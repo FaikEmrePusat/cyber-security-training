@@ -8,6 +8,10 @@
 node_modules/
 durum-web/node_modules/
 durum-web/dist/
+.env
+.env.*
+.env*.local
+*.env*
 
 # Binary & media files
 *.pdf
