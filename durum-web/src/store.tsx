@@ -30,6 +30,9 @@ import {
   type Tempo,
 } from "./model";
 import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
+import { auth, db, googleProvider } from "./firebase";
+import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 
 const MAX_HISTORY = 50;
 /** Ardışık tuş vuruşlarını tek geri alma adımında birleştir (ms). */
@@ -66,6 +69,10 @@ type StoreApi = {
   clearPending: () => void;
   exportFullBackup: () => string;
   importFullBackup: (jsonText: string) => boolean;
+  currentUser: User | null;
+  cloudSyncStatus: "idle" | "saving" | "synced" | "error";
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 const StoreContext = createContext<StoreApi | null>(null);
@@ -125,6 +132,8 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(loadState);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<"idle" | "saving" | "synced" | "error">("idle");
 
   const pastRef = useRef<AppState[]>([]);
   const futureRef = useRef<AppState[]>([]);
@@ -133,11 +142,113 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   /** Strict Mode setState double-invoke sırasında yığın bozulmasın diye güncel state. */
   const stateRef = useRef(state);
   stateRef.current = state;
+  const isRemoteUpdateRef = useRef(false);
 
+  // 1. Auth Listener
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setCurrentUser(u);
+    });
+    return () => unsub();
+  }, []);
+
+  // 2. Realtime Cloud Sync (Firestore -> Local)
+  useEffect(() => {
+    if (!currentUser) return;
+    const userDoc = doc(db, "users", currentUser.uid);
+    const unsub = onSnapshot(userDoc, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.state && !isRemoteUpdateRef.current) {
+          isRemoteUpdateRef.current = true;
+          applyingHistoryRef.current = true;
+          setState(data.state as AppState);
+          stateRef.current = data.state as AppState;
+          if (data.curriculum) {
+            try {
+              localStorage.setItem("durum-curriculum-v1", JSON.stringify(data.curriculum));
+              window.dispatchEvent(new Event("durum-curriculum-sync"));
+            } catch {
+              /* skip */
+            }
+          }
+          setCloudSyncStatus("synced");
+          setTimeout(() => {
+            applyingHistoryRef.current = false;
+            isRemoteUpdateRef.current = false;
+          }, 100);
+        }
+      }
+    });
+    return () => unsub();
+  }, [currentUser]);
+
+  // 3. Local Save + Push to Firestore
   useEffect(() => {
     if (applyingHistoryRef.current) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+
+    if (currentUser && !isRemoteUpdateRef.current) {
+      setCloudSyncStatus("saving");
+      let curriculumMap: Record<string, string> = {};
+      try {
+        const raw = localStorage.getItem("durum-curriculum-v1");
+        if (raw) curriculumMap = JSON.parse(raw);
+      } catch {
+        /* skip */
+      }
+      const userDoc = doc(db, "users", currentUser.uid);
+      setDoc(userDoc, {
+        updatedAt: new Date().toISOString(),
+        state,
+        curriculum: curriculumMap,
+      }, { merge: true })
+        .then(() => setCloudSyncStatus("synced"))
+        .catch(() => setCloudSyncStatus("error"));
+    }
+  }, [state, currentUser]);
+
+  const loginWithGoogle = useCallback(async () => {
+    try {
+      const res = await signInWithPopup(auth, googleProvider);
+      if (res.user) {
+        // İlk girişte cloud'da veri varsa çek, yoksa yereli cloud'a yükle
+        const userDoc = doc(db, "users", res.user.uid);
+        const snap = await getDoc(userDoc);
+        if (snap.exists() && snap.data()?.state) {
+          const data = snap.data();
+          setState(data.state as AppState);
+          stateRef.current = data.state as AppState;
+          if (data.curriculum) {
+            localStorage.setItem("durum-curriculum-v1", JSON.stringify(data.curriculum));
+            window.dispatchEvent(new Event("durum-curriculum-sync"));
+          }
+        } else {
+          let curriculumMap: Record<string, string> = {};
+          try {
+            const raw = localStorage.getItem("durum-curriculum-v1");
+            if (raw) curriculumMap = JSON.parse(raw);
+          } catch {
+            /* skip */
+          }
+          await setDoc(userDoc, {
+            updatedAt: new Date().toISOString(),
+            state: stateRef.current,
+            curriculum: curriculumMap,
+          });
+        }
+        setCloudSyncStatus("synced");
+      }
+    } catch (e) {
+      console.error(e);
+      setCloudSyncStatus("error");
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    await signOut(auth);
+    setCloudSyncStatus("idle");
+  }, []);
 
   const syncFlags = useCallback(() => {
     setCanUndo(pastRef.current.length > 0);
@@ -449,8 +560,12 @@ export function DurumProvider({ children }: { children: ReactNode }) {
           return false;
         }
       },
+      currentUser,
+      cloudSyncStatus,
+      loginWithGoogle,
+      logout,
     }),
-    [state, canUndo, canRedo, undo, redo, patch, commit],
+    [state, canUndo, canRedo, undo, redo, patch, commit, currentUser, cloudSyncStatus, loginWithGoogle, logout],
   );
 
   return <StoreContext.Provider value={api}>{children}</StoreContext.Provider>;
