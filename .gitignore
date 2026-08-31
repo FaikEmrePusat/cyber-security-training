@@ -1,0 +1,7 @@
+node_modules/
+durum-web/node_modules/
+durum-web/dist/
+.vscode/
+.idea/
+.DS_Store
+*.log
