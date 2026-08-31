@@ -150,12 +150,28 @@ export type SessionDraft = {
   kalite: string;
   kanit: string;
   not: string;
+  aktivite: string;
+  aktiviteCustom: string;
+  kaynak: string;
+};
+
+/** Yapılandırılmış oturum log formu (Bugün Bitti + Log sayfası). */
+export type SessionFormData = {
+  aktivite: string;
+  aktiviteCustom?: string;
+  kaynak: string;
+  dakika: number;
+  mod: string;
+  alan: string;
+  kanit?: string;
+  kalite: number;
+  not?: string;
 };
 
 /** Bugün bitmeyen görev — sonraki güne taşınır. */
 export type ScheduleCarryItem = {
   id: string;
-  kind: "tekrar" | "konu" | "temel" | "lab";
+  kind: "tekrar" | "konu" | "temel" | "lab" | "dil";
   baslik: string;
   saat: number;
   topicId?: string;
@@ -167,7 +183,7 @@ export type ScheduleCarryItem = {
 /** Bugün sayfasından tamamlanan / ertelenen görev referansı. */
 export type ScheduleTaskRef = {
   id: string;
-  kind: "tekrar" | "konu" | "temel" | "lab" | "dinlenme";
+  kind: "tekrar" | "konu" | "temel" | "lab" | "dil" | "dinlenme";
   topicId?: string;
   retrievalId?: string;
   roiId?: string;

@@ -1192,6 +1192,7 @@
 .gorev-card--tekrar .gorev-card__kind { color: #8a5a2b; }
 .gorev-card--temel .gorev-card__kind { color: #1a6b5c; }
 .gorev-card--lab .gorev-card__kind { color: #2d6a4f; }
+.gorev-card--dil .gorev-card__kind { color: #5a4a8a; }
 .gorev-card--dinlenme .gorev-card__kind { color: var(--ink-mute); }
 
 .gorev-card__title {
@@ -1239,6 +1240,10 @@
   color: #2d6a4f;
 }
 
+.gorev-card__badge--dil {
+  color: #5a4a8a;
+}
+
 .gorev-card__badge--carry {
   font-size: 0.68rem;
   text-transform: uppercase;
@@ -1259,6 +1264,73 @@
 .cta--sm {
   padding: 0.35rem 0.75rem;
   font-size: 0.82rem;
+}
+
+/* ——— Oturum log formu ——— */
+.bugun-gorevler__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.session-log-panel {
+  margin: 0 0 0.25rem;
+  padding: 0.85rem 1rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  animation: rise 0.35s ease both;
+}
+
+.session-log-panel__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.session-log-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.65rem 0.85rem;
+  margin-bottom: 0.65rem;
+}
+
+.session-log-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.session-log-form__slider {
+  width: 100%;
+  margin: 0.35rem 0;
+}
+
+.session-log-form__kalite-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.session-log-form__kalite-btn {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.session-log-form__kalite-btn--active {
+  border-color: var(--accent);
+  background: rgba(26, 107, 92, 0.08);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* ——— Yolculuk şeridi ——— */

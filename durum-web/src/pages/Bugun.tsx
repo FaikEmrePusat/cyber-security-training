@@ -8,6 +8,8 @@ import { round1 } from "../model";
 import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
 import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRollingSchedule";
+import { SessionLogForm } from "../components/SessionLogForm";
+import { defaultFormFromGorev } from "../components/sessionLogFormUtils";
 import { useDurum } from "../store";
 
 function MapGlyph() {
@@ -56,6 +58,7 @@ const KIND_CLASS: Record<string, string> = {
   konu: "gorev-card--konu",
   temel: "gorev-card--temel",
   lab: "gorev-card--lab",
+  dil: "gorev-card--dil",
   dinlenme: "gorev-card--dinlenme",
 };
 
@@ -88,6 +91,7 @@ function GorevCard({
           {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">TEMEL</span>}
           {gorev.kind === "konu" && <span className="gorev-card__badge gorev-card__badge--zayif">ZAYIF ALAN</span>}
           {gorev.kind === "lab" && <span className="gorev-card__badge gorev-card__badge--lab">LAB PRATİĞİ</span>}
+          {gorev.kind === "dil" && <span className="gorev-card__badge gorev-card__badge--dil">ALMANCA</span>}
           {gorev.carried && <span className="gorev-card__badge">Dünden kalan</span>}
         </div>
         {(onComplete || onDefer) && (
@@ -140,7 +144,9 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
                       ? "Zayıf"
                       : t.kind === "lab"
                         ? "Lab"
-                        : "Dinlen"}
+                        : t.kind === "dil"
+                          ? "Dil"
+                          : "Dinlen"}
               </span>
               <span className="plan-day__task">{t.baslik}</span>
               {t.carried && <span className="plan-day__carry">↩</span>}
@@ -154,8 +160,9 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
 
 export function BugunPage() {
   const d = useDerived();
-  const { state, completeScheduleTask, deferScheduleTask, clearScheduleCarry } = useDurum();
+  const { state, completeScheduleTaskWithLog, deferScheduleTask, clearScheduleCarry } = useDurum();
   const [toast, setToast] = useState<string | null>(null);
+  const [loggingTaskId, setLoggingTaskId] = useState<string | null>(null);
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
   const { getStatus } = useCurriculumStatuses(queueKeys);
   const schedule = useRollingSchedule(getStatus);
@@ -256,18 +263,32 @@ export function BugunPage() {
           </div>
           <div className="bugun-gorevler__list">
             {schedule.bugunGorevler.map((g) => (
-              <GorevCard
-                key={g.id}
-                gorev={g}
-                onComplete={() => {
-                  completeScheduleTask(toTaskRef(g));
-                  flash("Tamamlandı");
-                }}
-                onDefer={() => {
-                  deferScheduleTask(toCarryItem(g));
-                  flash("Yarına aktarıldı");
-                }}
-              />
+              <div key={g.id} className="bugun-gorevler__item">
+                <GorevCard
+                  gorev={g}
+                  onComplete={() => setLoggingTaskId(g.id)}
+                  onDefer={() => {
+                    deferScheduleTask(toCarryItem(g));
+                    flash("Yarına aktarıldı");
+                  }}
+                />
+                {loggingTaskId === g.id && (
+                  <div className="session-log-panel" role="region" aria-label="Oturum kaydı">
+                    <p className="session-log-panel__title">Ne yaptın? — kısa log</p>
+                    <SessionLogForm
+                      initial={defaultFormFromGorev(g, state.tempo.quality)}
+                      skills={state.skills}
+                      onSubmit={(form) => {
+                        completeScheduleTaskWithLog(toTaskRef(g), form);
+                        setLoggingTaskId(null);
+                        flash("Görev tamamlandı ve log kaydedildi");
+                      }}
+                      onCancel={() => setLoggingTaskId(null)}
+                      submitLabel="Kaydet ve bitir"
+                    />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           <div className="actions bugun-gorevler__links">
@@ -291,7 +312,8 @@ export function BugunPage() {
           <h2 className="plan-timeline__title">Önümüzdeki günler</h2>
           <p className="plan-timeline__note">
             Tahmini plan — bitmeyen görevler ertesi güne kayar; tempo: ~
-            {round1(state.tempo.hoursCyber / 7)} sa/gün siber.
+            {round1(state.tempo.hoursCyber / 7)} sa/gün siber · ~
+            {round1(state.tempo.hoursLang / 7)} sa/gün dil.
           </p>
           <div className="plan-timeline__today">
             <ScheduleDayCard day={schedule.days[0]} />

@@ -22,7 +22,7 @@ import {
 import { useDerived } from "./useDerived";
 import { useDurum } from "./store";
 
-export type ScheduleTaskKind = "tekrar" | "konu" | "temel" | "lab" | "dinlenme";
+export type ScheduleTaskKind = "tekrar" | "konu" | "temel" | "lab" | "dil" | "dinlenme";
 export type DayType = "A" | "B";
 
 export type ScheduleTask = {
@@ -76,6 +76,7 @@ export type JourneySnapshot = {
 const TEKRAR_SAAT = 8 / 60;
 const KONU_SAAT = 0.5;
 const LAB_SAAT_MIN = 0.5;
+const DIL_SAAT = 0.5;
 const PROJE_GUN = 14;
 const MAX_CARRY = MODEL.carry?.maxCarry ?? 2;
 const MAX_CARRY_AGE_DAYS = MODEL.carry?.maxAgeDays ?? 7;
@@ -104,6 +105,7 @@ const KIND_LABEL: Record<ScheduleTaskKind, string> = {
   konu: "Zayıf alanda sıradaki konu",
   temel: "Temel konu çalışma",
   lab: "Lab / pratik",
+  dil: "Dil çalışması",
   dinlenme: "Dinlenme",
 };
 
@@ -250,6 +252,18 @@ function labTask(a: RoiAction): ScheduleTask {
   };
 }
 
+function dilTask(offset: number, lang: "de" | "en" = "de"): ScheduleTask {
+  const label = lang === "de" ? "Almanca" : "İngilizce";
+  return {
+    id: `dil-${lang}-${offset}`,
+    kind: "dil",
+    baslik: `${label} çalışması`,
+    detay: lang === "de" ? "Konuşma / okuma / dinleme" : "İngilizce pratik",
+    saat: DIL_SAAT,
+    alan: lang === "de" ? "dil-de" : "dil-en",
+  };
+}
+
 type SimState = {
   carry: ScheduleTask[];
   bottleneckStudyIdx: number;
@@ -260,6 +274,7 @@ type SimState = {
   retrieval: Array<{ item: RetrievalItem; dueOffset: number }>;
   labRoi: RoiAction | null;
   labUsed: boolean;
+  langUsed: number;
 };
 
 function pickTemelTopic(
@@ -287,6 +302,7 @@ function packDay(
   sim: SimState,
   temelLists: Record<string, CurriculumTopic[]>,
   kapasite: number,
+  langKapasite: number,
   tekrarLimit: number,
   dayType: DayType,
 ): { tasks: ScheduleTask[]; tasima: number; sim: SimState } {
@@ -381,6 +397,16 @@ function packDay(
     }
   }
 
+  // 4. Dil kanalı — ayrı kapasite (hoursLang / 7); Konu günlerinde öncelikli
+  const langRemaining = langKapasite - sim.langUsed;
+  if (langRemaining >= DIL_SAAT && (dayType === "A" || langRemaining >= DIL_SAAT * 2)) {
+    const dilItem = dilTask(offset, "de");
+    if (langRemaining >= dilItem.saat) {
+      tasks.push(dilItem);
+      sim.langUsed += dilItem.saat;
+    }
+  }
+
   // Taşıma listesini tavanla sınırla (max 2 görev)
   sim.carry = nextCarry.slice(-MAX_CARRY);
   return { tasks, tasima, sim };
@@ -399,6 +425,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
 
     const dailyCyber = Math.max(0.5, state.tempo.hoursCyber / 7);
     const dailyCapBase = Math.min(2, Math.max(0.75, dailyCyber));
+    const dailyLang = Math.max(0, state.tempo.hoursLang / 7);
 
     const overdue = state.retrieval.filter((r) => isRetrievalDue(r, d.nowMs));
     const futureRetrieval = state.retrieval
@@ -415,7 +442,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     const temelIdxByAlan: Record<string, number> = {};
     for (const a of FOUNDATION_ALANS) temelIdxByAlan[a] = 0;
     const nextTemel = pickTemelTopic(
-      { temelAlanOrder, temelAlanRotate: 0, temelIdxByAlan, carry: [], bottleneckStudyIdx: 0, bottleneckStudyList: [], retrieval: [], labRoi: null, labUsed: false },
+      { temelAlanOrder, temelAlanRotate: 0, temelIdxByAlan, carry: [], bottleneckStudyIdx: 0, bottleneckStudyList: [], retrieval: [], labRoi: null, labUsed: false, langUsed: 0 },
       temelLists,
     );
     const labRoi = pickLabRoi(d.roiList);
@@ -438,6 +465,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       ],
       labRoi,
       labUsed: false,
+      langUsed: 0,
     };
 
     const days: ScheduleDay[] = [];
@@ -458,6 +486,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
         sim,
         temelLists,
         kapasite,
+        dailyLang,
         tekrarLim,
         dayType,
       );
@@ -540,7 +569,9 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
                   ? `${alanLabel} zayıf alanında sıradaki müfredat konusu.`
                   : t.kind === "lab"
                     ? "Kapsamlı lab / SOC pratiği — Gate B & C için portföy kanıtı üretir."
-                    : undefined,
+                    : t.kind === "dil"
+                      ? "Günlük dil kapasitesi — Almanca hedefi için düzenli pratik."
+                      : undefined,
         }));
       }
 

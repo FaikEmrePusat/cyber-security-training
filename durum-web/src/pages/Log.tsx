@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { MODEL, clamp, parseNum, round1, round2 } from "../model";
+import { MODEL, round1, round2 } from "../model";
 import { Section } from "../components/Section";
+import { SessionLogForm } from "../components/SessionLogForm";
+import { defaultManualForm } from "../components/sessionLogFormUtils";
 import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
 
 export function LogPage() {
-  const { state, setDraft, appendLog, clearPending, resetSeed, importJsonl, exportFullBackup, importFullBackup } = useDurum();
+  const { state, appendSessionFromForm, appendLog, clearPending, resetSeed, importJsonl, exportFullBackup, importFullBackup } = useDurum();
   const d = useDerived();
   const [toast, setToast] = useState<string | null>(null);
   const [paste, setPaste] = useState("");
@@ -51,22 +53,6 @@ export function LogPage() {
     } else {
       flash("Geçersiz yedek formatı!");
     }
-  };
-
-  const addSession = () => {
-    const dk = clamp(parseNum(state.draft.dakika, 60), 1, 600);
-    const rec = {
-      t: new Date().toISOString(),
-      type: "session" as const,
-      alan: state.draft.alan,
-      mod: state.draft.mod,
-      dur_min: dk,
-      kalite: clamp(parseNum(state.draft.kalite, 0.85), 0.3, 1),
-      kanit: state.draft.kanit || undefined,
-      not: state.draft.not || undefined,
-    };
-    appendLog(rec);
-    flash("Oturum kaydedildi");
   };
 
   const takeSnapshot = () => {
@@ -122,74 +108,15 @@ export function LogPage() {
         <h2 style={{ fontFamily: "var(--font-display)", margin: "0 0 0.75rem", fontSize: "1.15rem" }}>
           Oturum ekle
         </h2>
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="log-alan">Alan</label>
-            <select
-              id="log-alan"
-              value={state.draft.alan}
-              onChange={(e) => setDraft((d0) => ({ ...d0, alan: e.target.value }))}
-            >
-              {state.skills.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-              <option value="dil-de">Dil DE</option>
-              <option value="dil-en">Dil EN</option>
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="log-dakika">Dakika</label>
-            <input
-              id="log-dakika"
-              value={state.draft.dakika}
-              onChange={(e) => setDraft((d0) => ({ ...d0, dakika: e.target.value }))}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="log-mod">Mod</label>
-            <select
-              id="log-mod"
-              value={state.draft.mod}
-              onChange={(e) => setDraft((d0) => ({ ...d0, mod: e.target.value }))}
-            >
-              <option value="lab">Lab</option>
-              <option value="teori">Teori</option>
-              <option value="proje">Proje</option>
-              <option value="dil">Dil</option>
-              <option value="mulakat">Mülakat</option>
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="log-kalite">Kalite (0.3–1)</label>
-            <input
-              id="log-kalite"
-              value={state.draft.kalite}
-              onChange={(e) => setDraft((d0) => ({ ...d0, kalite: e.target.value }))}
-            />
-          </div>
-        </div>
-        <div className="field">
-          <label htmlFor="log-kanit">Kanıt notu (opsiyonel)</label>
-          <input
-            id="log-kanit"
-            value={state.draft.kanit}
-            onChange={(e) => setDraft((d0) => ({ ...d0, kanit: e.target.value }))}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="log-not">Not</label>
-          <textarea
-            id="log-not"
-            value={state.draft.not}
-            onChange={(e) => setDraft((d0) => ({ ...d0, not: e.target.value }))}
-          />
-        </div>
-        <div className="actions">
-          <button type="button" className="cta" onClick={addSession}>
-            Oturumu kaydet
-          </button>
+        <SessionLogForm
+          initial={defaultManualForm(state.tempo.quality)}
+          skills={state.skills}
+          onSubmit={(form) => {
+            appendSessionFromForm(form);
+            flash("Oturum kaydedildi");
+          }}
+        />
+        <div className="actions" style={{ marginTop: "0.75rem" }}>
           <button type="button" className="cta cta--ghost" onClick={takeSnapshot}>
             Haftalık snapshot
           </button>
@@ -293,7 +220,7 @@ export function LogPage() {
                   <td style={{ whiteSpace: "nowrap" }}>{r.t.slice(0, 16).replace("T", " ")}</td>
                   <td>{r.type}</td>
                   <td>
-                    {r.alan ?? r.kaynak ?? r.konu ?? r.not ?? (r.hesap ? `R=${r.hesap.R}` : "—")}
+                    {r.not ?? r.alan ?? r.kaynak ?? r.konu ?? (r.hesap ? `R=${r.hesap.R}` : "—")}
                   </td>
                 </tr>
               ))}

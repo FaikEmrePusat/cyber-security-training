@@ -121,6 +121,9 @@ export const DRAFT: SessionDraft = {
   kalite: "0.9",
   kanit: "",
   not: "",
+  aktivite: "lab-pratik",
+  aktiviteCustom: "",
+  kaynak: "oak",
 };
 
 export function createSeedState(): AppState {

@@ -15,6 +15,7 @@ import {
   daysSince,
   isRetrievalDue,
   nextStability,
+  clamp,
   type AppState,
   type Artifact,
   type CareerItem,
@@ -26,10 +27,12 @@ import {
   type ScheduleCarryItem,
   type ScheduleTaskRef,
   type SessionDraft,
+  type SessionFormData,
   type Skill,
   type Tempo,
 } from "./model";
 import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
+import { generateSessionNot } from "./components/sessionLogFormUtils";
 import { auth, db, googleProvider } from "./firebase";
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
@@ -62,6 +65,8 @@ type StoreApi = {
   setChancenkarte: (fn: (c: ChancenkarteState) => ChancenkarteState) => void;
   setDraft: (fn: (d: SessionDraft) => SessionDraft) => void;
   appendLog: (rec: LogRecord) => void;
+  appendSessionFromForm: (form: SessionFormData) => void;
+  completeScheduleTaskWithLog: (task: ScheduleTaskRef, form: SessionFormData) => void;
   /** State + log tek undo adımında (ör. tekrar işaretleme). */
   commitWithLog: (updater: (s: AppState) => AppState, rec: LogRecord) => void;
   resetSeed: () => void;
@@ -109,6 +114,77 @@ function dismissTaskToday(s: AppState, taskId: string, todayIso: string): AppSta
 function applyRetrievalReview(item: RetrievalItem, nowIso: string): RetrievalItem {
   const next = nextStability(item, "basarili");
   return { ...item, stability: next.s, ef: next.ef, n: next.n, lastIso: nowIso };
+}
+
+function formToLogRecord(form: SessionFormData): LogRecord {
+  const not = form.not?.trim() || generateSessionNot(form);
+  return {
+    t: new Date().toISOString(),
+    type: "session",
+    alan: form.alan,
+    mod: form.mod,
+    dur_min: clamp(form.dakika, 1, 600),
+    kalite: clamp(form.kalite, 0.3, 1),
+    kanit: form.kanit?.trim() || undefined,
+    kaynak: form.kaynak,
+    not,
+  };
+}
+
+function applyScheduleTaskCompletion(
+  s: AppState,
+  task: ScheduleTaskRef,
+  todayIso: string,
+  nowMs: number,
+  nowIso: string,
+): AppState {
+  let next = dismissTaskToday(s, task.id, todayIso);
+
+  if (task.kind === "tekrar") {
+    if (task.id.startsWith("tekrar-batch-")) {
+      const overdueIds = new Set(
+        next.retrieval.filter((r) => isRetrievalDue(r, nowMs)).map((r) => r.id),
+      );
+      next = {
+        ...next,
+        retrieval: next.retrieval.map((r) =>
+          overdueIds.has(r.id) ? applyRetrievalReview(r, nowIso) : r,
+        ),
+      };
+    } else if (task.retrievalId) {
+      next = {
+        ...next,
+        retrieval: next.retrieval.map((r) =>
+          r.id === task.retrievalId ? applyRetrievalReview(r, nowIso) : r,
+        ),
+      };
+    }
+  } else if ((task.kind === "konu" || task.kind === "temel") && task.topicId) {
+    const topic = OAK_BY_ID[task.topicId];
+    if (topic) {
+      const key = topicKey(topic.konu);
+      const exists = next.retrieval.some((r) => topicKey(r.topic) === key);
+      if (!exists) {
+        next = {
+          ...next,
+          retrieval: next.retrieval.concat([
+            {
+              id: newRetrievalId(),
+              topic: topic.konu,
+              alan: topic.alan,
+              difficulty: topic.zorluk,
+              n: 0,
+              stability: MODEL.tekrar.s0,
+              ef: MODEL.tekrar.ef0,
+              lastIso: nowIso,
+            },
+          ]),
+        };
+      }
+    }
+  }
+
+  return next;
 }
 
 function cloneState(s: AppState): AppState {
@@ -375,55 +451,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
         const nowMs = Date.now();
         const nowIso = new Date().toISOString();
         commit(
-          (s) => {
-            let next = dismissTaskToday(s, task.id, todayIso);
-
-            if (task.kind === "tekrar") {
-              if (task.id.startsWith("tekrar-batch-")) {
-                const overdueIds = new Set(
-                  next.retrieval.filter((r) => isRetrievalDue(r, nowMs)).map((r) => r.id),
-                );
-                next = {
-                  ...next,
-                  retrieval: next.retrieval.map((r) =>
-                    overdueIds.has(r.id) ? applyRetrievalReview(r, nowIso) : r,
-                  ),
-                };
-              } else if (task.retrievalId) {
-                next = {
-                  ...next,
-                  retrieval: next.retrieval.map((r) =>
-                    r.id === task.retrievalId ? applyRetrievalReview(r, nowIso) : r,
-                  ),
-                };
-              }
-            } else if ((task.kind === "konu" || task.kind === "temel") && task.topicId) {
-              const topic = OAK_BY_ID[task.topicId];
-              if (topic) {
-                const key = topicKey(topic.konu);
-                const exists = next.retrieval.some((r) => topicKey(r.topic) === key);
-                if (!exists) {
-                  next = {
-                    ...next,
-                    retrieval: next.retrieval.concat([
-                      {
-                        id: newRetrievalId(),
-                        topic: topic.konu,
-                        alan: topic.alan,
-                        difficulty: topic.zorluk,
-                        n: 0,
-                        stability: MODEL.tekrar.s0,
-                        ef: MODEL.tekrar.ef0,
-                        lastIso: nowIso,
-                      },
-                    ]),
-                  };
-                }
-              }
-            }
-
-            return next;
-          },
+          (s) => applyScheduleTaskCompletion(s, task, todayIso, nowMs, nowIso),
           { forceHistory: true },
         );
       },
@@ -476,6 +504,34 @@ export function DurumProvider({ children }: { children: ReactNode }) {
             history: s.history.concat([rec]),
             pending: s.pending.concat([JSON.stringify(rec)]),
           }),
+          { forceHistory: true },
+        );
+      },
+      appendSessionFromForm: (form) => {
+        const rec = formToLogRecord(form);
+        commit(
+          (s) => ({
+            ...s,
+            history: s.history.concat([rec]),
+            pending: s.pending.concat([JSON.stringify(rec)]),
+          }),
+          { forceHistory: true },
+        );
+      },
+      completeScheduleTaskWithLog: (task, form) => {
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const nowMs = Date.now();
+        const nowIso = new Date().toISOString();
+        const rec = formToLogRecord(form);
+        commit(
+          (s) => {
+            const next = applyScheduleTaskCompletion(s, task, todayIso, nowMs, nowIso);
+            return {
+              ...next,
+              history: next.history.concat([rec]),
+              pending: next.pending.concat([JSON.stringify(rec)]),
+            };
+          },
           { forceHistory: true },
         );
       },
