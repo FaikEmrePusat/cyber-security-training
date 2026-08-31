@@ -5,15 +5,52 @@ import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
 
 export function LogPage() {
-  const { state, setDraft, appendLog, clearPending, resetSeed, importJsonl } = useDurum();
+  const { state, setDraft, appendLog, clearPending, resetSeed, importJsonl, exportFullBackup, importFullBackup } = useDurum();
   const d = useDerived();
   const [toast, setToast] = useState<string | null>(null);
   const [paste, setPaste] = useState("");
+  const [backupPaste, setBackupPaste] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
 
   const flash = (t: string) => {
     setToast(t);
     setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleDownloadFullBackup = () => {
+    const jsonStr = exportFullBackup();
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `durum-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    flash("Tam yedek dosyası indirildi (.json)");
+  };
+
+  const handleCopyFullBackup = async () => {
+    const jsonStr = exportFullBackup();
+    try {
+      await navigator.clipboard.writeText(jsonStr);
+      flash("Tam yedek panoya kopyalandı");
+    } catch {
+      flash("Kopyalanamadı — dosya olarak indir");
+    }
+  };
+
+  const handleRestoreBackup = () => {
+    if (!backupPaste.trim()) {
+      flash("Lütfen yedek JSON metnini yapıştırın");
+      return;
+    }
+    const ok = importFullBackup(backupPaste.trim());
+    if (ok) {
+      setBackupPaste("");
+      flash("Tüm veriler başarıyla geri yüklendi!");
+    } else {
+      flash("Geçersiz yedek formatı!");
+    }
   };
 
   const addSession = () => {
@@ -190,7 +227,34 @@ export function LogPage() {
         )}
       </Section>
 
-      <Section title="İçe aktar" lead="JSONL yapıştır — satırlar geçmişe eklenir.">
+      <Section title="Tam Veri Yedekleme & Cihazlar Arası Aktarım" lead="Telefon, tablet veya başka bir tarayıcıya geçerken tüm ilerlemenizi (beceriler, loglar, tekrarlar, harita durumları) tek tıkla aktarın.">
+        <div className="actions" style={{ marginBottom: "1rem" }}>
+          <button type="button" className="cta" onClick={handleDownloadFullBackup}>
+            Tüm Veriyi İndir (.json)
+          </button>
+          <button type="button" className="cta cta--ghost" onClick={handleCopyFullBackup}>
+            Yedeği Panoya Kopyala
+          </button>
+        </div>
+        <div className="field">
+          <label htmlFor="log-backup-json">Yedekten Geri Yükle (JSON Yapıştır)</label>
+          <textarea
+            id="log-backup-json"
+            value={backupPaste}
+            onChange={(e) => setBackupPaste(e.target.value)}
+            placeholder='{"version":"durum-v22","state":{...},"curriculum":{...}}'
+          />
+        </div>
+        <button
+          type="button"
+          className="cta cta--ghost"
+          onClick={handleRestoreBackup}
+        >
+          Yedeği Sisteme Yükle ve Uygula
+        </button>
+      </Section>
+
+      <Section title="İçe aktar (Yalnızca JSONL Log Satırları)" lead="JSONL yapıştır — satırlar geçmişe eklenir.">
         <div className="field">
           <label htmlFor="log-jsonl">JSONL</label>
           <textarea

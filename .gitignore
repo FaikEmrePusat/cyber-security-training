@@ -1,7 +1,34 @@
+# Logs & Caches
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Node build artifacts
 node_modules/
 durum-web/node_modules/
 durum-web/dist/
-.vscode/
-.idea/
-.DS_Store
-*.log
+
+# Binary & media files
+*.pdf
+*.docx
+*.zip
+*.msi
+*.exe
+*.png
+*.jpg
+*.jpeg
+
+# Personal strategy, notes and private planning documents
+/*.md
+!/README.md
+/*.txt
+/*.jsonl
+Oak-Study-Notes/
+durum-web/haftalik-shots/
+durum-web/HAFTALIK-KULLANICI-TESTI.md
+durum-web/PARITE-RAPORU.md
+durum-web/SISTEM-DENETIM-VE-TEST-RAPORU.md
+durum-web/SITE-DENETIMI.md
+durum-web/haftalik_kullanici_testi.py
+durum-web/simulate_and_audit.py

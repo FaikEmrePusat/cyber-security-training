@@ -64,6 +64,8 @@ type StoreApi = {
   resetSeed: () => void;
   importJsonl: (text: string) => number;
   clearPending: () => void;
+  exportFullBackup: () => string;
+  importFullBackup: (jsonText: string) => boolean;
 };
 
 const StoreContext = createContext<StoreApi | null>(null);
@@ -408,6 +410,44 @@ export function DurumProvider({ children }: { children: ReactNode }) {
           );
         }
         return recs.length;
+      },
+      exportFullBackup: () => {
+        let curriculumMap: Record<string, string> = {};
+        try {
+          const raw = localStorage.getItem("durum-curriculum-v1");
+          if (raw) curriculumMap = JSON.parse(raw);
+        } catch {
+          /* skip */
+        }
+        const payload = {
+          version: "durum-v22",
+          exportedAt: new Date().toISOString(),
+          state,
+          curriculum: curriculumMap,
+        };
+        return JSON.stringify(payload, null, 2);
+      },
+      importFullBackup: (jsonText: string) => {
+        try {
+          const parsed = JSON.parse(jsonText);
+          const nextState = parsed.state ?? parsed;
+          if (!nextState || !Array.isArray(nextState.skills)) {
+            return false;
+          }
+          if (parsed.curriculum && typeof parsed.curriculum === "object") {
+            try {
+              localStorage.setItem("durum-curriculum-v1", JSON.stringify(parsed.curriculum));
+              window.dispatchEvent(new Event("durum-curriculum-sync"));
+            } catch {
+              /* skip */
+            }
+          }
+          commit(() => ({ ...createSeedState(), ...nextState }), { forceHistory: true });
+          coalesceUntilRef.current = 0;
+          return true;
+        } catch {
+          return false;
+        }
       },
     }),
     [state, canUndo, canRedo, undo, redo, patch, commit],
