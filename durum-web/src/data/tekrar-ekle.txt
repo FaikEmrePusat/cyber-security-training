@@ -1,141 +1,141 @@
-net|kolay|OSI modeli (7 katman)
-net|kolay|TCP/IP modeli ve kapsülleme
-net|kolay|MAC vs IP adresi
-net|orta|Ethernet çerçeve / CSMA/CD
+net|kolay|OSI model (7 layers)
+net|kolay|TCP/IP model and encapsulation
+net|kolay|MAC vs IP address
+net|orta|Ethernet frame / CSMA/CD
 net|orta|Collision domain vs broadcast domain
 net|orta|ARP (request/reply, arp -a)
-net|orta|VLAN temelleri
+net|orta|VLAN basics
 net|orta|IPv4 vs IPv6
 net|zor|Subnetting / CIDR / subnet mask
-net|orta|Private vs public IP ve NAT
-net|kolay|Loopback (127.0.0.0/8) ve link-local
+net|orta|Private vs public IP and NAT
+net|kolay|Loopback (127.0.0.0/8) and link-local
 net|kolay|Default gateway
-net|orta|DHCP DORA süreci
+net|orta|DHCP DORA process
 net|kolay|ICMP / ping / traceroute
 net|kolay|TCP 3-way handshake (SYN/SYN-ACK/ACK)
 net|kolay|TCP vs UDP
-net|orta|Port aralıkları (well-known / registered / dynamic)
-net|orta|DNS hiyerarşisi ve sorgu akışı
-net|orta|DNS kayıtları (A, AAAA, CNAME, MX, NS, TXT)
+net|orta|Port ranges (well-known / registered / dynamic)
+net|orta|DNS hierarchy and query flow
+net|orta|DNS records (A, AAAA, CNAME, MX, NS, TXT)
 net|kolay|nslookup / dig
-net|orta|HTTP istek metotları ve durum kodları
+net|orta|HTTP request methods and status codes
 net|orta|HTTP vs HTTPS / SSL-TLS
-net|orta|E-posta protokolleri (SMTP / IMAP / POP3)
+net|orta|Email protocols (SMTP / IMAP / POP3)
 net|kolay|SSH (22) vs Telnet (23)
 net|kolay|RDP (3389)
 net|orta|FTP / SFTP / SMB
-net|kolay|SNMP ve NTP
-net|kolay|Ağ topolojileri (star / bus / ring / mesh)
+net|kolay|SNMP and NTP
+net|kolay|Network topologies (star / bus / ring / mesh)
 net|orta|Switch / Router / Access Point / Hub
 net|orta|Load balancer (L4 vs L7)
-net|orta|Proxy sunucu
-net|orta|DMZ mimarisi
+net|orta|Proxy server
+net|orta|DMZ architecture
 net|orta|NAC (Network Access Control)
-net|orta|Wireshark ile paket analizi
-net|orta|tcpdump temel kullanım
-net|orta|netstat ile port/bağlantı analizi
+net|orta|Packet analysis with Wireshark
+net|orta|tcpdump basics
+net|orta|Port/connection analysis with netstat
 linux|kolay|Linux kernel / distro / shell (bash)
-linux|kolay|CLI vs GUI; root (#) vs kullanıcı ($)
-linux|orta|Linux temel komutlar (navigasyon / dosya)
-linux|orta|/etc/passwd ve /etc/shadow
-linux|orta|Kullanıcı/grup yönetimi (adduser, usermod, deluser)
+linux|kolay|CLI vs GUI; root (#) vs user ($)
+linux|orta|Linux basic commands (navigation / files)
+linux|orta|/etc/passwd and /etc/shadow
+linux|orta|User/group management (adduser, usermod, deluser)
 linux|orta|sudo / su / whoami
-linux|orta|Dosya izinleri (rwx) ve chmod
-linux|orta|chown ve least privilege
-linux|orta|Linux dosya sistemi hiyerarşisi (/bin /etc /var /home…)
+linux|orta|File permissions (rwx) and chmod
+linux|orta|chown and least privilege
+linux|orta|Linux filesystem hierarchy (/bin /etc /var /home…)
 linux|orta|ifconfig / ip addr
-linux|orta|Linux process (ps, top, pstree, kill)
-linux|orta|Linux servis yönetimi (systemctl / service)
-linux|orta|Disk/bellek izleme (df, du, /proc)
-linux|orta|tar / gzip arşivleme
-linux|orta|APT / DPKG paket yönetimi
-linux|kolay|SSH ile uzaktan Linux erişimi
-win|kolay|Windows Server / Client–Server temelleri
-win|orta|Server Manager (rol / özellik)
-win|orta|Windows process / Task Manager / PID
+linux|orta|Linux processes (ps, top, pstree, kill)
+linux|orta|Linux service management (systemctl / service)
+linux|orta|Disk/memory monitoring (df, du, /proc)
+linux|orta|tar / gzip archiving
+linux|orta|APT / DPKG package management
+linux|kolay|Remote Linux access via SSH
+win|kolay|Windows Server / Client–Server basics
+win|orta|Server Manager (roles / features)
+win|orta|Windows processes / Task Manager / PID
 win|orta|Windows Services (services.msc, startup types)
-win|orta|Computer Management / yerel kullanıcı-grup
+win|orta|Computer Management / local users and groups
 win|orta|net user / net localgroup
-win|orta|RDP yapılandırma ve güvenlik
-win|orta|Windows DHCP / DNS / IIS rolleri
-win|orta|IIS güvenlik (directory browsing, auth)
-win|orta|PowerShell cmdlet temelleri
-win|orta|SMB paylaşım ve NTFS izinleri
+win|orta|RDP configuration and security
+win|orta|Windows DHCP / DNS / IIS roles
+win|orta|IIS security (directory browsing, auth)
+win|orta|PowerShell cmdlet basics
+win|orta|SMB shares and NTFS permissions
 win|orta|Windows Defender Firewall (inbound/outbound)
 win|zor|Registry (HKLM/HKCU, Run keys)
-win|orta|Task Scheduler (persistence farkındalığı)
+win|orta|Task Scheduler (persistence awareness)
 win|orta|Disk Management / NTFS vs FAT32
 win|zor|Active Directory: Domain / DC / OU
-win|orta|AD kullanıcı ve grup yönetimi
-win|orta|LDAP ve Kerberos (AD bağlamı)
-win|orta|NTDS.dit / SAM / NTLM farkındalığı
-win|orta|GPO temelleri (Default Domain Policy)
-win|orta|GPO parola ve hesap kilitleme politikası
+win|orta|AD user and group management
+win|orta|LDAP and Kerberos (AD context)
+win|orta|NTDS.dit / SAM / NTLM awareness
+win|orta|GPO basics (Default Domain Policy)
+win|orta|GPO password and account lockout policy
 win|kolay|gpupdate /force
 secfund|kolay|CIA triad
-secfund|orta|Defense in Depth (önleme/engelleme/tespit/müdahale)
+secfund|orta|Defense in Depth (prevent/detect/respond/block)
 secfund|orta|Threat / Vulnerability / Risk / Exploit
-secfund|kolay|Zero-Day ve CVE
+secfund|kolay|Zero-Day and CVE
 secfund|kolay|Blue / Red / Purple Team
-secfund|orta|Cyber Kill Chain (7 aşama)
+secfund|orta|Cyber Kill Chain (7 stages)
 secfund|orta|APT (Advanced Persistent Threat)
-secfund|orta|MITRE ATT&CK farkındalığı
-secfund|orta|Zero Trust ve least privilege
+secfund|orta|MITRE ATT&CK awareness
+secfund|orta|Zero Trust and least privilege
 secfund|orta|IAM / IAAA (Identification–Authentication–Authorization–Accountability)
-secfund|orta|MFA faktörleri (know / have / are)
+secfund|orta|MFA factors (know / have / are)
 secfund|orta|SSO (SAML / OAuth / Kerberos)
-secfund|orta|Malware türleri (virus, worm, trojan, ransomware, spyware, rootkit, adware)
-secfund|kolay|Hacker türleri (white / black / grey)
-secfund|orta|Sosyal mühendislik ve phishing
+secfund|orta|Malware types (virus, worm, trojan, ransomware, spyware, rootkit, adware)
+secfund|kolay|Hacker types (white / black / grey)
+secfund|orta|Social engineering and phishing
 secfund|orta|Attack surface
-secfund|orta|Pentest adımları (recon → exploit → rapor)
+secfund|orta|Pentest steps (recon → exploit → report)
 crypto|kolay|Encryption vs Hashing vs Encoding
-crypto|orta|Simetrik vs asimetrik şifreleme
-crypto|orta|AES / DES ve RSA / ECC / Diffie-Hellman
-crypto|orta|Hash özellikleri ve SHA-256 (MD5/SHA-1 zayıf)
-crypto|orta|Dijital imza
-crypto|orta|PKI / CA / sertifika zinciri
+crypto|orta|Symmetric vs asymmetric encryption
+crypto|orta|AES / DES and RSA / ECC / Diffie-Hellman
+crypto|orta|Hash properties and SHA-256 (MD5/SHA-1 weak)
+crypto|orta|Digital signature
+crypto|orta|PKI / CA / certificate chain
 crypto|orta|OCSP / CRL / self-signed
-crypto|orta|TLS handshake ve hibrit şifreleme
+crypto|orta|TLS handshake and hybrid encryption
 crypto|orta|MAC / HMAC
-crypto|orta|E2EE kavramı
-crypto|orta|SSH anahtar doğrulama (ssh-keygen)
-crypto|zor|Parola hash: salt / pepper / bcrypt / Argon2
-crypto|kolay|CyberChef / OpenSSL farkındalığı
-netsec|orta|Firewall türleri (packet filter / proxy / WAF / NGFW)
+crypto|orta|E2EE concept
+crypto|orta|SSH key authentication (ssh-keygen)
+crypto|zor|Password hashing: salt / pepper / bcrypt / Argon2
+crypto|kolay|CyberChef / OpenSSL awareness
+netsec|orta|Firewall types (packet filter / proxy / WAF / NGFW)
 netsec|kolay|Host-based vs network-based firewall
 netsec|orta|Implicit Deny / Deny All
-netsec|orta|FortiGate politika yapısı (adres / servis / sıra)
-netsec|orta|FortiGate NAT ve VIP (port forwarding)
+netsec|orta|FortiGate policy structure (address / service / order)
+netsec|orta|FortiGate NAT and VIP (port forwarding)
 netsec|orta|NGFW: App Control / Web Filter / DNS Filter
 netsec|zor|SSL Certificate Inspection vs Deep Inspection
 netsec|orta|IDS vs IPS
-netsec|orta|WAF ve OWASP Top 10 koruması (SQLi/XSS)
-netsec|orta|VPN temelleri (Remote Access vs Site-to-Site)
+netsec|orta|WAF and OWASP Top 10 protection (SQLi/XSS)
+netsec|orta|VPN basics (Remote Access vs Site-to-Site)
 netsec|orta|IPSec / SSL VPN
-def|orta|Antivirus: imza vs heuristic
-def|orta|EDR vs klasik AV (davranış analizi)
-def|orta|EDR ajan–konsol mimarisi (Sophos)
+def|orta|Antivirus: signature vs heuristic
+def|orta|EDR vs classic AV (behavior analysis)
+def|orta|EDR agent–console architecture (Sophos)
 def|orta|Tamper Protection
-def|zor|Endpoint izolasyon (quarantine) yaşam döngüsü
-def|zor|Live Discover / Threat Graph ile triage
-def|orta|EDR politikaları (scan / USB / app / web control)
-def|orta|DLP ve BitLocker (EDR bağlamı)
+def|zor|Endpoint isolation (quarantine) lifecycle
+def|zor|Triage with Live Discover / Threat Graph
+def|orta|EDR policies (scan / USB / app / web control)
+def|orta|DLP and BitLocker (EDR context)
 def|orta|FIM (File Integrity Monitoring)
-def|zor|SOC analist iş akışı (alarm → RCA → müdahale → kapatma)
+def|zor|SOC analyst workflow (alert → RCA → response → close)
 def|orta|Sandboxing
-def|kolay|VirusTotal / hash kontrolü
-def|orta|3-2-1 yedekleme kuralı
-def|orta|Hardening temelleri (gereksiz servis / RDP-SMB sınırlama)
+def|kolay|VirusTotal / hash lookup
+def|orta|3-2-1 backup rule
+def|orta|Hardening basics (unnecessary services / RDP-SMB restriction)
 def|orta|False positive vs true positive (EDR/SOC)
-off|orta|DoS / DDoS farkındalığı
-off|orta|Spoofing / sniffing farkındalığı
-off|orta|SQL Injection / XSS farkındalığı
-off|orta|Brute force / parola saldırıları
+off|orta|DoS / DDoS awareness
+off|orta|Spoofing / sniffing awareness
+off|orta|SQL Injection / XSS awareness
+off|orta|Brute force / password attacks
 off|orta|Fileless malware / LOLBins (rundll32, certutil, bitsadmin)
-off|kolay|Hashcat / John farkındalığı
-cloud|kolay|Cloud computing temelleri
-cloud|orta|Sanallaştırma: Hypervisor Type 1 vs Type 2
-cloud|orta|VM vs konteyner (Docker)
-cloud|kolay|Bulut depolama riskleri (gizlilik / mülkiyet)
-port|kolay|Kritik portlar (22, 53, 80, 443, 3389, 445, 25…)
+off|kolay|Hashcat / John awareness
+cloud|kolay|Cloud computing basics
+cloud|orta|Virtualization: Hypervisor Type 1 vs Type 2
+cloud|orta|VM vs container (Docker)
+cloud|kolay|Cloud storage risks (privacy / ownership)
+port|kolay|Critical ports (22, 53, 80, 443, 3389, 445, 25…)

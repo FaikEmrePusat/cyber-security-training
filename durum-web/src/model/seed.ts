@@ -22,7 +22,7 @@ export const SEED_SKILLS: Skill[] = [
   { id: "secfund", name: "Security Fundamentals", kisa: "SecFund", weight: 1.0, neden: "Baseline — threat model, CIA, attack surface", claimed: 7, evidence: "yok", ref: "" },
   { id: "crypto", name: "Crypto", kisa: "Crypto", weight: 0.6, neden: "Necessary but early depth is not junior priority", claimed: 7, evidence: "yok", ref: "" },
   { id: "netsec", name: "Network Security", kisa: "NetSec", weight: 0.9, neden: "FW / IDS / proxy — daily SOC concepts", claimed: 7, evidence: "yok", ref: "" },
-  { id: "siem", name: "SIEM kavram", kisa: "SIEM", weight: 1.1, neden: "Gate B prerequisite; core tool of target role", claimed: 3, evidence: "yok", ref: "" },
+  { id: "siem", name: "SIEM concept", kisa: "SIEM", weight: 1.1, neden: "Gate B prerequisite; core tool of target role", claimed: 3, evidence: "yok", ref: "" },
   { id: "def", name: "Defensive/SOC", kisa: "Def/SOC", weight: 1.5, neden: "The target role itself", claimed: 3, evidence: "yok", ref: "" },
   { id: "off", name: "Offensive", kisa: "Off", weight: 0.7, neden: "Feeds defense; secondary at junior level", claimed: 2, evidence: "yok", ref: "" },
   { id: "py", name: "Python", kisa: "Python", weight: 0.8, neden: "Automation / log parsing", claimed: 5, evidence: "yok", ref: "" },

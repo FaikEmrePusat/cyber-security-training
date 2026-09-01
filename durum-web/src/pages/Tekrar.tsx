@@ -403,7 +403,7 @@ export function TekrarPage() {
             id="tekrar-bulk"
             value={bulk}
             rows={4}
-            placeholder={"TCP 3-way handshake\nlinux|orta|chmod / sticky bit\ndef|zor|SOC triage zinciri"}
+            placeholder={"TCP 3-way handshake\nlinux|orta|chmod / sticky bit\ndef|zor|SOC triage chain"}
             onChange={(e) => setBulk(e.target.value)}
           />
         </div>

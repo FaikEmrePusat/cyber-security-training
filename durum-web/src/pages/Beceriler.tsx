@@ -128,7 +128,7 @@ export function BecerilerPage() {
                     <td>
                       <input
                         style={{ minHeight: 44, minWidth: 120 }}
-                        placeholder="dosya / URL"
+                        placeholder="file / URL"
                         value={ref}
                         onChange={(e) => setEditRef((m) => ({ ...m, [s.id]: e.target.value }))}
                         onBlur={() => {

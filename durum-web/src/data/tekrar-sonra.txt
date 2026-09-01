@@ -1,12 +1,12 @@
-# Oak Academy — henüz işlenmedi (kurs konumu: EDR sonrası). FSRS'e dump etme.
-# Biçim: alan|zorluk|konu
+# Oak Academy — not yet covered (course position: post-EDR). Do not dump into FSRS.
+# Format: alan|zorluk|konu
 off|orta|Network Scanning (Nmap)
 off|orta|Vulnerability Scanning & Management (Nessus)
 off|orta|Project 2: Vulnerability Management
 off|orta|Exploitation
 off|orta|Project 3: Exploitation
-siem|orta|SIEM Mimarisi ve Log Toplama (Syslog / WinEvent / Sysmon)
-siem|orta|Splunk Temelleri ve SPL Sorgulama
-siem|zor|SOC Alarm Triage ve Olay İnceleme (IR Workflow)
+siem|orta|SIEM Architecture and Log Collection (Syslog / WinEvent / Sysmon)
+siem|orta|Splunk Basics and SPL Querying
+siem|zor|SOC Alert Triage and Incident Investigation (IR Workflow)
 siem|orta|Project 4: Mini SOC & SIEM Lab (Wazuh / Splunk + Sysmon)
 secfund|orta|GRC (Governance, Risk, Compliance)
