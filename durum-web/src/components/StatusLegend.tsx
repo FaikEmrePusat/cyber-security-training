@@ -14,7 +14,7 @@ export function StatusMark({ status }: { status: CurriculumStatus | "ogrenilmedi
 export function StatusLegend({ compact }: { compact?: boolean }) {
   const items = compact ? ORDER : (["ogreniyorum", "kuyrukta", "pekiştirildi", "sonra", "ogrenilmedi"] as const);
   return (
-    <ul className="legend-strip" aria-label="Durum efsanesi">
+    <ul className="legend-strip" aria-label="Status legend">
       {items.map((s) => (
         <li key={s}>
           <StatusMark status={s} />
@@ -25,15 +25,15 @@ export function StatusLegend({ compact }: { compact?: boolean }) {
         <>
           <li>
             <span className="diff-mark diff-mark--kolay" aria-hidden />
-            <span>Kolay</span>
+            <span>Easy</span>
           </li>
           <li>
             <span className="diff-mark diff-mark--orta" aria-hidden />
-            <span>Orta</span>
+            <span>Medium</span>
           </li>
           <li>
             <span className="diff-mark diff-mark--zor" aria-hidden />
-            <span>Zor</span>
+            <span>Hard</span>
           </li>
         </>
       )}

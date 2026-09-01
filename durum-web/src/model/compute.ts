@@ -95,7 +95,7 @@ export function sfiaLabel(s: number): string {
   if (s <= 5) return "SFIA 2 · Assist";
   if (s <= 7) return "SFIA 3 · Apply";
   if (s <= 8) return "SFIA 4 · Enable";
-  return "SFIA 5 · hedefin ötesi";
+  return "SFIA 5 · beyond target";
 }
 
 export function glhForScore(s: number): number {
@@ -111,19 +111,19 @@ export function langHoursRemaining(deScore: number, target: number): number {
 }
 
 export function bandLabel(r: number): string {
-  if (r < 25) return "Temel kurulum";
-  if (r < 45) return "Oturtma / lab dönemi";
-  if (r < 65) return "Portföy + defensive pratik";
-  if (r < 80) return "Başvuru eşiği";
-  return "Güçlü başvuru profili";
+  if (r < 25) return "Foundation setup";
+  if (r < 45) return "Settling in / lab phase";
+  if (r < 65) return "Portfolio + defensive practice";
+  if (r < 80) return "Application threshold";
+  return "Strong application profile";
 }
 
 export function levelLabel(score: number): string {
-  if (score <= 1) return "Tanışmadım";
+  if (score <= 1) return "Not familiar";
   if (score <= 3) return "Follow";
   if (score <= 5) return "Assist";
-  if (score <= 7) return "Apply — junior hedefi";
-  if (score <= 8) return "Enable — hedefin ötesi";
+  if (score <= 7) return "Apply — junior target";
+  if (score <= 8) return "Enable — beyond target";
   return "Ensure — lead";
 }
 
@@ -252,13 +252,13 @@ export function evaluateGates(
   const g = MODEL.kapi;
   const rEsik = rGiris();
 
-  const A = mkGate("A", "Gate A — Temel oturma", `net≥${g.A.net} ∧ linux≥${g.A.linux} ∧ win≥${g.A.win}`, "Ciddi defensive lab yoğunluğu", [
+  const A = mkGate("A", "Gate A — Foundation baseline", `net≥${g.A.net} ∧ linux≥${g.A.linux} ∧ win≥${g.A.win}`, "Serious defensive lab workload", [
     part("net", "Networking", sEff.net ?? 0, g.A.net),
     part("linux", "Linux", sEff.linux ?? 0, g.A.linux),
     part("win", "Windows/AD", sEff.win ?? 0, g.A.win),
   ]);
 
-  const B = mkGate("B", "Gate B — Defensive pratik", `Gate A ∧ secfund≥${g.B.secfund} ∧ siem≥${g.B.siem}`, "Mini SOC lab (Sysmon / SIEM)", [
+  const B = mkGate("B", "Gate B — Defensive practice", `Gate A ∧ secfund≥${g.B.secfund} ∧ siem≥${g.B.siem}`, "Mini SOC lab (Sysmon / SIEM)", [
     { key: "gateA", label: `Gate A ${pct(A.pi)}`, ratio: A.pi, ok: A.open },
     part("secfund", "SecFund", sEff.secfund ?? 0, g.B.secfund),
     part("siem", "SIEM", sEff.siem ?? 0, g.B.siem),
@@ -278,13 +278,13 @@ export function evaluateGates(
   );
   const C = mkGate(
     "C",
-    "Gate C — Kanıt",
-    `≥${g.C.publicProje} artefakt public+sahipli, ≥1 deger≥${g.C.minDeger}`,
-    "CV'ye güçlü proje satırı",
+    "Gate C — Evidence",
+    `≥${g.C.publicProje} artifact public+owned, ≥1 value≥${g.C.minDeger}`,
+    "Strong project line on CV",
     [
       {
         key: "artefakt-public",
-        label: `Public+sahipli ${kanitliPublic.length}/${g.C.publicProje} · değerli lab ${degerliLab.length >= 1 ? "✓" : "✗"}`,
+        label: `Public+owned ${kanitliPublic.length}/${g.C.publicProje} · valuable lab ${degerliLab.length >= 1 ? "✓" : "✗"}`,
         ratio: cRatio,
         ok: cOk,
       },
@@ -293,37 +293,37 @@ export function evaluateGates(
 
   const D = mkGate(
     "D",
-    "Gate D — Başvuru eşiği",
+    "Gate D — Application threshold",
     `R≥${rEsik} ∧ Gate C ∧ Gate 0 ∧ DE≥${g.D.de} ∧ EN≥${g.D.en}`,
-    "Almanya odaklı düzenli başvuru",
+    "Regular Germany-focused applications",
     [
       part("R", "R", R, rEsik),
       { key: "gateC", label: `Gate C ${pct(C.pi)}`, ratio: C.pi, ok: C.open },
       { key: "gate0", label: `Gate 0 ${gate0Ok ? "✓" : "✗"}`, ratio: gate0Ok ? 1 : 0, ok: gate0Ok },
       part("de", "DE", deEff, g.D.de),
-      part("en", "EN teknik", enEff, g.D.en),
+      part("en", "EN technical", enEff, g.D.en),
     ],
   );
 
-  const E = mkGate("E", "Gate E — Yoğun mülakat", `Gate D ∧ son 14 günde mülakat ≥ ${g.E.mulakat14gun}`, "Yoğun mülakat temposu", [
+  const E = mkGate("E", "Gate E — Intensive interviews", `Gate D ∧ interviews in last 14 days ≥ ${g.E.mulakat14gun}`, "Intensive interview pace", [
     { key: "gateD", label: `Gate D ${pct(D.pi)}`, ratio: D.pi, ok: D.open },
-    part("mulakat", "Mülakat (14 gün)", interviews14, g.E.mulakat14gun),
+    part("mulakat", "Interviews (14 days)", interviews14, g.E.mulakat14gun),
   ]);
 
   const F = mkGate(
     "F",
-    "Gate F — Finans (Rota B)",
-    `Runway ≥ ${g.F.runwayAy} ay`,
-    "Chancenkarte iş arama süresi",
-    [{ key: "runway", label: `Runway ${gateFOk ? "≥12 ay" : "yetersiz/bilinmiyor"}`, ratio: gateFOk ? 1 : 0, ok: gateFOk }],
+    "Gate F — Finances (Route B)",
+    `Runway ≥ ${g.F.runwayAy} months`,
+    "Chancenkarte job-search period",
+    [{ key: "runway", label: `Runway ${gateFOk ? "≥12 months" : "insufficient/unknown"}`, ratio: gateFOk ? 1 : 0, ok: gateFOk }],
   );
 
   const zero = mkGate(
     "0",
-    "Gate 0 — Hukuki ön koşul",
-    "Denklik sonucu biliniyor ∧ oturum rotası tanımlı",
-    "Chancenkarte / çalışma vizesi yolu",
-    [{ key: "gate0durum", label: gate0Ok ? "Rota tanımlı" : "Bilinmiyor — ETA koşullu", ratio: gate0Ok ? 1 : 0.25, ok: gate0Ok }],
+    "Gate 0 — Legal prerequisite",
+    "Recognition outcome known ∧ residence route defined",
+    "Chancenkarte / work visa path",
+    [{ key: "gate0durum", label: gate0Ok ? "Route defined" : "Unknown — ETA conditional", ratio: gate0Ok ? 1 : 0.25, ok: gate0Ok }],
   );
 
   return [zero, A, B, C, D, E, F];
@@ -332,9 +332,9 @@ export function evaluateGates(
 export function gateSummary(gates: GateResult[]): string {
   const open = gates.filter((g) => g.open).map((g) => g.id);
   const next = gates.find((g) => !g.open);
-  if (!next) return "Tüm kapılar açık";
-  const head = open.length ? `Açık: ${open.join(", ")}` : "Henüz açık kapı yok";
-  return `${head} · sıradaki ${next.id} ${pct(next.pi)}${next.bottleneck ? ` · darboğaz: ${next.bottleneck.label}` : ""}`;
+  if (!next) return "All gates open";
+  const head = open.length ? `Open: ${open.join(", ")}` : "No gates open yet";
+  return `${head} · next ${next.id} ${pct(next.pi)}${next.bottleneck ? ` · bottleneck: ${next.bottleneck.label}` : ""}`;
 }
 
 export function effectiveHours(hCyber: number, hLang: number, quality: number): number {
@@ -500,53 +500,53 @@ export function computeChancenkarte(
     return {
       puan: null,
       detay: [
-        { madde: "Mesleki eğitim ≥2 yıl", puan: 0, ok: nitelik },
-        { madde: "DE≥A1 veya EN≥B2", puan: 0, ok: dilOk },
-        { madde: "Geçim kanıtı", puan: 0, ok: ch.lebensunterhalt },
+        { madde: "Vocational training ≥2 years", puan: 0, ok: nitelik },
+        { madde: "DE≥A1 or EN≥B2", puan: 0, ok: dilOk },
+        { madde: "Proof of subsistence", puan: 0, ok: ch.lebensunterhalt },
       ],
       uygun: false,
     };
   }
   if (ch.gate0 === "tam_denklik" || ch.anerkennungDurum === "tam") {
-    return { puan: null, detay: [{ madde: "Tam denklik — puan sistemi dışı", puan: 0, ok: true }], uygun: true };
+    return { puan: null, detay: [{ madde: "Full recognition — outside points system", puan: 0, ok: true }], uygun: true };
   }
   let p = 0;
   if (ch.anerkennungDurum === "kismi" || ch.gate0 === "kismi_denklik") {
     p += 4;
-    detay.push({ madde: "Kısmi denklik bescheid (IHK FOSA)", puan: 4, ok: true });
+    detay.push({ madde: "Partial recognition bescheid (IHK FOSA)", puan: 4, ok: true });
   } else if (ch.anerkennungDurum === "ihk_fosa_basvuru" || ch.anerkennungDurum === "basvuruldu") {
-    detay.push({ madde: "IHK FOSA başvurusu — karar bekleniyor (3–4 ay)", puan: 4, ok: false });
+    detay.push({ madde: "IHK FOSA application — decision pending (3–4 months)", puan: 4, ok: false });
   } else if (ch.anerkennungDurum === "anabin_kontrol" || ch.anerkennungDurum === "arastiriliyor") {
-    detay.push({ madde: "Kısmi denklik — önce anabin kontrolü (rehber §8)", puan: 4, ok: false });
+    detay.push({ madde: "Partial recognition — check anabin first (guide §8)", puan: 4, ok: false });
   } else if (ch.anerkennungDurum === "red") {
-    detay.push({ madde: "Kısmi denklik — red (alternatif puan yolu)", puan: 4, ok: false });
+    detay.push({ madde: "Partial recognition — rejected (alternative points path)", puan: 4, ok: false });
   } else {
-    detay.push({ madde: "Kısmi denklik (Anerkennung)", puan: 4, ok: false });
+    detay.push({ madde: "Partial recognition (Anerkennung)", puan: 4, ok: false });
   }
   if (deScore >= cefrToScore("B2")) {
     p += 3;
-    detay.push({ madde: "Almanca B2+", puan: 3, ok: true });
+    detay.push({ madde: "German B2+", puan: 3, ok: true });
   } else if (deScore >= cefrToScore("B1")) {
     p += 2;
-    detay.push({ madde: "Almanca B1", puan: 2, ok: true });
+    detay.push({ madde: "German B1", puan: 2, ok: true });
   } else if (deScore >= cefrToScore("A2")) {
     p += 1;
-    detay.push({ madde: "Almanca A2", puan: 1, ok: true });
-  } else detay.push({ madde: "Almanca A2+", puan: 1, ok: false });
+    detay.push({ madde: "German A2", puan: 1, ok: true });
+  } else detay.push({ madde: "German A2+", puan: 1, ok: false });
   if (enScore >= cefrToScore("C1")) {
     p += 1;
-    detay.push({ madde: "İngilizce C1", puan: 1, ok: true });
+    detay.push({ madde: "English C1", puan: 1, ok: true });
   }
   if (ch.yas <= c.yasEsik.tam) {
     p += c.yasPuan.tam;
-    detay.push({ madde: `Yaş ≤${c.yasEsik.tam}`, puan: c.yasPuan.tam, ok: true });
+    detay.push({ madde: `Age ≤${c.yasEsik.tam}`, puan: c.yasPuan.tam, ok: true });
   } else if (ch.yas <= c.yasEsik.kismi) {
     p += c.yasPuan.kismi;
-    detay.push({ madde: `Yaş ≤${c.yasEsik.kismi}`, puan: c.yasPuan.kismi, ok: true });
+    detay.push({ madde: `Age ≤${c.yasEsik.kismi}`, puan: c.yasPuan.kismi, ok: true });
   }
   if (ch.engpassberuf) {
     p += 1;
-    detay.push({ madde: "Engpassberuf (doğrulanmadı)", puan: 1, ok: true });
+    detay.push({ madde: "Shortage occupation (unverified)", puan: 1, ok: true });
   }
   return { puan: p, detay, uygun: p >= c.puanEsik };
 }
@@ -702,9 +702,9 @@ export function computeRoiList(args: {
         id: `ev-${s.id}`,
         baslik:
           tier === "public"
-            ? `${s.name}: herkese açık bir kanıt linki ekle`
-            : `${s.name}: lab kaydı / ekran görüntüsü ekle`,
-        detay: `Beyan ${s.claimed} · tavan kilidi ~${round1(s.claimed - cap)} · hedef kanıt: ${MODEL.kanitAd[tier]}`,
+            ? `${s.name}: add a public evidence link`
+            : `${s.name}: add lab recording / screenshot`,
+        detay: `Claim ${s.claimed} · cap lock ~${round1(s.claimed - cap)} · target evidence: ${MODEL.kanitAd[tier]}`,
         deltaR: r - base,
         saat: MODEL.roi.saatKanit[tier === "public" ? "public" : "kayit"],
         gate,
@@ -718,7 +718,7 @@ export function computeRoiList(args: {
       const r = computeAll(mod, artifacts, lang, career, practice, opts).R;
       push({
         id: `s-${s.id}`,
-        baslik: `${s.name}: ${s.claimed} → ${hedef}${kanitEk ? " (+ kanıt)" : ""}`,
+        baslik: `${s.name}: ${s.claimed} → ${hedef}${kanitEk ? " (+ evidence)" : ""}`,
         detay: `w=${s.weight} · ΔT = w/Σw = ${round2(s.weight / sumWModel)}`,
         deltaR: r - base,
         saat: MODEL.roi.saatPuanTeknik + kanitEk,
@@ -735,14 +735,14 @@ export function computeRoiList(args: {
     const r = computeAll(skills, mod, lang, career, practice, opts).R;
     const publishPlain =
       a.tur === "writeup"
-        ? "Bir lab yazını GitHub'a (herkese açık link) koy — kanıtın olsun"
+        ? "Publish a lab write-up on GitHub (public link) — get evidence"
         : a.tur === "lab-egzersizi"
-          ? "Lab çalışmanı herkese açık bir linkle yayınla — kanıtın olsun"
-          : `"${a.ad}" için herkese açık link ekle — kanıtın olsun`;
+          ? "Publish your lab work with a public link — get evidence"
+          : `Add a public link for "${a.ad}" — get evidence`;
     push({
       id: `ap-${a.id}`,
       baslik: publishPlain,
-      detay: `Kanıt: yok/kayıt → public · q_etkin ${round2(Math.min(a.sahiplik, MODEL.kanitOrani[a.evidence]))} → 1.0 · v=${MODEL.artefaktDeger[a.tur]}`,
+      detay: `Evidence: none/record → public · q_eff ${round2(Math.min(a.sahiplik, MODEL.kanitOrani[a.evidence]))} → 1.0 · v=${MODEL.artefaktDeger[a.tur]}`,
       deltaR: r - base,
       saat: MODEL.roi.saatKanit.public,
       gate: blocking.has("artefakt-public") || blocking.has("gateC"),
@@ -750,14 +750,14 @@ export function computeRoiList(args: {
   }
 
   for (const tur of Object.keys(MODEL.artefaktDeger) as ArtifactType[]) {
-    let baslik = `Yeni ${MODEL.artefaktAd[tur]} yap ve herkese açık yayınla`;
-    let detay = `v=${MODEL.artefaktDeger[tur]} · public kanıt P'nin ${evidenceCap("public", 10)} tavanını açar`;
+    let baslik = `Create new ${MODEL.artefaktAd[tur]} and publish publicly`;
+    let detay = `v=${MODEL.artefaktDeger[tur]} · public evidence opens P cap of ${evidenceCap("public", 10)}`;
     if (tur === "soc-lab") {
-      baslik = "Sysmon + Wazuh / Splunk Lab Kurulumu ve Analizi";
-      detay = "Gate B & Gate C için değerli SOC labı (v=3.0) · Sysmon/WinEvent loglarını SIEM'e topla, alarm kuralı yaz ve incele";
+      baslik = "Sysmon + Wazuh / Splunk Lab Setup and Analysis";
+      detay = "Valuable SOC lab for Gate B & Gate C (v=3.0) · collect Sysmon/WinEvent logs into SIEM, write and review alert rule";
     } else if (tur === "ad-lab") {
-      baslik = "Active Directory Saldırı & Savunma Labı";
-      detay = "Gate C için değerli AD labı (v=2.5) · Kerberos/NTLM/GPO analizi ve Event ID 4624/4688 tespiti";
+      baslik = "Active Directory Attack & Defense Lab";
+      detay = "Valuable AD lab for Gate C (v=2.5) · Kerberos/NTLM/GPO analysis and Event ID 4624/4688 detection";
     }
     const mod = artifacts.concat([
       { id: `sim-${tur}`, ad: baslik, tur, sahiplik: 1, evidence: "public", ref: "sim" },
@@ -779,8 +779,8 @@ export function computeRoiList(args: {
     ad: string;
     ev: "deEv" | "enEv";
   }> = [
-    { konusma: "deKonusma", genel: "deGenel", ad: "Almanca", ev: "deEv" },
-    { konusma: "enKonusma", genel: "enGenel", ad: "İngilizce", ev: "enEv" },
+    { konusma: "deKonusma", genel: "deGenel", ad: "German", ev: "deEv" },
+    { konusma: "enKonusma", genel: "enGenel", ad: "English", ev: "enEv" },
   ];
   for (const d of diller) {
     const cur = langComposite(lang[d.konusma], lang[d.genel]);
@@ -792,8 +792,8 @@ export function computeRoiList(args: {
       const r = computeAll(skills, artifacts, mod, career, practice, opts).R;
       push({
         id: `lev-${d.konusma}`,
-        baslik: `${d.ad}: seviyeyi belgele (test / sertifika)`,
-        detay: `Beyan ${round1(cur)} · kanıt tavanı ${round1(cap)}`,
+        baslik: `${d.ad}: document level (test / certificate)`,
+        detay: `Claim ${round1(cur)} · evidence cap ${round1(cap)}`,
         deltaR: r - base,
         saat: MODEL.roi.saatKanit[tier === "public" ? "public" : "kayit"],
         gate: blocking.has(d.konusma),
@@ -806,8 +806,8 @@ export function computeRoiList(args: {
       const r = computeAll(skills, artifacts, mod, career, practice, opts).R;
       push({
         id: `l-${d.konusma}`,
-        baslik: `${d.ad} konuşma: ${round1(kCur)} → ${hedef}`,
-        detay: `DE = 0.6·konuşma + 0.4·genel · GLH tabanlı maliyet`,
+        baslik: `${d.ad} speaking: ${round1(kCur)} → ${hedef}`,
+        detay: `DE = 0.6·speaking + 0.4·general · GLH-based cost`,
         deltaR: r - base,
         saat: langHoursPerPoint(kCur),
         gate: blocking.has("L"),
@@ -823,8 +823,8 @@ export function computeRoiList(args: {
       const r = computeAll(skills, artifacts, lang, mod, practice, opts).R;
       push({
         id: `cev-${c.id}`,
-        baslik: `${c.label}: belge / URL ekle`,
-        detay: `Beyan ${c.claimed}/${c.max} · kanıt tavanı ${round1(cap)}`,
+        baslik: `${c.label}: add document / URL`,
+        detay: `Claim ${c.claimed}/${c.max} · evidence cap ${round1(cap)}`,
         deltaR: r - base,
         saat: MODEL.roi.saatKanit[tier === "public" ? "public" : "kayit"],
         gate: blocking.has(c.id),
@@ -838,8 +838,8 @@ export function computeRoiList(args: {
       const r = computeAll(skills, artifacts, lang, mod, practice, opts).R;
       push({
         id: `c-${c.id}`,
-        baslik: `${c.label}: ${c.claimed} → ${hedef}${kanitEk ? " (+ belge)" : ""}`,
-        detay: `C ağırlığı ${MODEL.R.C}`,
+        baslik: `${c.label}: ${c.claimed} → ${hedef}${kanitEk ? " (+ document)" : ""}`,
+        detay: `C weight ${MODEL.R.C}`,
         deltaR: r - base,
         saat: c.saatPuan + kanitEk,
         gate: blocking.has(c.id),

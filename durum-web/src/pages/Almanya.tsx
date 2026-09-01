@@ -4,20 +4,20 @@ import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
 
 const GATE0_OPTS: { value: Gate0State; label: string }[] = [
-  { value: "bilinmiyor", label: "Bilinmiyor" },
-  { value: "tam_denklik", label: "Tam denklik (Seçenek 1)" },
-  { value: "kismi_denklik", label: "Kısmi denklik (+4 puan)" },
-  { value: "denk_degil", label: "Denk değil" },
+  { value: "bilinmiyor", label: "Unknown" },
+  { value: "tam_denklik", label: "Full recognition (Option 1)" },
+  { value: "kismi_denklik", label: "Partial recognition (+4 points)" },
+  { value: "denk_degil", label: "Not recognized" },
 ];
 
 const ANER_OPTS: { value: ChancenkarteState["anerkennungDurum"]; label: string }[] = [
-  { value: "arastiriliyor", label: "Araştırılıyor" },
-  { value: "anabin_kontrol", label: "anabin kontrolü" },
-  { value: "ihk_fosa_basvuru", label: "IHK FOSA başvurusu" },
-  { value: "basvuruldu", label: "Başvuruldu — karar bekleniyor" },
-  { value: "kismi", label: "Kısmi denklik (bescheid)" },
-  { value: "tam", label: "Tam denklik" },
-  { value: "red", label: "Red" },
+  { value: "arastiriliyor", label: "Researching" },
+  { value: "anabin_kontrol", label: "anabin check" },
+  { value: "ihk_fosa_basvuru", label: "IHK FOSA application" },
+  { value: "basvuruldu", label: "Applied — awaiting decision" },
+  { value: "kismi", label: "Partial recognition (bescheid)" },
+  { value: "tam", label: "Full recognition" },
+  { value: "red", label: "Rejected" },
 ];
 
 export function AlmanyaPage() {
@@ -29,30 +29,30 @@ export function AlmanyaPage() {
     <div className="page">
       <Section
         as="h1"
-        title="Almanya / Chancenkarte"
-        lead="§20b AufenthG puan motoru · Gate 0 hukuki ön koşul · Rota A (EN) vs Rota B (DE B2)."
+        title="Germany / Chancenkarte"
+        lead="§20b AufenthG points engine · Gate 0 legal prerequisite · Route A (EN) vs Route B (DE B2)."
       >
         <div className="dim-row">
           <div className="dim">
-            <div className="dim__label">Puan</div>
+            <div className="dim__label">Points</div>
             <div className="dim__value">
               {d.ck.puan === null ? "—" : d.ck.puan}
             </div>
             <div className="dim__sub">
-              eşik ≥{MODEL.chancenkarte.puanEsik} · {d.ck.uygun ? "uygun" : "eksik"}
+              threshold ≥{MODEL.chancenkarte.puanEsik} · {d.ck.uygun ? "eligible" : "short"}
             </div>
           </div>
           <div className="dim">
             <div className="dim__label">Runway</div>
             <div className="dim__value" style={{ fontSize: "1.5rem" }}>
-              {d.runway === null ? "bilinmiyor" : `${round1(d.runway)} ay`}
+              {d.runway === null ? "unknown" : `${round1(d.runway)} mo`}
             </div>
-            <div className="dim__sub">Gate F ≥ {MODEL.kapi.F.runwayAy} ay</div>
+            <div className="dim__sub">Gate F ≥ {MODEL.kapi.F.runwayAy} months</div>
           </div>
           <div className="dim">
             <div className="dim__label">Gate 0</div>
             <div className="dim__value" style={{ fontSize: "1.5rem" }}>
-              {d.gate0Ok ? "açık" : "kapalı"}
+              {d.gate0Ok ? "open" : "closed"}
             </div>
           </div>
         </div>
@@ -67,10 +67,10 @@ export function AlmanyaPage() {
         </ul>
       </Section>
 
-      <Section title="Anerkennung durumu" lead="Detay: Anerkennung-Rehberi.md — anabin → IHK FOSA → bescheid.">
+      <Section title="Anerkennung status" lead="Details: Anerkennung-Rehberi.md — anabin → IHK FOSA → bescheid.">
         <div className="field-row">
           <div className="field">
-            <label>Gate 0 sonucu</label>
+            <label>Gate 0 outcome</label>
             <select
               value={ch.gate0}
               onChange={(e) =>
@@ -85,7 +85,7 @@ export function AlmanyaPage() {
             </select>
           </div>
           <div className="field">
-            <label>Anerkennung aşaması</label>
+            <label>Anerkennung stage</label>
             <select
               value={ch.anerkennungDurum}
               onChange={(e) =>
@@ -103,7 +103,7 @@ export function AlmanyaPage() {
             </select>
           </div>
           <div className="field">
-            <label>Yaş</label>
+            <label>Age</label>
             <input
               type="number"
               min={18}
@@ -113,7 +113,7 @@ export function AlmanyaPage() {
             />
           </div>
           <div className="field">
-            <label>Mesleki eğitim (yıl)</label>
+            <label>Vocational training (years)</label>
             <input
               type="number"
               min={0}
@@ -134,7 +134,7 @@ export function AlmanyaPage() {
                 setChancenkarte((c) => ({ ...c, lebensunterhalt: e.target.checked }))
               }
             />
-            Geçim kanıtı (~{MODEL.chancenkarte.gecimAy2026} €/ay)
+            Proof of subsistence (~{MODEL.chancenkarte.gecimAy2026} €/month)
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", minHeight: 44 }}>
             <input
@@ -144,23 +144,23 @@ export function AlmanyaPage() {
                 setChancenkarte((c) => ({ ...c, engpassberuf: e.target.checked }))
               }
             />
-            Engpassberuf (+1, doğrulanmadı)
+            Shortage occupation (+1, unverified)
           </label>
         </div>
         <div className="field-row">
           <div className="field">
-            <label>Birikim (€)</label>
+            <label>Savings (€)</label>
             <input
               value={ch.birikim}
-              placeholder="örn. 8000"
+              placeholder="e.g. 8000"
               onChange={(e) => setChancenkarte((c) => ({ ...c, birikim: e.target.value }))}
             />
           </div>
           <div className="field">
-            <label>Aylık tasarruf (€)</label>
+            <label>Monthly savings (€)</label>
             <input
               value={ch.aylikTasarruf}
-              placeholder="örn. 400"
+              placeholder="e.g. 400"
               onChange={(e) =>
                 setChancenkarte((c) => ({ ...c, aylikTasarruf: e.target.value }))
               }
@@ -168,7 +168,7 @@ export function AlmanyaPage() {
           </div>
         </div>
         <p className="note">
-          Resmi self-check:{" "}
+          Official self-check:{" "}
           <a
             href="https://www.make-it-in-germany.com/de/visum-aufenthalt/chancenkarte/self-check-chancenkarte"
             target="_blank"
@@ -187,37 +187,37 @@ export function AlmanyaPage() {
         </p>
       </Section>
 
-      <Section title="Dual rota ETA" lead="ETA = max_k ETA_k (T, L, P, C). Geri dönüş modunda gizlenir.">
+      <Section title="Dual route ETA" lead="ETA = max_k ETA_k (T, L, P, C). Hidden in return mode.">
         {d.geriDonusModu ? (
-          <p className="note">Geri dönüş modu aktif — ETA gizlendi. Önce tekrar / oturum.</p>
+          <p className="note">Return mode active — ETA hidden. Do reviews / sessions first.</p>
         ) : (
           <div className="dim-row">
             <div className="dim">
-              <div className="dim__label">Rota A · EN</div>
+              <div className="dim__label">Route A · EN</div>
               <div className="dim__value" style={{ fontSize: "1.6rem" }}>
-                ~{round1(d.etaRotaA.max)} hf
+                ~{round1(d.etaRotaA.max)} wk
               </div>
-              <div className="dim__sub">darboğaz {d.etaRotaA.darboğaz}</div>
+              <div className="dim__sub">bottleneck {d.etaRotaA.darboğaz}</div>
             </div>
             <div className="dim">
-              <div className="dim__label">Rota B · DE @ 7h</div>
+              <div className="dim__label">Route B · DE @ 7h</div>
               <div className="dim__value" style={{ fontSize: "1.6rem" }}>
-                ~{round1(d.etaRotaB7.max)} hf
+                ~{round1(d.etaRotaB7.max)} wk
               </div>
-              <div className="dim__sub">darboğaz {d.etaRotaB7.darboğaz}</div>
+              <div className="dim__sub">bottleneck {d.etaRotaB7.darboğaz}</div>
             </div>
             <div className="dim">
-              <div className="dim__label">Rota B · DE @ 14h</div>
+              <div className="dim__label">Route B · DE @ 14h</div>
               <div className="dim__value" style={{ fontSize: "1.6rem" }}>
-                ~{round1(d.etaRotaB14.max)} hf
+                ~{round1(d.etaRotaB14.max)} wk
               </div>
-              <div className="dim__sub">darboğaz {d.etaRotaB14.darboğaz}</div>
+              <div className="dim__sub">bottleneck {d.etaRotaB14.darboğaz}</div>
             </div>
           </div>
         )}
         <div className="field-row">
           <div className="field">
-            <label>Siber sa/hf</label>
+            <label>Cyber h/week</label>
             <input
               type="number"
               value={state.tempo.hoursCyber}
@@ -227,7 +227,7 @@ export function AlmanyaPage() {
             />
           </div>
           <div className="field">
-            <label>Dil sa/hf (7)</label>
+            <label>Language h/week (7)</label>
             <input
               type="number"
               value={state.tempo.hoursLang}
@@ -237,7 +237,7 @@ export function AlmanyaPage() {
             />
           </div>
           <div className="field">
-            <label>Dil sa/hf (14 alt)</label>
+            <label>Language h/week (14 alt)</label>
             <input
               type="number"
               value={state.tempo.hoursLangAlt}
@@ -247,7 +247,7 @@ export function AlmanyaPage() {
             />
           </div>
           <div className="field">
-            <label>Kalite plan</label>
+            <label>Quality plan</label>
             <input
               type="number"
               min={0.3}

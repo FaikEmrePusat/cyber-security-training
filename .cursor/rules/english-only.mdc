@@ -1,0 +1,19 @@
+---
+description: All project deliverables must be written in English
+alwaysApply: true
+---
+
+# English-only deliverables
+
+Write all project output in English:
+
+- Source code, comments, and identifiers
+- UI strings, labels, toasts, and error messages
+- Documentation (README, technical docs, commit messages)
+- GitHub profile content and workflow-generated text
+
+The user may communicate in Turkish; responses and artifacts stay in English unless they explicitly ask for Turkish in a specific deliverable.
+
+When editing existing Turkish content, translate it to English as part of the change.
+
+Do not translate gitignored private strategy files unless the user explicitly requests it.

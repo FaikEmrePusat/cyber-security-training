@@ -1,15 +1,15 @@
 import type { GateResult } from "../model";
 import { pct } from "../model";
 
-/** Kısa insan adı — tooltip ve compact etiket. */
+/** Short human name — tooltip and compact label. */
 export const GATE_SHORT: Record<string, string> = {
-  "0": "Hukuk",
-  A: "Temel",
-  B: "Savunma",
-  C: "Portföy",
-  D: "Başvuru",
-  E: "Mülakat",
-  F: "Para",
+  "0": "Legal",
+  A: "Foundation",
+  B: "Defense",
+  C: "Portfolio",
+  D: "Apply",
+  E: "Interview",
+  F: "Funds",
 };
 
 function MiniRing({
@@ -73,13 +73,13 @@ export function GatePipeline({
   currentId?: string | null;
   onSelect?: (id: string) => void;
   compact?: boolean;
-  /** Tiny human labels under letter (Bugün). */
+  /** Tiny human labels under letter (Today page). */
   showNames?: boolean;
 }) {
   const current = currentId ?? gates.find((g) => !g.open)?.id ?? null;
 
   return (
-    <div className={`gate-pipeline${compact ? " gate-pipeline--compact" : ""}`} role="list" aria-label="Kapı hattı">
+    <div className={`gate-pipeline${compact ? " gate-pipeline--compact" : ""}`} role="list" aria-label="Gate pipeline">
       {gates.map((g, i) => {
         const isOpen = g.open;
         const isCurrent = g.id === current && !isOpen;
@@ -87,8 +87,8 @@ export function GatePipeline({
         const short = GATE_SHORT[g.id] ?? g.id;
         const tip = [
           `${g.id} ${short}`,
-          isOpen ? "Açık" : isCurrent ? `Sıradaki engel · ${pct(g.pi)}` : pct(g.pi),
-          "Doluluk = ne kadar açığa yakın",
+          isOpen ? "Open" : isCurrent ? `Next blocker · ${pct(g.pi)}` : pct(g.pi),
+          "Fill = how close to open",
         ].join(" — ");
         return (
           <div key={g.id} style={{ display: "contents" }}>
@@ -108,7 +108,7 @@ export function GatePipeline({
               }${isCurrent ? " is-current" : ""}${locked ? " is-locked" : ""}`}
               onClick={() => onSelect?.(g.id)}
               title={tip}
-              aria-label={`${g.id} ${short}: ${isOpen ? "açık" : pct(g.pi)}${isCurrent ? ", sıradaki engel" : ""}`}
+              aria-label={`${g.id} ${short}: ${isOpen ? "open" : pct(g.pi)}${isCurrent ? ", next blocker" : ""}`}
               aria-current={isCurrent ? "step" : undefined}
             >
               <MiniRing ratio={g.pi} open={isOpen} current={!!isCurrent} size={compact ? 36 : 44} />

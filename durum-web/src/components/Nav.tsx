@@ -3,19 +3,19 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useDurum } from "../store";
 
 const PRIMARY = [
-  { to: "/", label: "Bugün", end: true },
-  { to: "/harita", label: "Harita" },
-  { to: "/beceriler", label: "Beceriler" },
-  { to: "/tekrar", label: "Tekrar" },
+  { to: "/", label: "Today", end: true },
+  { to: "/harita", label: "Map" },
+  { to: "/beceriler", label: "Skills" },
+  { to: "/tekrar", label: "Review" },
   { to: "/log", label: "Log" },
-  { to: "/almanya", label: "Almanya" },
+  { to: "/almanya", label: "Germany" },
 ];
 
 const MORE = [
-  { to: "/durum", label: "Durum" },
-  { to: "/kapilar", label: "Kapılar" },
-  { to: "/hiz", label: "Hız" },
-  { to: "/formuller", label: "Formüller" },
+  { to: "/durum", label: "Status" },
+  { to: "/kapilar", label: "Gates" },
+  { to: "/hiz", label: "Pace" },
+  { to: "/formuller", label: "Formulas" },
 ];
 
 export function Nav() {
@@ -48,7 +48,7 @@ export function Nav() {
   }, [moreOpen]);
 
   return (
-    <nav className="site-nav" aria-label="Ana menü">
+    <nav className="site-nav" aria-label="Main menu">
       <NavLink to="/" className="site-nav__brand" end>
         Durum
       </NavLink>
@@ -69,7 +69,7 @@ export function Nav() {
             aria-controls={menuId}
             onClick={() => setMoreOpen((o) => !o)}
           >
-            Daha fazla
+            More
           </button>
           {moreOpen && (
             <div id={menuId} className="site-nav__more-menu" role="menu">
@@ -88,24 +88,24 @@ export function Nav() {
           )}
         </div>
       </div>
-      <div className="site-nav__history" role="group" aria-label="Geri alma">
+      <div className="site-nav__history" role="group" aria-label="Undo">
         <button
           type="button"
           className="history-btn"
           disabled={!canUndo}
           onClick={undo}
-          title="Geri al (Ctrl+Z)"
+          title="Undo (Ctrl+Z)"
         >
-          Geri al
+          Undo
         </button>
         <button
           type="button"
           className="history-btn"
           disabled={!canRedo}
           onClick={redo}
-          title="Yinele (Ctrl+Y)"
+          title="Redo (Ctrl+Y)"
         >
-          Yinele
+          Redo
         </button>
       </div>
       <div className="site-nav__auth">
@@ -115,19 +115,19 @@ export function Nav() {
               className={`cloud-indicator cloud-indicator--${cloudSyncStatus}`}
               title={
                 cloudSyncStatus === "synced"
-                  ? "Bulut senkronize"
+                  ? "Cloud synced"
                   : cloudSyncStatus === "saving"
-                  ? "Buluta kaydediliyor..."
+                  ? "Saving to cloud..."
                   : cloudSyncStatus === "error"
-                  ? "Senkronizasyon hatası"
-                  : "Bağlı"
+                  ? "Sync error"
+                  : "Connected"
               }
             />
             <span className="user-email" title={currentUser.email ?? ""}>
               {currentUser.displayName?.split(" ")[0] || currentUser.email?.split("@")[0]}
             </span>
-            <button type="button" className="auth-btn auth-btn--logout" onClick={logout} title="Çıkış yap">
-              Çıkış
+            <button type="button" className="auth-btn auth-btn--logout" onClick={logout} title="Sign out">
+              Sign out
             </button>
           </div>
         ) : (
@@ -138,7 +138,7 @@ export function Nav() {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
             </svg>
-            Google ile Giriş
+            Sign in with Google
           </button>
         )}
       </div>

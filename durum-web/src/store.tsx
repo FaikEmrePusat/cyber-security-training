@@ -38,7 +38,7 @@ import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebas
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 
 const MAX_HISTORY = 50;
-/** Ardışık tuş vuruşlarını tek geri alma adımında birleştir (ms). */
+/** Coalesce consecutive keystrokes into one undo step (ms). */
 const COALESCE_MS = 800;
 const MAX_CARRY = MODEL.carry?.maxCarry ?? 2;
 const MAX_CARRY_AGE_DAYS = MODEL.carry?.maxAgeDays ?? 7;
@@ -67,7 +67,7 @@ type StoreApi = {
   appendLog: (rec: LogRecord) => void;
   appendSessionFromForm: (form: SessionFormData) => void;
   completeScheduleTaskWithLog: (task: ScheduleTaskRef, form: SessionFormData) => void;
-  /** State + log tek undo adımında (ör. tekrar işaretleme). */
+  /** State + log in one undo step (e.g. marking a review). */
   commitWithLog: (updater: (s: AppState) => AppState, rec: LogRecord) => void;
   resetSeed: () => void;
   importJsonl: (text: string) => number;
@@ -87,9 +87,9 @@ function newRetrievalId(): string {
 }
 
 function sanitizeCarry(carryList: ScheduleCarryItem[], nowMs: number): ScheduleCarryItem[] {
-  // 7 günden eski görevler borç kar topu yapmaması için müfredat havuzuna döner
+  // Tasks older than 7 days return to curriculum pool to avoid debt snowball
   const fresh = carryList.filter((c) => daysSince(c.sinceIso, nowMs) <= MAX_CARRY_AGE_DAYS);
-  // En fazla MAX_CARRY (2) görev taşınır
+  // At most MAX_CARRY (2) tasks are carried
   return fresh.slice(-MAX_CARRY);
 }
 
@@ -215,7 +215,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   const futureRef = useRef<AppState[]>([]);
   const coalesceUntilRef = useRef(0);
   const applyingHistoryRef = useRef(false);
-  /** Strict Mode setState double-invoke sırasında yığın bozulmasın diye güncel state. */
+  /** Current state ref so stack is not corrupted during Strict Mode double-invoke. */
   const stateRef = useRef(state);
   stateRef.current = state;
   const isRemoteUpdateRef = useRef(false);
@@ -288,7 +288,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
     try {
       const res = await signInWithPopup(auth, googleProvider);
       if (res.user) {
-        // İlk girişte cloud'da veri varsa çek, yoksa yereli cloud'a yükle
+        // On first login, pull cloud data if present; otherwise push local to cloud
         const userDoc = doc(db, "users", res.user.uid);
         const snap = await getDoc(userDoc);
         if (snap.exists() && snap.data()?.state) {
@@ -331,7 +331,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
     setCanRedo(futureRef.current.length > 0);
   }, []);
 
-  /** Değişiklikten önce mevcut state'i yığına koy. Kısa aralıkta birleşir. */
+  /** Push current state onto stack before change. Coalesces within short interval. */
   const pushPast = useCallback(
     (current: AppState, force = false) => {
       if (applyingHistoryRef.current) return;
@@ -406,7 +406,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
       if (!mod) return;
       const key = e.key.toLowerCase();
       if (key === "z" && !e.shiftKey) {
-        // Input içinde de geri alma istiyoruz (yanlış skor vs.)
+        // Allow undo inside inputs too (wrong score, etc.)
         e.preventDefault();
         undo();
         return;
@@ -633,7 +633,7 @@ export function useDurum() {
   return ctx;
 }
 
-/** Asimetrik mandal: yükseltmek için kanıt ref gerekir. */
+/** Asymmetric latch: raising requires evidence ref. */
 export function tryRaiseSkill(
   skill: Skill,
   nextClaimed: number,
@@ -645,7 +645,7 @@ export function tryRaiseSkill(
     (nextEvidence !== skill.evidence &&
       ["yok", "kayit", "public"].indexOf(nextEvidence) > ["yok", "kayit", "public"].indexOf(skill.evidence));
   if (raising && !nextRef.trim()) {
-    return { ok: false, reason: "Yükseltmek için kanıt referansı (dosya yolu / URL) zorunlu." };
+    return { ok: false, reason: "Evidence reference (file path / URL) required to raise." };
   }
   return {
     ok: true,

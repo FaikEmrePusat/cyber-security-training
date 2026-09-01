@@ -9,6 +9,7 @@ import {
   OAK_CURRICULUM,
   OAK_UPCOMING,
   STATUS_LABEL,
+  DIFF_LABEL,
   alanCounts,
   curriculumEdges,
   topicKey,
@@ -144,19 +145,19 @@ export function HaritaPage() {
       if (!t.upcoming) patch[t.id] = "kuyrukta";
     }
     if (!items.length) {
-      flash(skippedSonra ? "Yaklaşan kilitli — override" : "Hepsi kuyrukta");
+      flash(skippedSonra ? "Upcoming locked — override required" : "All already in queue");
       return;
     }
     setRetrieval((all) => all.concat(items));
     setStatuses(patch);
-    flash(`${items.length} eklendi` + (skippedSonra ? ` · ${skippedSonra} atlandı` : "") + " (Ctrl+Z)");
+    flash(`${items.length} added` + (skippedSonra ? ` · ${skippedSonra} skipped` : "") + " (Ctrl+Z)");
   };
 
   const removeFromQueue = (t: CurriculumTopic) => {
     const key = topicKey(t.konu);
     setRetrieval((all) => all.filter((r) => topicKey(r.topic) !== key));
     if (!t.upcoming) setStatus(t.id, "ogreniyorum");
-    flash("Çıkarıldı (Ctrl+Z)");
+    flash("Removed (Ctrl+Z)");
   };
 
   const addBulkFromAlan = (alan: string) => {
@@ -179,9 +180,9 @@ export function HaritaPage() {
     <div className="page page--wide page--harita">
       <header className="harita-top">
         <div className="harita-top__title">
-          <h1 className="harita-top__h">Harita</h1>
+          <h1 className="harita-top__h">Map</h1>
           <p className="harita-top__meta">
-            {OAK_COVERED.length} konu · kuyruk {coveredInQueue}/{OAK_COVERED.length} · sonra {OAK_UPCOMING.length}
+            {OAK_COVERED.length} topics · queue {coveredInQueue}/{OAK_COVERED.length} · later {OAK_UPCOMING.length}
           </p>
         </div>
         <div className="harita-top__actions">
@@ -194,7 +195,7 @@ export function HaritaPage() {
               setView("harita");
             }}
           >
-            Bugün
+            Today
           </button>
           <button
             type="button"
@@ -208,7 +209,7 @@ export function HaritaPage() {
             Hub
           </button>
           <Link className="cta cta--ghost" to="/tekrar">
-            Kuyruk
+            Queue
           </Link>
         </div>
       </header>
@@ -218,9 +219,9 @@ export function HaritaPage() {
       <div className="harita-sticky">
         <div className="filters-compact filters-compact--sticky">
           <div className="field">
-            <label htmlFor="harita-alan">Alan</label>
+            <label htmlFor="harita-alan">Area</label>
             <select id="harita-alan" value={alanFilter} onChange={(e) => setAlanFilter(e.target.value)}>
-              <option value="all">Tüm alanlar</option>
+              <option value="all">All areas</option>
               {countsByAlan.map(({ alan, count }) => (
                 <option key={alan} value={alan}>
                   {skillName(alan)} ({count})
@@ -229,20 +230,20 @@ export function HaritaPage() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="harita-zorluk">Zorluk</label>
+            <label htmlFor="harita-zorluk">Difficulty</label>
             <select id="harita-zorluk" value={zorlukFilter} onChange={(e) => setZorlukFilter(e.target.value)}>
-              <option value="all">Hepsi</option>
+              <option value="all">All</option>
               {DIFFS.map((x) => (
                 <option key={x} value={x}>
-                  {x}
+                  {DIFF_LABEL[x]}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="harita-status">Durum</label>
+            <label htmlFor="harita-status">Status</label>
             <select id="harita-status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="all">Hepsi</option>
+              <option value="all">All</option>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {STATUS_LABEL[s]}
@@ -251,20 +252,20 @@ export function HaritaPage() {
             </select>
           </div>
           <div className="field field--grow">
-            <label htmlFor="harita-q">Ara</label>
+            <label htmlFor="harita-q">Search</label>
             <input id="harita-q" value={q} placeholder="DNS, GPO…" onChange={(e) => setQ(e.target.value)} />
           </div>
           <label className="harita-sticky__check">
             <input type="checkbox" checked={todayOnly} onChange={(e) => setTodayOnly(e.target.checked)} />
-            Bugün ({skillName(bottleneckAlan)})
+            Today ({skillName(bottleneckAlan)})
           </label>
         </div>
-        <div className="view-tabs view-tabs--inline" role="tablist" aria-label="Görünüm">
+        <div className="view-tabs view-tabs--inline" role="tablist" aria-label="View">
           {(
             [
-              ["harita", "Graf"],
-              ["agac", "Ağaç"],
-              ["liste", "Liste"],
+              ["harita", "Graph"],
+              ["agac", "Tree"],
+              ["liste", "List"],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -285,7 +286,7 @@ export function HaritaPage() {
       {view === "harita" && (
         <section
           className="harita-graph-first"
-          aria-label={alanFilter === "all" ? "Tüm alanlar haritası" : skillName(alanFilter)}
+          aria-label={alanFilter === "all" ? "All-areas map" : skillName(alanFilter)}
         >
           <CurriculumGraph
             topics={graphTopics}
@@ -331,16 +332,16 @@ export function HaritaPage() {
                 <span className={statusBadgeClass(getStatus(selected.id))}>
                   {STATUS_LABEL[getStatus(selected.id)]}
                 </span>
-                {selected.upcoming && <span className="badge badge--closed">kilitli</span>}
+                {selected.upcoming && <span className="badge badge--closed">locked</span>}
               </div>
               {!selected.upcoming &&
                 (queueKeys.has(topicKey(selected.konu)) ? (
                   <button type="button" className="cta cta--ghost" onClick={() => removeFromQueue(selected)}>
-                    Çıkar
+                    Remove
                   </button>
                 ) : (
                   <button type="button" className="cta" onClick={() => addToQueue([selected])}>
-                    Kuyruğa
+                    Add to queue
                   </button>
                 ))}
               <ModelsForTags tags={[...selected.tags, selected.konu, selected.alan]} />
@@ -350,10 +351,10 @@ export function HaritaPage() {
       )}
 
       {view === "agac" && (
-        <Section title="Ağaç" lead="Gruplara katla · toplu ekle">
+        <Section title="Tree" lead="Collapse groups · bulk add">
           <div className="field-row" style={{ marginBottom: "1rem" }}>
             <div className="field">
-              <label htmlFor="bulk-n">En fazla</label>
+              <label htmlFor="bulk-n">Up to</label>
               <input
                 id="bulk-n"
                 type="number"
@@ -419,15 +420,15 @@ export function HaritaPage() {
       )}
 
       {view === "liste" && (
-        <Section title="Liste" lead={`${filtered.length} satır`}>
+        <Section title="List" lead={`${filtered.length} rows`}>
           <div className="table-wrap">
             <table className="data">
               <thead>
                 <tr>
-                  <th>Konu</th>
-                  <th>Alan</th>
-                  <th>Z</th>
-                  <th>Durum</th>
+                  <th>Topic</th>
+                  <th>Area</th>
+                  <th>D</th>
+                  <th>Status</th>
                   <th />
                 </tr>
               </thead>
@@ -443,7 +444,7 @@ export function HaritaPage() {
                         </button>
                         {t.upcoming && (
                           <span className="badge badge--closed" style={{ marginLeft: 6 }}>
-                            sonra
+                            later
                           </span>
                         )}
                       </td>
@@ -463,7 +464,7 @@ export function HaritaPage() {
                       <td>
                         {t.upcoming ? (
                           <span className="note" style={{ margin: 0 }}>
-                            kilitli
+                            locked
                           </span>
                         ) : inQ ? (
                           <button
@@ -472,7 +473,7 @@ export function HaritaPage() {
                             style={{ minHeight: 36, padding: "0.3rem 0.6rem" }}
                             onClick={() => removeFromQueue(t)}
                           >
-                            Çıkar
+                            Remove
                           </button>
                         ) : (
                           <button
@@ -481,7 +482,7 @@ export function HaritaPage() {
                             style={{ minHeight: 36, padding: "0.3rem 0.6rem" }}
                             onClick={() => addToQueue([t])}
                           >
-                            Ekle
+                            Add
                           </button>
                         )}
                       </td>
@@ -496,18 +497,18 @@ export function HaritaPage() {
 
       <Section
         id="yaklasan"
-        title="Yaklaşan"
-        lead="Henüz müfredatta yok — kuyruğa kilitli (override gerekir)"
+        title="Upcoming"
+        lead="Not in curriculum yet — queue locked (override required)"
       >
         <div className="upcoming-shelf">
-          <p className="upcoming-shelf__title">Kilitli gelecek · SIEM / EDR sonrası</p>
+          <p className="upcoming-shelf__title">Locked future · after SIEM / EDR</p>
           <label className="note" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <input
               type="checkbox"
               checked={allowSonraOverride}
               onChange={(e) => setAllowSonraOverride(e.target.checked)}
             />
-            Override ile ekle
+            Add with override
           </label>
           <ul className="upcoming-list">
             {OAK_UPCOMING.map((t) => (
@@ -526,7 +527,7 @@ export function HaritaPage() {
                     style={{ minHeight: 32, padding: "0.25rem 0.55rem" }}
                     onClick={() => addToQueue([t], { forceSonra: true })}
                   >
-                    Yine de
+                    Add anyway
                   </button>
                 )}
               </li>
@@ -566,22 +567,22 @@ function TopicRow({
       </button>
       <div className="tree-row__actions">
         <select
-          aria-label="Durum"
+          aria-label="Status"
           value={status === "kuyrukta" ? "ogreniyorum" : status}
           disabled={inQueue}
           onChange={(e) => onStatus(e.target.value as CurriculumStatus)}
         >
-          <option value="ogrenilmedi">Öğrenilmedi</option>
-          <option value="ogreniyorum">Öğreniyorum</option>
-          <option value="pekiştirildi">Pekiştirildi</option>
+          <option value="ogrenilmedi">Not started</option>
+          <option value="ogreniyorum">Learning</option>
+          <option value="pekiştirildi">Reinforced</option>
         </select>
         {inQueue ? (
           <button type="button" className="cta cta--ghost" style={{ minHeight: 36, padding: "0.3rem 0.55rem" }} onClick={onRemove}>
-            Çıkar
+            Remove
           </button>
         ) : (
           <button type="button" className="cta" style={{ minHeight: 36, padding: "0.3rem 0.55rem" }} onClick={onAdd}>
-            Kuyruğa
+            Add to queue
           </button>
         )}
       </div>
@@ -1002,14 +1003,14 @@ function InteractiveGraphCanvas({
     <div className="curriculum-graph-wrap" ref={wrapRef}>
       {header}
       <div className={`curriculum-graph-viewport${isPanning ? " is-panning" : ""}`}>
-        <div className="curriculum-graph__toolbar" aria-label="Graf kontrolleri">
-          <button type="button" className="curriculum-graph__tool" onClick={() => zoomBy(ZOOM_STEP)} title="Yakınlaştır" aria-label="Yakınlaştır">
+        <div className="curriculum-graph__toolbar" aria-label="Graph controls">
+          <button type="button" className="curriculum-graph__tool" onClick={() => zoomBy(ZOOM_STEP)} title="Zoom in" aria-label="Zoom in">
             +
           </button>
-          <button type="button" className="curriculum-graph__tool" onClick={() => zoomBy(1 / ZOOM_STEP)} title="Uzaklaştır" aria-label="Uzaklaştır">
+          <button type="button" className="curriculum-graph__tool" onClick={() => zoomBy(1 / ZOOM_STEP)} title="Zoom out" aria-label="Zoom out">
             −
           </button>
-          <button type="button" className="curriculum-graph__tool curriculum-graph__tool--reset" onClick={resetView} title="Görünümü sıfırla" aria-label="Görünümü sıfırla">
+          <button type="button" className="curriculum-graph__tool curriculum-graph__tool--reset" onClick={resetView} title="Reset view" aria-label="Reset view">
             ⟲
           </button>
         </div>
@@ -1086,7 +1087,7 @@ function CurriculumGraph({
   skillName: (id: string) => string;
 }) {
   if (!topics.length) {
-    return <p className="note">Bu filtrede düğüm yok — alan seç.</p>;
+    return <p className="note">No nodes in this filter — pick an area.</p>;
   }
 
   if (allAlan) {
@@ -1161,7 +1162,7 @@ function SingleAlanGraph({
       edges={edges}
       basePositions={basePositions}
       selectedId={selectedId}
-      ariaLabel="Konu haritası"
+      ariaLabel="Topic map"
       className="curriculum-graph curriculum-graph--full"
       hub={
         <>
@@ -1248,21 +1249,21 @@ function AllAlanGraph({
       edges={edges}
       basePositions={positions}
       selectedId={selectedId}
-      ariaLabel={`Tüm alanlar — ${topics.length} konu, birleşik graf`}
+      ariaLabel={`All areas — ${topics.length} topics, unified graph`}
       className="curriculum-graph curriculum-graph--full curriculum-graph--unified"
       header={
         <div className="curriculum-graph__meta">
           <span>
-            {topics.length} düğüm · {alans.length} alan
+            {topics.length} nodes · {alans.length} areas
           </span>
-          <div className="curriculum-graph__legend" aria-label="Alan renkleri">
+          <div className="curriculum-graph__legend" aria-label="Area colors">
             {alans.map((alan) => (
               <button
                 key={alan}
                 type="button"
                 className="curriculum-graph__legend-item"
                 onClick={() => onSelectAlan(alan)}
-                title={`${skillName(alan)} — filtrele`}
+                title={`${skillName(alan)} — filter`}
               >
                 <span className="curriculum-graph__legend-swatch" style={{ background: ALAN_COLOR[alan] }} />
                 {skillName(alan)}

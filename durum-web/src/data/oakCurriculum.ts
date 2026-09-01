@@ -2,7 +2,7 @@ import type { Difficulty } from "../model";
 import coveredRaw from "./tekrar-ekle.txt?raw";
 import upcomingRaw from "./tekrar-sonra.txt?raw";
 
-/** Oak müfredat durumu. `sonra` = henüz işlenmedi; FSRS'e kilitli (override gerekir). */
+/** Oak curriculum status. `sonra` = not yet covered; locked from FSRS (override required). */
 export type CurriculumStatus =
   | "ogrenilmedi"
   | "ogreniyorum"
@@ -16,15 +16,15 @@ export type CurriculumTopic = {
   zorluk: Difficulty;
   konu: string;
   tags: string[];
-  /** Bağlı konu id'leri (Obsidian benzeri kenarlar). */
+  /** Linked topic ids (Obsidian-style edges). */
   links: string[];
-  /** true = Oak EDR sonrası; not yok. */
+  /** true = post-Oak EDR; no note. */
   upcoming: boolean;
 };
 
 export const CURRICULUM_STORAGE_KEY = "durum-curriculum-v1";
 
-/** Günlük planda zayıf alandan bağımsız temel kanal — SOC yolu için zemin. */
+/** Foundation channel independent of weak area in daily plan — baseline for the SOC path. */
 export const FOUNDATION_ALANS = ["net", "linux", "secfund"] as const;
 
 export const ALAN_ORDER = [
@@ -52,12 +52,12 @@ export const ALAN_LABEL: Record<string, string> = {
   def: "Defensive/SOC",
   off: "Offensive",
   cloud: "Cloud",
-  port: "Portlar",
+  port: "Portfolio",
   siem: "SIEM",
   py: "Python",
 };
 
-/** Harita düğüm renkleri — maritime slate/forest. */
+/** Map node colors — maritime slate/forest. */
 export const ALAN_COLOR: Record<string, string> = {
   net: "#1a6b5c",
   linux: "#3d5a80",
@@ -74,11 +74,17 @@ export const ALAN_COLOR: Record<string, string> = {
 };
 
 export const STATUS_LABEL: Record<CurriculumStatus, string> = {
-  ogrenilmedi: "Öğrenilmedi",
-  ogreniyorum: "Öğreniyorum",
-  kuyrukta: "Kuyrukta",
-  pekiştirildi: "Pekiştirildi",
-  sonra: "Sonra",
+  ogrenilmedi: "Not started",
+  ogreniyorum: "Learning",
+  kuyrukta: "In queue",
+  pekiştirildi: "Reinforced",
+  sonra: "Later",
+};
+
+export const DIFF_LABEL: Record<Difficulty, string> = {
+  kolay: "Easy",
+  orta: "Medium",
+  zor: "Hard",
 };
 
 const DIFFS: Difficulty[] = ["kolay", "orta", "zor"];
@@ -280,7 +286,7 @@ export function curriculumEdges(ids?: Set<string>): CurriculumEdge[] {
   return out;
 }
 
-/** Kuyruk eşlemesi: konu metni (case-insensitive). */
+/** Queue mapping: topic text (case-insensitive). */
 export function topicKey(konu: string): string {
   return konu.trim().toLowerCase();
 }

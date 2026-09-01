@@ -155,7 +155,7 @@ export type SessionDraft = {
   kaynak: string;
 };
 
-/** Yapılandırılmış oturum log formu (Bugün Bitti + Log sayfası). */
+/** Structured session log form (Today Done + Log page). */
 export type SessionFormData = {
   aktivite: string;
   aktiviteCustom?: string;
@@ -168,7 +168,7 @@ export type SessionFormData = {
   not?: string;
 };
 
-/** Bugün bitmeyen görev — sonraki güne taşınır. */
+/** Incomplete task from today — carries to the next day. */
 export type ScheduleCarryItem = {
   id: string;
   kind: "tekrar" | "konu" | "temel" | "lab" | "dil";
@@ -180,7 +180,7 @@ export type ScheduleCarryItem = {
   sinceIso: string;
 };
 
-/** Bugün sayfasından tamamlanan / ertelenen görev referansı. */
+/** Task reference from Today page when completed / deferred. */
 export type ScheduleTaskRef = {
   id: string;
   kind: "tekrar" | "konu" | "temel" | "lab" | "dil" | "dinlenme";
@@ -203,6 +203,6 @@ export type AppState = {
   chancenkarte: ChancenkarteState;
   draft: SessionDraft;
   scheduleCarry: ScheduleCarryItem[];
-  /** ISO tarih → bugün tamamlanan veya yarına aktarılan görev id'leri. */
+  /** ISO date → task ids completed or deferred today. */
   scheduleCompletedToday: Record<string, string[]>;
 };

@@ -82,44 +82,44 @@ const MAX_CARRY = MODEL.carry?.maxCarry ?? 2;
 const MAX_CARRY_AGE_DAYS = MODEL.carry?.maxAgeDays ?? 7;
 
 export function getDayType(offset: number): { dayType: DayType; dayTypeLabel: string } {
-  // 2 gün Konu (A), 1 gün Lab (B) ritmi: A, A, B, A, A, B ...
+  // 2 Topic days (A), 1 Lab day (B) rhythm: A, A, B, A, A, B ...
   const isLab = offset % 3 === 2;
   return {
     dayType: isLab ? "B" : "A",
-    dayTypeLabel: isLab ? "Lab Günü" : "Konu Günü",
+    dayTypeLabel: isLab ? "Lab Day" : "Topic Day",
   };
 }
 
 const GUN_AD: Record<number, string> = {
-  0: "Pazar",
-  1: "Pazartesi",
-  2: "Salı",
-  3: "Çarşamba",
-  4: "Perşembe",
-  5: "Cuma",
-  6: "Cumartesi",
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
 };
 
 const KIND_LABEL: Record<ScheduleTaskKind, string> = {
-  tekrar: "Konu tekrarı",
-  konu: "Zayıf alanda sıradaki konu",
-  temel: "Temel konu çalışma",
-  lab: "Lab / pratik",
-  dil: "Dil çalışması",
-  dinlenme: "Dinlenme",
+  tekrar: "Topic review",
+  konu: "Next topic in weak area",
+  temel: "Foundation topic study",
+  lab: "Lab / practice",
+  dil: "Language study",
+  dinlenme: "Rest",
 };
 
 function formatSure(saat: number): string {
   if (saat <= 0) return "";
-  if (saat <= 1) return `~${Math.max(5, Math.round(saat * 60))} dk`;
-  return `~${round1(saat)} sa`;
+  if (saat <= 1) return `~${Math.max(5, Math.round(saat * 60))} min`;
+  return `~${round1(saat)} h`;
 }
 
 function dayLabel(offset: number, date: Date): string {
-  if (offset === 0) return "Bugün";
-  if (offset === 1) return "Yarın";
-  if (offset < 7) return GUN_AD[date.getDay()] ?? date.toLocaleDateString("tr-TR", { weekday: "long" });
-  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+  if (offset === 0) return "Today";
+  if (offset === 1) return "Tomorrow";
+  if (offset < 7) return GUN_AD[date.getDay()] ?? date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }
 
 function weekGroup(offset: number): ScheduleDay["weekGroup"] {
@@ -138,7 +138,7 @@ function bottleneckAlan(skills: Skill[]): string {
   return worst.id;
 }
 
-/** Temel kanal: en düşük claimed/weight alanı önce; günler arası round-robin. */
+/** Foundation channel: lowest claimed/weight area first; round-robin across days. */
 function foundationAlanOrder(skills: Skill[]): string[] {
   return [...FOUNDATION_ALANS].sort((a, b) => {
     const sa = skills.find((s) => s.id === a);
@@ -229,12 +229,12 @@ function temelTask(t: CurriculumTopic): ScheduleTask {
 }
 
 function tekrarTask(r: RetrievalItem, count?: number): ScheduleTask {
-  const suffix = count && count > 1 ? ` (${count} konu)` : "";
+  const suffix = count && count > 1 ? ` (${count} topics)` : "";
   return {
     id: count && count > 1 ? `tekrar-batch-${r.id}` : `tekrar-${r.id}`,
     kind: "tekrar",
-    baslik: count && count > 1 ? `${count} konu tekrarı${suffix}` : r.topic,
-    detay: count && count > 1 ? "Vadesi gelen tekrarlar" : ALAN_LABEL[r.alan] ?? r.alan,
+    baslik: count && count > 1 ? `${count} topic reviews${suffix}` : r.topic,
+    detay: count && count > 1 ? "Due reviews" : ALAN_LABEL[r.alan] ?? r.alan,
     saat: count && count > 1 ? TEKRAR_SAAT * count : TEKRAR_SAAT,
     alan: r.alan,
     retrievalId: r.id,
@@ -253,12 +253,12 @@ function labTask(a: RoiAction): ScheduleTask {
 }
 
 function dilTask(offset: number, lang: "de" | "en" = "de"): ScheduleTask {
-  const label = lang === "de" ? "Almanca" : "İngilizce";
+  const label = lang === "de" ? "German" : "English";
   return {
     id: `dil-${lang}-${offset}`,
     kind: "dil",
-    baslik: `${label} çalışması`,
-    detay: lang === "de" ? "Konuşma / okuma / dinleme" : "İngilizce pratik",
+    baslik: `${label} study`,
+    detay: lang === "de" ? "Speaking / reading / listening" : "English practice",
     saat: DIL_SAAT,
     alan: lang === "de" ? "dil-de" : "dil-en",
   };
@@ -326,13 +326,13 @@ function packDay(
     return false;
   };
 
-  // 1. Dünden / önceki günlerden taşınan görevleri (max MAX_CARRY) kapasiteye yerleştir
+  // 1. Place carried tasks from yesterday / prior days (max MAX_CARRY) into capacity
   for (const c of sim.carry) {
     if (!tryAdd({ ...c, carried: true }, true)) break;
   }
   sim.carry = sim.carry.filter((c) => !tasks.some((t) => t.id === c.id));
 
-  // 2. FSRS Aralıklı Tekrar Kanalı
+  // 2. FSRS spaced repetition channel
   const dueToday = sim.retrieval
     .filter((r) => r.dueOffset <= offset)
     .sort((a, b) => a.dueOffset - b.dueOffset);
@@ -356,9 +356,9 @@ function packDay(
     }
   }
 
-  // 3. Günün Modüler Ritmi:
+  // 3. Day modular rhythm:
   if (dayType === "A") {
-    // --- GÜN A (KONU / DERİNLEŞME): Temel Konu + Zayıf Alan Konusu ---
+    // --- DAY A (TOPIC / DEEP WORK): Foundation topic + weak-area topic ---
     const temelTopic = pickTemelTopic(sim, temelLists);
     if (temelTopic) {
       const task = temelTask(temelTopic);
@@ -379,14 +379,14 @@ function packDay(
       }
     }
   } else {
-    // --- GÜN B (LAB / UYGULAMA): Kapsamlı SOC / AD Lab Pratiği (~60-90 dk) ---
+    // --- DAY B (LAB / APPLICATION): Full SOC / AD lab practice (~60–90 min) ---
     const labTaskItem = sim.labRoi
       ? labTask(sim.labRoi)
       : {
           id: `lab-soc-wazuh-${offset}`,
           kind: "lab" as const,
-          baslik: "Sysmon + Wazuh / Splunk Lab Kurulumu ve Analizi",
-          detay: "Gate B & Gate C için değerli SOC labı (v=3.0) · Sysmon/WinEvent log analizi",
+          baslik: "Sysmon + Wazuh / Splunk Lab Setup and Analysis",
+          detay: "Valuable SOC lab for Gate B & Gate C (v=3.0) · Sysmon/WinEvent log analysis",
           saat: 1.25,
         };
     if (tryAdd(labTaskItem)) {
@@ -397,7 +397,7 @@ function packDay(
     }
   }
 
-  // 4. Dil kanalı — ayrı kapasite (hoursLang / 7); Konu günlerinde öncelikli
+  // 4. Language channel — separate capacity (hoursLang / 7); prioritized on topic days
   const langRemaining = langKapasite - sim.langUsed;
   if (langRemaining >= DIL_SAAT && (dayType === "A" || langRemaining >= DIL_SAAT * 2)) {
     const dilItem = dilTask(offset, "de");
@@ -407,7 +407,7 @@ function packDay(
     }
   }
 
-  // Taşıma listesini tavanla sınırla (max 2 görev)
+  // Cap carry list (max 2 tasks)
   sim.carry = nextCarry.slice(-MAX_CARRY);
   return { tasks, tasima, sim };
 }
@@ -506,8 +506,8 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
                 {
                   id: "dinlen",
                   kind: "dinlenme",
-                  baslik: "Hafif tekrar veya dinlen",
-                  detay: "Yorgunluk yüksek",
+                  baslik: "Light review or rest",
+                  detay: "Fatigue is high",
                   saat: 0.25,
                 },
               ]
@@ -528,7 +528,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     }
 
     const todayDayType = days[0]?.dayType ?? "A";
-    const todayDayTypeLabel = days[0]?.dayTypeLabel ?? "Konu Günü";
+    const todayDayTypeLabel = days[0]?.dayTypeLabel ?? "Topic Day";
     const bugunFromSchedule = days[0]?.tasks ?? [];
 
     const bugunGorevler: BugunGorev[] = (() => {
@@ -540,14 +540,14 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             kindLabel: KIND_LABEL.tekrar,
             baslik:
               overdue.length > 0
-                ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} konu tekrarı`
-                : "15 dk hafif pratik",
-            detay: "Geri dönüş modu",
+                ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
+                : "15 min light practice",
+            detay: "Return mode",
             saat: 0.25,
-            sure: "~15 dk",
+            sure: "~15 min",
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
-            neden: "Birkaç gündür ara var — önce hafif başla.",
+            neden: "You have been away a few days — start light first.",
           },
         ];
       }
@@ -560,17 +560,17 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
           neden: t.carried
-            ? "Dünden kalan taşınan görev — öncelikle tamamlanması önerilir."
+            ? "Carried-over task from yesterday — recommended to finish first."
             : t.kind === "tekrar"
-              ? "FSRS vadesi geldi; unutma hazırlığı düşürür."
+              ? "FSRS due date reached; forgetting reduces readiness."
               : t.kind === "temel"
-                ? `${ALAN_LABEL[t.alan ?? ""] ?? t.alan ?? "Temel"} zemin — Oak sırasıyla ilerlenir.`
+                ? `${ALAN_LABEL[t.alan ?? ""] ?? t.alan ?? "Foundation"} baseline — follow Oak order.`
                 : t.kind === "konu"
-                  ? `${alanLabel} zayıf alanında sıradaki müfredat konusu.`
+                  ? `Next curriculum topic in weak ${alanLabel} area.`
                   : t.kind === "lab"
-                    ? "Kapsamlı lab / SOC pratiği — Gate B & C için portföy kanıtı üretir."
+                    ? "Full lab / SOC practice — produces portfolio evidence for Gate B & C."
                     : t.kind === "dil"
-                      ? "Günlük dil kapasitesi — Almanca hedefi için düzenli pratik."
+                      ? "Daily language capacity — regular practice for the German goal."
                       : undefined,
         }));
       }
@@ -584,7 +584,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           sure: formatSure(TEKRAR_SAAT * Math.min(overdue.length, lim)),
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
-          neden: "Vadesi geçmiş tekrarlar öncelikli.",
+          neden: "Overdue reviews take priority.",
         });
       }
       if (todayDayType === "A") {
@@ -595,7 +595,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             sure: formatSure(KONU_SAAT),
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
-            neden: `${ALAN_LABEL[nextTemel.alan] ?? nextTemel.alan} temeli — günlük zemin.`,
+            neden: `${ALAN_LABEL[nextTemel.alan] ?? nextTemel.alan} foundation — daily baseline.`,
           });
         }
         if (nextStudy) {
@@ -605,15 +605,15 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             sure: formatSure(KONU_SAAT),
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
-            neden: `${alanLabel} zayıf alanında yeni konu.`,
+            neden: `New topic in weak ${alanLabel} area.`,
           });
         }
       } else {
         const labItem = labRoi ? labTask(labRoi) : {
           id: "lab-soc-wazuh-fallback",
           kind: "lab" as const,
-          baslik: "Sysmon + Wazuh / Splunk Lab Kurulumu ve Analizi",
-          detay: "Gate B & Gate C için değerli SOC labı (v=3.0)",
+          baslik: "Sysmon + Wazuh / Splunk Lab Setup and Analysis",
+          detay: "Valuable SOC lab for Gate B & Gate C (v=3.0)",
           saat: 1.25,
         };
         fallback.push({
@@ -622,7 +622,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           sure: formatSure(labItem.saat),
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
-          neden: "Kapsamlı SOC lab pratiği — Gate B & C için portföy kanıtı üretir.",
+          neden: "Full SOC lab practice — produces portfolio evidence for Gate B & C.",
         });
       }
       return fallback;
@@ -642,14 +642,14 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
 
     let konumMetni = "";
     if (edrDone && sonraIlk) {
-      konumMetni = `EDR sonrası · sıradaki: ${sonraIlk.konu}`;
+      konumMetni = `After EDR · next: ${sonraIlk.konu}`;
     } else if (nextStudy) {
-      konumMetni = `${alanLabel} zayıf · ${nextStudy.konu}`;
-      if (nextTemel) konumMetni += ` · temel: ${nextTemel.konu}`;
+      konumMetni = `${alanLabel} weak · ${nextStudy.konu}`;
+      if (nextTemel) konumMetni += ` · foundation: ${nextTemel.konu}`;
     } else if (nextTemel) {
-      konumMetni = `Temel · ${nextTemel.konu}`;
+      konumMetni = `Foundation · ${nextTemel.konu}`;
     } else {
-      konumMetni = `${alanLabel} alanında müfredat devam ediyor`;
+      konumMetni = `Curriculum continues in ${alanLabel} area`;
     }
 
     const journey: JourneySnapshot = {

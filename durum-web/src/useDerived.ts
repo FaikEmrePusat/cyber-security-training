@@ -92,10 +92,10 @@ export function useDerived() {
 
     const hedefV = MODEL.hedef.vektor;
     const boyutlar = [
-      { key: "T", ad: "Teknik", v: live.T, hedef: hedefV.T },
-      { key: "P", ad: "Üretim", v: live.P, hedef: hedefV.P },
-      { key: "L", ad: "Dil", v: live.L, hedef: hedefV.L },
-      { key: "C", ad: "Kariyer", v: live.C, hedef: hedefV.C },
+      { key: "T", ad: "Technical", v: live.T, hedef: hedefV.T },
+      { key: "P", ad: "Production", v: live.P, hedef: hedefV.P },
+      { key: "L", ad: "Language", v: live.L, hedef: hedefV.L },
+      { key: "C", ad: "Career", v: live.C, hedef: hedefV.C },
     ];
     let darbogaz = boyutlar[0];
     for (const b of boyutlar) if (b.v / b.hedef < darbogaz.v / darbogaz.hedef) darbogaz = b;
@@ -145,7 +145,7 @@ export function useDerived() {
       .sort((a, b) => b.ratio - a.ratio);
     const kuyruk = overdue.slice(0, MODEL.tekrar.kuyrukTavani);
 
-    /** Daily ritual budget (~45–90 dk max). Longer ROI → slice or “Diğer seçenekler”. */
+    /** Daily ritual budget (~45–90 min max). Longer ROI → slice or "Other options". */
     const GUNLUK_SAAT_MAX = 0.75;
     const DILIM_DK = 25;
 
@@ -159,7 +159,7 @@ export function useDerived() {
       a.id.startsWith("lev-");
 
     const formatSure = (saat: number) =>
-      saat <= 1 ? `~${Math.max(5, Math.round(saat * 60))} dk` : `~${round1(saat)} sa`;
+      saat <= 1 ? `~${Math.max(5, Math.round(saat * 60))} min` : `~${round1(saat)} h`;
 
     const pickDailyRoi = (): { action: RoiAction; sliced: boolean } | null => {
       if (!roiList.length) return null;
@@ -174,32 +174,32 @@ export function useDerived() {
 
     const dailyRoiPick = pickDailyRoi();
 
-    /** Bugün kartı: düz Türkçe; jargon ayrı alanda. */
+    /** Today card: plain English; jargon in a separate field. */
     const tekGorev = (() => {
       if (geriDonusModu) {
         return {
-          baslik: `Kısa bir dönüş: ${kuyruk.length || 1} tekrar veya 15 dk hafif pratik`,
-          neden: "Birkaç gündür ara var veya yorgunluk yüksek — önce hafif başla.",
-          sure: "~15 dk",
-          jargon: `${Math.round(daysSinceSession)} gündür oturum yok · TSB = CTL − ATL · ETA gizli`,
+          baslik: `Quick return: ${kuyruk.length || 1} reviews or 15 min light practice`,
+          neden: "You have been away a few days or fatigue is high — start light first.",
+          sure: "~15 min",
+          jargon: `${Math.round(daysSinceSession)} days without session · TSB = CTL − ATL · ETA hidden`,
           roiId: null as string | null,
         };
       }
       if (pmc.tsb < -20) {
         return {
-          baslik: "Bugün dinlen veya sadece 15 dk hafif tekrar yap",
-          neden: "Son günlerin yükü çok yüksek; zorlamak formu bozar.",
-          sure: "~15 dk",
-          jargon: `TSB ${pmc.tsb} (< −20) · load = (h_s×0.8 + h_d×0.2)×kalite×10`,
+          baslik: "Rest today or do only 15 min of light review",
+          neden: "Recent load is very high; pushing harder hurts form.",
+          sure: "~15 min",
+          jargon: `TSB ${pmc.tsb} (< −20) · load = (h_s×0.8 + h_d×0.2)×quality×10`,
           roiId: null as string | null,
         };
       }
       if (overdue.length >= 1) {
         return {
-          baslik: `Vadesi geçmiş ${overdue.length} konuyu tekrarla (bugün en fazla ${kuyruk.length})`,
-          neden: "Unutulan bilgi hazırlık skorunu sessizce düşürür; tekrar en ucuz kazanç.",
-          sure: `~${kuyruk.length * 8} dk`,
-          jargon: `Çürüme −${round1(curumeKaybi)} · R(t,S) < 0.85 ⇒ vadesi geldi`,
+          baslik: `Review ${overdue.length} overdue topics (today max ${kuyruk.length})`,
+          neden: "Forgotten knowledge silently lowers readiness; review is the cheapest gain.",
+          sure: `~${kuyruk.length * 8} min`,
+          jargon: `Decay −${round1(curumeKaybi)} · R(t,S) < 0.85 ⇒ due`,
           roiId: null as string | null,
         };
       }
@@ -207,16 +207,16 @@ export function useDerived() {
         const { action, sliced } = dailyRoiPick;
         const neden =
           action.gate
-            ? "Bu adım sıradaki kariyer kapısını açmaya yardımcı olur."
-            : "Hazırlık skorunu en verimli şekilde yükselten kısa hamle.";
-        const jargon = [action.baslik !== action.detay ? action.detay : "", `ROI = ΔR/saat = ${round2(action.deltaR)}/${action.saat} = ${round2(action.roi)}`]
+            ? "This step helps open the next career gate."
+            : "Short move that raises readiness most efficiently.";
+        const jargon = [action.baslik !== action.detay ? action.detay : "", `ROI = ΔR/hour = ${round2(action.deltaR)}/${action.saat} = ${round2(action.roi)}`]
           .filter(Boolean)
           .join(" · ");
         if (sliced) {
           return {
             baslik: action.baslik,
-            neden: `Tam iş daha uzun (~${formatSure(action.saat)}); bugün sadece ~${DILIM_DK} dk'lık bir dilim.`,
-            sure: `~${DILIM_DK} dk`,
+            neden: `Full task is longer (~${formatSure(action.saat)}); today only a ~${DILIM_DK} min slice.`,
+            sure: `~${DILIM_DK} min`,
             jargon,
             roiId: action.id,
           };
@@ -230,8 +230,8 @@ export function useDerived() {
         };
       }
       return {
-        baslik: "Skorları güncelle — model net bir sonraki adım bulamıyor",
-        neden: "Beceri veya log girdileri eksik olabilir.",
+        baslik: "Update scores — model cannot find a clear next step",
+        neden: "Skill or log inputs may be missing.",
         sure: "",
         jargon: "",
         roiId: null as string | null,

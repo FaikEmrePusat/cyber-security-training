@@ -14,13 +14,13 @@ export function KapilarPage() {
       <header className="hero hero--compact">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">Durum</p>
-        <h1 className="hero__headline">Kapılar</h1>
-        <p className="hero__sub hero__sub--short">Koşul hattı — dolu halka = açık.</p>
+        <h1 className="hero__headline">Gates</h1>
+        <p className="hero__sub hero__sub--short">Condition pipeline — filled ring = open.</p>
       </header>
 
       <SiemGapCallout />
 
-      <Section title="Süreç" lead="0 → A → F · tıkla detay">
+      <Section title="Process" lead="0 → A → F · click for detail">
         <div className="kapilar-pipeline">
           <GatePipeline gates={d.gates} currentId={d.nextGate?.id ?? null} onSelect={setFocusId} />
         </div>
@@ -30,7 +30,7 @@ export function KapilarPage() {
             <div className="kapilar-detail__head" style={{ width: "100%" }}>
               <h3 className="kapilar-detail__name">{focus.name}</h3>
               <span className={`badge ${focus.open ? "badge--ok" : "badge--closed"}`}>
-                {focus.open ? "Açık" : "Kapalı"}
+                {focus.open ? "Open" : "Closed"}
               </span>
             </div>
             <ul className="kapilar-parts">
@@ -43,7 +43,7 @@ export function KapilarPage() {
             </ul>
             {focus.bottleneck && (
               <p className="note" style={{ margin: 0 }}>
-                Darboğaz: {focus.bottleneck.label}
+                Bottleneck: {focus.bottleneck.label}
               </p>
             )}
           </div>

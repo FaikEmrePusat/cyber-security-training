@@ -1,12 +1,12 @@
-# Durum — İlerleme Durum Web
+# Durum — Progress State Web
 
-Model **2.1** ilerleme paneli: state, kapılar, Chancenkarte, FSRS tekrar, log.
+Model **2.1** progress panel: state, gates, Chancenkarte, FSRS review, log.
 
-Canvas (`ilerleme-durum-dashboard.canvas.tsx`) formüllerinin tarayıcı sürümü. Durum `localStorage` anahtarı `durum-v22` altında tutulur.
+Browser version of Canvas (`ilerleme-durum-dashboard.canvas.tsx`) formulas. State is stored under `localStorage` key `durum-v22`.
 
-Teknik referans: [TEKNIK-DOKUMANTASYON.md](./TEKNIK-DOKUMANTASYON.md)
+Technical reference: [TECHNICAL-DOCUMENTATION.md](./TECHNICAL-DOCUMENTATION.md)
 
-## Çalıştırma
+## Running
 
 ```bash
 cd "D:\Projects\Cyber Security Training\durum-web"
@@ -14,47 +14,47 @@ npm install
 npm run dev
 ```
 
-Tarayıcıda Vite’ın yazdığı adresi aç (genelde http://localhost:5173).
+Open the address Vite prints in the browser (usually http://localhost:5173).
 
-Üretim derlemesi:
+Production build:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Ne var?
+## What's included?
 
-| Sayfa | İçerik |
-|-------|--------|
-| **Bugün** | TEK GÖREV + GM / R / TSB |
-| **Durum** | T/P/L/C, R gauge, kanıt açığı, radar |
-| **Beceriler** | Düzenlenebilir skor + kanıt mandalı, artefakt, dil, kariyer |
-| **Kapılar** | Gate 0, A–F · π · darboğaz |
-| **Almanya** | Chancenkarte puan, Anerkennung, Rota A/B ETA, runway |
-| **Hız** | CTL/ATL/TSB, v, κ, projeksiyon, ROI |
-| **Harita** | Oak müfredat ağaç / grafik / liste · FSRS’e seçerek ekle · Yaklaşan (EDR sonrası) kilitli |
-| **Tekrar** | FSRS kuyruk + sonuç (yalnızca kuyruk — tam müfredat Harita’da) |
-| **Log** | Oturum, snapshot, JSONL export/import |
-| **Formüller** | Açılır matematik referansı |
+| Page | Content |
+|------|---------|
+| **Today** | SINGLE TASK + GM / R / TSB |
+| **Status** | T/P/L/C, R gauge, evidence gap, radar |
+| **Skills** | Editable score + evidence latch, artifacts, language, career |
+| **Gates** | Gate 0, A–F · π · bottleneck |
+| **Germany** | Chancenkarte points, Anerkennung, Route A/B ETA, runway |
+| **Velocity** | CTL/ATL/TSB, v, κ, projection, ROI |
+| **Map** | Oak curriculum tree / graph / list · add to FSRS selectively · Upcoming (post-EDR) locked |
+| **Review** | FSRS queue + outcome (queue only — full curriculum on Map) |
+| **Log** | Session, snapshot, JSONL export/import |
+| **Formulas** | Expandable math reference |
 
-## Geri al / Yinele
+## Undo / Redo
 
-Üst menüde **Geri al** ve **Yinele** butonları vardır.
+**Undo** and **Redo** buttons are in the top menu.
 
-| Kısayol | İşlem |
-|---------|--------|
-| `Ctrl+Z` (Mac: `Cmd+Z`) | Son değişikliği geri al |
-| `Ctrl+Y` veya `Ctrl+Shift+Z` | Yinele |
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` (Mac: `Cmd+Z`) | Undo last change |
+| `Ctrl+Y` or `Ctrl+Shift+Z` | Redo |
 
-Beceri, kanıt, log, Almanya alanları, tekrar, Harita→kuyruk ekleme, sıfırlama — hepsi geri alınabilir. Yazarken (birikim, oturum notu vb.) ~0.8 sn içindeki tuşlar tek adım sayılır; yanlışlıkla bir harf silince tüm cümleyi kaybetmezsin.
+Skills, evidence, log, Germany fields, review, Map→queue add, reset — all undoable. While typing (savings, session notes, etc.) keystrokes within ~0.8 s count as one step; accidentally deleting one character won't lose the whole sentence.
 
-## Müfredat (Harita)
+## Curriculum (Map)
 
-Oak notlarından çıkarılan konular (`src/data/tekrar-ekle.txt`, kaynak: `Oak-Study-Notes/TEKRAR-EKLE.txt`) **otomatik FSRS kuyruğuna girmez**. `/harita` sayfasında ağaç, alan haritası ve liste ile gezilir; durum `localStorage` anahtarı `durum-curriculum-v1`. EDR sonrası konular `TEKRAR-SONRA.txt` → Yaklaşan / Sonra (kilitli).
+Topics extracted from Oak notes (`src/data/tekrar-ekle.txt`, source: `Oak-Study-Notes/TEKRAR-EKLE.txt`) **do not auto-enter the FSRS queue**. Browse via tree, domain map, and list on `/harita`; status is under `localStorage` key `durum-curriculum-v1`. Post-EDR topics from `TEKRAR-SONRA.txt` → Upcoming / Later (locked).
 
 ## Seed
 
-Açılış: **2026-08-27** diagnostic. Geometrik R (ρ=0, portfolio T’den çıkık) ile R ≈ **23** civarı (eski lineer seed log’unda 26.62 yazıyordu — `Durum-Dashboard.md` ile uyumlu).
+Startup: **2026-08-27** diagnostic. Geometric R (ρ=0, portfolio excluded from T) yields R ≈ **23** (older linear seed log had 26.62 — aligned with `Durum-Dashboard.md`).
 
-Markdown belgeler ve canvas silinmedi; bu uygulama onları tamamlar.
+Markdown documents and canvas were not removed; this app complements them.

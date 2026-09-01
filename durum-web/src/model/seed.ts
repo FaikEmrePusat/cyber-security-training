@@ -16,23 +16,23 @@ import type {
 export const SEED_ISO = "2026-08-27T12:00:00+03:00";
 
 export const SEED_SKILLS: Skill[] = [
-  { id: "net", name: "Networking", kisa: "Net", weight: 1.2, neden: "Her SOC analizi paket/protokol okumaya dayanır", claimed: 6, evidence: "yok", ref: "" },
-  { id: "linux", name: "Linux", kisa: "Linux", weight: 1.3, neden: "SOC araç zinciri ve log analizi Linux üstünde", claimed: 4, evidence: "yok", ref: "" },
-  { id: "win", name: "Windows/AD", kisa: "Win/AD", weight: 1.4, neden: "Kurumsal ortamların çoğu AD; olaylar oradan gelir", claimed: 3, evidence: "yok", ref: "" },
-  { id: "secfund", name: "Security Fundamentals", kisa: "SecFund", weight: 1.0, neden: "Zemin — tehdit modeli, CIA, saldırı yüzeyi", claimed: 7, evidence: "yok", ref: "" },
-  { id: "crypto", name: "Crypto", kisa: "Crypto", weight: 0.6, neden: "Gerekli ama junior'da erken derinlik değil", claimed: 7, evidence: "yok", ref: "" },
-  { id: "netsec", name: "Network Security", kisa: "NetSec", weight: 0.9, neden: "FW / IDS / proxy — SOC'ta günlük kavramlar", claimed: 7, evidence: "yok", ref: "" },
-  { id: "siem", name: "SIEM kavram", kisa: "SIEM", weight: 1.1, neden: "Gate B'nin ön koşulu; hedef rolün ana aracı", claimed: 3, evidence: "yok", ref: "" },
-  { id: "def", name: "Defensive/SOC", kisa: "Def/SOC", weight: 1.5, neden: "Hedef rolün kendisi", claimed: 3, evidence: "yok", ref: "" },
-  { id: "off", name: "Offensive", kisa: "Off", weight: 0.7, neden: "Savunmayı besler; junior'da ikincil", claimed: 2, evidence: "yok", ref: "" },
-  { id: "py", name: "Python", kisa: "Python", weight: 0.8, neden: "Otomasyon / log parse", claimed: 5, evidence: "yok", ref: "" },
-  { id: "cloud", name: "Cloud", kisa: "Cloud", weight: 0.4, neden: "Junior SOC ilanlarında ikincil", claimed: 2, evidence: "yok", ref: "" },
-  { id: "port", name: "Portfolio", kisa: "Portfolio", weight: 1.4, neden: "İşe alınabilirlik — ilanların ortak talebi", claimed: 2, evidence: "yok", ref: "" },
+  { id: "net", name: "Networking", kisa: "Net", weight: 1.2, neden: "Every SOC analysis depends on reading packets/protocols", claimed: 6, evidence: "yok", ref: "" },
+  { id: "linux", name: "Linux", kisa: "Linux", weight: 1.3, neden: "SOC tool chain and log analysis run on Linux", claimed: 4, evidence: "yok", ref: "" },
+  { id: "win", name: "Windows/AD", kisa: "Win/AD", weight: 1.4, neden: "Most enterprise environments use AD; incidents originate there", claimed: 3, evidence: "yok", ref: "" },
+  { id: "secfund", name: "Security Fundamentals", kisa: "SecFund", weight: 1.0, neden: "Baseline — threat model, CIA, attack surface", claimed: 7, evidence: "yok", ref: "" },
+  { id: "crypto", name: "Crypto", kisa: "Crypto", weight: 0.6, neden: "Necessary but early depth is not junior priority", claimed: 7, evidence: "yok", ref: "" },
+  { id: "netsec", name: "Network Security", kisa: "NetSec", weight: 0.9, neden: "FW / IDS / proxy — daily SOC concepts", claimed: 7, evidence: "yok", ref: "" },
+  { id: "siem", name: "SIEM kavram", kisa: "SIEM", weight: 1.1, neden: "Gate B prerequisite; core tool of target role", claimed: 3, evidence: "yok", ref: "" },
+  { id: "def", name: "Defensive/SOC", kisa: "Def/SOC", weight: 1.5, neden: "The target role itself", claimed: 3, evidence: "yok", ref: "" },
+  { id: "off", name: "Offensive", kisa: "Off", weight: 0.7, neden: "Feeds defense; secondary at junior level", claimed: 2, evidence: "yok", ref: "" },
+  { id: "py", name: "Python", kisa: "Python", weight: 0.8, neden: "Automation / log parsing", claimed: 5, evidence: "yok", ref: "" },
+  { id: "cloud", name: "Cloud", kisa: "Cloud", weight: 0.4, neden: "Secondary in junior SOC job posts", claimed: 2, evidence: "yok", ref: "" },
+  { id: "port", name: "Portfolio", kisa: "Portfolio", weight: 1.4, neden: "Employability — common job posting requirement", claimed: 2, evidence: "yok", ref: "" },
 ];
 
 export const SEED_ARTIFACTS: Artifact[] = [
-  { id: "a1", ad: "Lab yazısı (henüz herkese açık link yok)", tur: "writeup", sahiplik: 1, evidence: "yok", ref: "" },
-  { id: "a2", ad: "Tamamlanan lab senaryosu (henüz herkese açık link yok)", tur: "lab-egzersizi", sahiplik: 1, evidence: "yok", ref: "" },
+  { id: "a1", ad: "Lab write-up (no public link yet)", tur: "writeup", sahiplik: 1, evidence: "yok", ref: "" },
+  { id: "a2", ad: "Completed lab scenario (no public link yet)", tur: "lab-egzersizi", sahiplik: 1, evidence: "yok", ref: "" },
 ];
 
 export const SEED_LANG: LangState = {
@@ -58,11 +58,11 @@ export const SEED_CHANCE: ChancenkarteState = {
 };
 
 export const SEED_CAREER: CareerItem[] = [
-  { id: "cv", label: "CV hazır", max: 2, claimed: 1, evidence: "yok", ref: "", saatPuan: 5 },
-  { id: "ag", label: "Ağ (LinkedIn + referans)", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 4 },
-  { id: "staj", label: "Staj belgelenmiş", max: 2, claimed: 1, evidence: "yok", ref: "", saatPuan: 4 },
-  { id: "funnel", label: "Başvuru funnel aktif", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 6 },
-  { id: "mulakat", label: "Mülakat pratiği", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 8 },
+  { id: "cv", label: "CV ready", max: 2, claimed: 1, evidence: "yok", ref: "", saatPuan: 5 },
+  { id: "ag", label: "Network (LinkedIn + references)", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 4 },
+  { id: "staj", label: "Internship documented", max: 2, claimed: 1, evidence: "yok", ref: "", saatPuan: 4 },
+  { id: "funnel", label: "Application funnel active", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 6 },
+  { id: "mulakat", label: "Interview practice", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 8 },
 ];
 
 export const SEED_TEMPO: Tempo = { hoursCyber: 28, hoursLang: 7, hoursLangAlt: 14, quality: 0.85 };
@@ -88,10 +88,10 @@ export const SEED_RETRIEVAL: RetrievalItem[] = [
   mkRetrieval("r2", "TCP 3-way handshake", "net", "kolay"),
   mkRetrieval("r3", "Linux process / permissions", "linux", "orta"),
   mkRetrieval("r4", "CIA triad + threat model", "secfund", "kolay"),
-  mkRetrieval("r5", "Simetrik vs asimetrik kripto", "crypto", "orta"),
-  mkRetrieval("r6", "Windows event log temelleri", "win", "zor"),
+  mkRetrieval("r5", "Symmetric vs asymmetric crypto", "crypto", "orta"),
+  mkRetrieval("r6", "Windows event log basics", "win", "zor"),
   mkRetrieval("r7", "Python socket / log parse", "py", "orta"),
-  mkRetrieval("r8", "SOC triage düşünce zinciri", "def", "zor"),
+  mkRetrieval("r8", "SOC triage thought chain", "def", "zor"),
 ];
 
 export const SEED_HISTORY: LogRecord[] = [
@@ -99,7 +99,7 @@ export const SEED_HISTORY: LogRecord[] = [
     t: SEED_ISO,
     type: "meta",
     seed: true,
-    not: "Şema 1.0 · model 2.0. Bu satır seed'dir; ölçülmüş ilerleme içermez.",
+    not: "Schema 1.0 · model 2.0. This row is seed data; contains no measured progress.",
   },
   {
     t: SEED_ISO,
@@ -110,7 +110,7 @@ export const SEED_HISTORY: LogRecord[] = [
     v_tahmin: 1.84,
     v_olculen: null,
     kappa: null,
-    not: "SEED — tek ölçüm noktası. v_ölçülen için en az 2 snapshot gerekir.",
+    not: "SEED — single measurement point. v_measured requires at least 2 snapshots.",
   },
 ];
 

@@ -29,7 +29,7 @@ export function RadarChart({
     .join(" ");
 
   return (
-    <svg className="chart radar-wrap" viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Beceri radarı">
+    <svg className="chart radar-wrap" viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Skills radar">
       {[0.25, 0.5, 0.75, 1].map((lvl) => (
         <polygon
           key={lvl}

@@ -13,20 +13,20 @@ export function SiemGapCallout({ compact }: { compact?: boolean }) {
   return (
     <aside
       className={`siem-gap${compact ? " siem-gap--compact" : ""}`}
-      aria-label="SIEM kariyer boşluğu"
+      aria-label="SIEM career gap"
     >
       <span className="siem-gap__swatch" aria-hidden />
       <div className="siem-gap__body">
-        <p className="siem-gap__eyebrow">Gate B · EDR sonrası</p>
+        <p className="siem-gap__eyebrow">Gate B · After EDR</p>
         <p className="siem-gap__title">
-          Sonraki kurs bloğu: <strong>SIEM</strong>
+          Next course block: <strong>SIEM</strong>
         </p>
-        <p className="siem-gap__meta" title="Yaklaşan konular tekrar kuyruğuna otomatik dökülmez">
-          {claimed}/{need} · yaklaşan kilitli (tekrar kuyruğuna dökülmez)
+        <p className="siem-gap__meta" title="Upcoming topics are not auto-dumped into the review queue">
+          {claimed}/{need} · upcoming locked (not dumped into review queue)
         </p>
       </div>
       <Link className="siem-gap__link" to="/harita#yaklasan">
-        Yaklaşan
+        Upcoming
       </Link>
     </aside>
   );

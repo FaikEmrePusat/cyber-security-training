@@ -10,6 +10,7 @@ import {
   type RetrievalItem,
 } from "../model";
 import { ROADMAP_SUGGESTIONS } from "../data/roadmapTopics";
+import { DIFF_LABEL } from "../data/oakCurriculum";
 import { Section } from "../components/Section";
 import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
@@ -131,16 +132,16 @@ export function TekrarPage() {
   const addOne = () => {
     const t = topic.trim();
     if (!t) {
-      flash("Konu boş olamaz");
+      flash("Topic cannot be empty");
       return;
     }
     if (existingTopics.has(t.toLowerCase())) {
-      flash("Bu konu zaten kuyrukta");
+      flash("This topic is already in the queue");
       return;
     }
     setRetrieval((all) => all.concat([makeItem(t, alan, difficulty)]));
     setTopic("");
-    flash("Konu eklendi");
+    flash("Topic added");
   };
 
   const addBulk = () => {
@@ -156,23 +157,23 @@ export function TekrarPage() {
       items.push(makeItem(parsed.topic, parsed.alan, parsed.difficulty));
     }
     if (!items.length) {
-      flash("Eklenecek satır yok");
+      flash("No rows to add");
       return;
     }
     setRetrieval((all) => all.concat(items));
     setBulk("");
-    flash(`${items.length} konu eklendi`);
+    flash(`${items.length} topics added`);
   };
 
   const removeItem = (id: string) => {
     setRetrieval((all) => all.filter((r) => r.id !== id));
-    flash("Silindi — Ctrl+Z ile geri al");
+    flash("Deleted — undo with Ctrl+Z");
   };
 
   const addPickedSuggestions = () => {
     const ids = Object.keys(picked).filter((id) => picked[id]);
     if (!ids.length) {
-      flash("Öneri seçilmedi");
+      flash("No suggestion selected");
       return;
     }
     const seen = new Set(existingTopics);
@@ -186,12 +187,12 @@ export function TekrarPage() {
       items.push(makeItem(s.topic, s.alan, s.difficulty));
     }
     if (!items.length) {
-      flash("Hepsi zaten kuyrukta");
+      flash("All already in queue");
       return;
     }
     setRetrieval((all) => all.concat(items));
     setPicked({});
-    flash(`${items.length} öneri eklendi`);
+    flash(`${items.length} suggestions added`);
   };
 
   const skillName = (id: string) => state.skills.find((s) => s.id === id)?.kisa ?? id;
@@ -215,14 +216,14 @@ export function TekrarPage() {
           {item.topic}
           {due && (
             <span className="badge badge--warn" style={{ marginLeft: 6 }}>
-              vade
+              due
             </span>
           )}
         </td>
         <td>{skillName(item.alan)}</td>
-        <td>{item.difficulty}</td>
-        <td title="R(t) — hatırlama olasılığı">{round2(r)}</td>
-        <td title="S — kararlılık (gün)">{round2(item.stability)}</td>
+        <td>{DIFF_LABEL[item.difficulty] ?? item.difficulty}</td>
+        <td title="R(t) — recall probability">{round2(r)}</td>
+        <td title="S — stability (days)">{round2(item.stability)}</td>
         <td>
           {showActions ? (
             <div className="actions" style={{ margin: 0 }}>
@@ -232,7 +233,7 @@ export function TekrarPage() {
                 style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
                 onClick={() => mark(item, "basarili")}
               >
-                Başarılı
+                Success
               </button>
               <button
                 type="button"
@@ -240,7 +241,7 @@ export function TekrarPage() {
                 style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
                 onClick={() => mark(item, "zorlandim")}
               >
-                Zorlandım
+                Struggled
               </button>
               <button
                 type="button"
@@ -248,7 +249,7 @@ export function TekrarPage() {
                 style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
                 onClick={() => mark(item, "basarisiz")}
               >
-                Başarısız
+                Failed
               </button>
             </div>
           ) : (
@@ -263,9 +264,9 @@ export function TekrarPage() {
             className="cta cta--ghost"
             style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
             onClick={() => removeItem(item.id)}
-            title="Sil (Ctrl+Z ile geri al)"
+            title="Delete (undo with Ctrl+Z)"
           >
-            Sil
+            Delete
           </button>
         </td>
       </tr>
@@ -275,12 +276,12 @@ export function TekrarPage() {
   const tableHead = (
     <thead>
       <tr>
-        <th>Konu</th>
-        <th>Alan</th>
-        <th>Z</th>
-        <th title="R(t) — hatırlama">Hazır</th>
-        <th title="S — kararlılık">S</th>
-        <th>Sonuç</th>
+        <th>Topic</th>
+        <th>Area</th>
+        <th>D</th>
+        <th title="R(t) — recall">Ready</th>
+        <th title="S — stability">S</th>
+        <th>Result</th>
         <th />
       </tr>
     </thead>
@@ -290,29 +291,29 @@ export function TekrarPage() {
     <div className="page">
       <Section
         as="h1"
-        title="Tekrar"
-        lead={`Bugün en fazla ${MODEL.tekrar.kuyrukTavani} madde. Vadesi gelenleri işaretle — motor arka planda çalışır.`}
+        title="Review"
+        lead={`Today max ${MODEL.tekrar.kuyrukTavani} items. Mark due ones — engine runs in the background.`}
       >
-        <p className="note" style={{ marginTop: 0 }} title="FSRS — spaced repetition motoru">
-          Tam müfredat (141+ yaklaşan) → <Link to="/harita">Harita</Link> — buraya dump etme.
+        <p className="note" style={{ marginTop: 0 }} title="FSRS — spaced repetition engine">
+          Full curriculum (141+ upcoming) → <Link to="/harita">Map</Link> — do not dump here.
         </p>
         {toast && <p className="note">{toast}</p>}
 
         {d.overdue.length === 0 ? (
-          <p className="note">Vadesi geçmiş madde yok — iyi.</p>
+          <p className="note">No overdue items — good.</p>
         ) : (
           <p className="note">
-            Vadesi geçmiş: <strong>{d.overdue.length}</strong> · bugün önerilen:{" "}
+            Overdue: <strong>{d.overdue.length}</strong> · suggested today:{" "}
             <strong>{d.kuyruk.length}</strong>
-            {laterOverdue.length > 0 ? ` · sonra: ${laterOverdue.length}` : ""}
+            {laterOverdue.length > 0 ? ` · later: ${laterOverdue.length}` : ""}
           </p>
         )}
 
         <h2 style={{ fontFamily: "var(--font-display)", margin: "0 0 0.75rem", fontSize: "1.15rem" }}>
-          Bugün önerilen ({d.kuyruk.length})
+          Suggested today ({d.kuyruk.length})
         </h2>
         {d.kuyruk.length === 0 ? (
-          <p className="note">Bugün için öncelikli vade yok.</p>
+          <p className="note">No priority due items for today.</p>
         ) : (
           <div className="table-wrap">
             <table className="data">
@@ -325,8 +326,8 @@ export function TekrarPage() {
         {laterCount > 0 && (
           <details className="roi-alts" style={{ marginTop: "1rem" }}>
             <summary className="roi-alts__summary">
-              Daha sonra ({laterCount}
-              {laterOverdue.length ? ` · ${laterOverdue.length} vade` : ""})
+              Later ({laterCount}
+              {laterOverdue.length ? ` · ${laterOverdue.length} due` : ""})
             </summary>
             <div className="table-wrap" style={{ marginTop: "0.75rem" }}>
               <table className="data">
@@ -341,15 +342,15 @@ export function TekrarPage() {
         )}
 
         <h3 style={{ fontFamily: "var(--font-display)", margin: "1.5rem 0 0.75rem", fontSize: "1.05rem" }}>
-          Konu ekle
+          Add topic
         </h3>
         <div className="field-row">
           <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label htmlFor="tekrar-konu">Konu</label>
+            <label htmlFor="tekrar-konu">Topic</label>
             <input
               id="tekrar-konu"
               value={topic}
-              placeholder="örn. DNS query/response (Wireshark)"
+              placeholder="e.g. DNS query/response (Wireshark)"
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -360,7 +361,7 @@ export function TekrarPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="tekrar-alan">Alan</label>
+            <label htmlFor="tekrar-alan">Area</label>
             <select id="tekrar-alan" value={alan} onChange={(e) => setAlan(e.target.value)}>
               {state.skills.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -370,7 +371,7 @@ export function TekrarPage() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="tekrar-zorluk">Zorluk</label>
+            <label htmlFor="tekrar-zorluk">Difficulty</label>
             <select
               id="tekrar-zorluk"
               value={difficulty}
@@ -378,7 +379,7 @@ export function TekrarPage() {
             >
               {DIFFS.map((x) => (
                 <option key={x} value={x}>
-                  {x}
+                  {DIFF_LABEL[x]}
                 </option>
               ))}
             </select>
@@ -386,18 +387,18 @@ export function TekrarPage() {
         </div>
         <div className="actions" style={{ marginTop: 0 }}>
           <button type="button" className="cta" onClick={addOne}>
-            Konu ekle
+            Add topic
           </button>
         </div>
 
         <h3 style={{ fontFamily: "var(--font-display)", margin: "1.5rem 0 0.5rem", fontSize: "1.05rem" }}>
-          Toplu ekle
+          Bulk add
         </h3>
         <p className="note" style={{ marginTop: 0 }}>
-          Satır başına bir konu. Biçim: <code>konu</code> veya <code>alan|zorluk|konu</code> (varsayılan: net · orta).
+          One topic per line. Format: <code>topic</code> or <code>area|difficulty|topic</code> (default: net · medium).
         </p>
         <div className="field">
-          <label htmlFor="tekrar-bulk">Konu listesi</label>
+          <label htmlFor="tekrar-bulk">Topic list</label>
           <textarea
             id="tekrar-bulk"
             value={bulk}
@@ -408,14 +409,14 @@ export function TekrarPage() {
         </div>
         <div className="actions" style={{ marginTop: 0 }}>
           <button type="button" className="cta cta--ghost" onClick={addBulk}>
-            Toplu ekle
+            Bulk add
           </button>
         </div>
       </Section>
 
       <Section
-        title="Önerilenlerden ekle"
-        lead="Junior SOC odaklı seçki. Sadece öğrendiğin konuları ekle — tüm yol haritasını buraya doldurma."
+        title="Add from suggestions"
+        lead="Junior SOC focused selection. Only add topics you have studied — do not fill the entire roadmap here."
       >
         <label className="note" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <input
@@ -423,11 +424,11 @@ export function TekrarPage() {
             checked={showLater}
             onChange={(e) => setShowLater(e.target.checked)}
           />
-          Junior SOC sonrası konuları da göster
+          Also show post–Junior SOC topics
         </label>
 
         {suggestions.length === 0 ? (
-          <p className="note">Gösterilecek öneri kalmadı (hepsi kuyrukta veya filtre kapalı).</p>
+          <p className="note">No suggestions left to show (all in queue or filter off).</p>
         ) : (
           <div
             style={{
@@ -461,8 +462,8 @@ export function TekrarPage() {
                 <span>
                   <strong>{s.topic}</strong>
                   <span className="note" style={{ display: "block", margin: 0, fontSize: "0.75rem" }}>
-                    {skillName(s.alan)} · {s.difficulty}
-                    {s.later ? " · sonra" : ""}
+                    {skillName(s.alan)} · {DIFF_LABEL[s.difficulty] ?? s.difficulty}
+                    {s.later ? " · later" : ""}
                   </span>
                 </span>
               </label>
@@ -472,7 +473,7 @@ export function TekrarPage() {
 
         <div className="actions">
           <button type="button" className="cta" onClick={addPickedSuggestions}>
-            Seçilenleri ekle
+            Add selected
           </button>
         </div>
       </Section>

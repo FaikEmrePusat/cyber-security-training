@@ -33,16 +33,16 @@ export function BecerilerPage() {
     <div className="page">
       <Section
         as="h1"
-        title="Beceriler"
-        lead="Skoru yükseltmek için kanıt referansı gerekir; düşürmek serbest. Değişiklikler log’a yazılır."
+        title="Skills"
+        lead="Raising score requires evidence reference; lowering is free. Changes are written to the log."
       >
         <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
-                <th>Alan</th>
-                <th>Beyan</th>
-                <th>Kanıt</th>
+                <th>Area</th>
+                <th>Claim</th>
+                <th>Evidence</th>
                 <th>S_etkin</th>
                 <th>Ref</th>
               </tr>
@@ -158,15 +158,15 @@ export function BecerilerPage() {
         </div>
       </Section>
 
-      <Section title="Artefaktlar (P)" lead="P doygun + kanıt tavanlı. Public olmadan tavan 8. Tür seçimi model değerlerini açar.">
+      <Section title="Artifacts (P)" lead="P saturates + evidence-capped. Cap 8 without public. Type selection reveals model values.">
         <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
-                <th>Ad</th>
-                <th>Tür</th>
-                <th>Sahiplik</th>
-                <th>Kanıt</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Ownership</th>
+                <th>Evidence</th>
                 <th>Ref</th>
               </tr>
             </thead>
@@ -229,7 +229,7 @@ export function BecerilerPage() {
                             ["yok", "kayit", "public"].indexOf(a.evidence) &&
                           !a.ref.trim()
                         ) {
-                          flash("Artefakt yükseltmek için ref gerekli.");
+                          flash("Reference required to raise artifact.");
                           return;
                         }
                         setArtifacts((all) =>
@@ -262,7 +262,7 @@ export function BecerilerPage() {
         </div>
         <div className="field-row" style={{ alignItems: "flex-end", marginTop: "0.75rem" }}>
           <div className="field">
-            <label>Yeni tür</label>
+            <label>New type</label>
             <select
               style={{ minHeight: 44 }}
               value={newTur}
@@ -284,7 +284,7 @@ export function BecerilerPage() {
                 all.concat([
                   {
                     id,
-                    ad: "Yeni artefakt",
+                    ad: "New artifact",
                     tur: newTur,
                     sahiplik: 1,
                     evidence: "yok",
@@ -294,23 +294,23 @@ export function BecerilerPage() {
               );
             }}
           >
-            Artefakt ekle
+            Add artifact
           </button>
         </div>
         <p className="note">
-          Σ q·v = {round1(d.live.pSum)} → P = {round1(d.live.P)} / 10 · tavan{" "}
+          Σ q·v = {round1(d.live.pSum)} → P = {round1(d.live.P)} / 10 · cap{" "}
           {evidenceCap(d.live.pTavan, 10)}
         </p>
       </Section>
 
-      <Section title="Dil" lead="DE/EN = 0.6·konuşma + 0.4·genel (canvas dil skorunda skor log yazmaz).">
+      <Section title="Language" lead="DE/EN = 0.6·speaking + 0.4·general (language score on canvas does not write score log).">
         <div className="field-row">
           {(
             [
-              ["deKonusma", "DE konuşma"],
-              ["deGenel", "DE genel"],
-              ["enKonusma", "EN konuşma"],
-              ["enGenel", "EN genel"],
+              ["deKonusma", "DE speaking"],
+              ["deGenel", "DE general"],
+              ["enKonusma", "EN speaking"],
+              ["enGenel", "EN general"],
             ] as const
           ).map(([key, label]) => (
             <div className="field" key={key}>
@@ -328,7 +328,7 @@ export function BecerilerPage() {
             </div>
           ))}
           <div className="field">
-            <label>DE kanıt</label>
+            <label>DE evidence</label>
             <select
               value={state.lang.deEv}
               onChange={(e) => setLang((l) => ({ ...l, deEv: e.target.value as EvidenceTier }))}
@@ -341,7 +341,7 @@ export function BecerilerPage() {
             </select>
           </div>
           <div className="field">
-            <label>EN kanıt</label>
+            <label>EN evidence</label>
             <select
               value={state.lang.enEv}
               onChange={(e) => setLang((l) => ({ ...l, enEv: e.target.value as EvidenceTier }))}
@@ -356,7 +356,7 @@ export function BecerilerPage() {
         </div>
       </Section>
 
-      <Section title="Kariyer (C)">
+      <Section title="Career (C)">
         {state.career.map((c) => (
           <div key={c.id} className="field-row" style={{ marginBottom: "0.75rem" }}>
             <div className="field">
@@ -367,7 +367,7 @@ export function BecerilerPage() {
                   const next = Number(e.target.value);
                   if (next === c.claimed) return;
                   if (next > c.claimed && !c.ref.trim()) {
-                    flash("Kariyer yükseltmek için belge/URL gerekli.");
+                    flash("Document/URL required to raise career.");
                     return;
                   }
                   setCareer((all) =>
@@ -393,14 +393,14 @@ export function BecerilerPage() {
               </select>
             </div>
             <div className="field">
-              <label>Kanıt</label>
+              <label>Evidence</label>
               <select
                 value={c.evidence}
                 onChange={(e) => {
                   const t2 = e.target.value as EvidenceTier;
                   if (t2 === c.evidence) return;
                   if (t2 !== "yok" && !c.ref.trim()) {
-                    flash("Kariyer kanıt yükseltmek için belge/URL gerekli.");
+                    flash("Document/URL required to raise career evidence.");
                     return;
                   }
                   setCareer((all) =>

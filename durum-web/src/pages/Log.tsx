@@ -28,30 +28,30 @@ export function LogPage() {
     a.download = `durum-full-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    flash("Tam yedek dosyası indirildi (.json)");
+    flash("Full backup file downloaded (.json)");
   };
 
   const handleCopyFullBackup = async () => {
     const jsonStr = exportFullBackup();
     try {
       await navigator.clipboard.writeText(jsonStr);
-      flash("Tam yedek panoya kopyalandı");
+      flash("Full backup copied to clipboard");
     } catch {
-      flash("Kopyalanamadı — dosya olarak indir");
+      flash("Could not copy — download as file instead");
     }
   };
 
   const handleRestoreBackup = () => {
     if (!backupPaste.trim()) {
-      flash("Lütfen yedek JSON metnini yapıştırın");
+      flash("Please paste backup JSON text");
       return;
     }
     const ok = importFullBackup(backupPaste.trim());
     if (ok) {
       setBackupPaste("");
-      flash("Tüm veriler başarıyla geri yüklendi!");
+      flash("All data restored successfully!");
     } else {
-      flash("Geçersiz yedek formatı!");
+      flash("Invalid backup format!");
     }
   };
 
@@ -72,22 +72,22 @@ export function LogPage() {
       v_tahmin: round2(d.vTahmin),
       v_olculen: d.vOlculen ? round2(d.vOlculen.v) : null,
       kappa: d.kappa !== null ? round2(d.kappa) : null,
-      not: `model ${MODEL.surum} · Σw=${round1(d.sumW)} · çürüme ${round1(d.curumeKaybi)} R`,
+      not: `model ${MODEL.surum} · Σw=${round1(d.sumW)} · decay ${round1(d.curumeKaybi)} R`,
     });
-    flash("Haftalık snapshot alındı");
+    flash("Weekly snapshot taken");
   };
 
   const exportPending = async () => {
     const text = state.pending.join("\n");
     if (!text) {
-      flash("Bekleyen satır yok");
+      flash("No pending rows");
       return;
     }
     try {
       await navigator.clipboard.writeText(text);
-      flash("JSONL panoya kopyalandı — Ilerleme-Log.jsonl'a yapıştır");
+      flash("JSONL copied to clipboard — paste into Ilerleme-Log.jsonl");
     } catch {
-      flash("Kopyalanamadı — aşağıdaki metni elle kopyala");
+      flash("Could not copy — copy the text below manually");
     }
   };
 
@@ -104,36 +104,36 @@ export function LogPage() {
 
   return (
     <div className="page">
-      <Section as="h1" title="Log" lead="~60 sn ritüel: oturum yaz → tekrar işaretle → haftada bir snapshot. Ölçüm log'suz görünmez.">
+      <Section as="h1" title="Log" lead="~60 s ritual: log session → mark reviews → weekly snapshot. Progress is invisible without logs.">
         <h2 style={{ fontFamily: "var(--font-display)", margin: "0 0 0.75rem", fontSize: "1.15rem" }}>
-          Oturum ekle
+          Add session
         </h2>
         <SessionLogForm
           initial={defaultManualForm(state.tempo.quality)}
           skills={state.skills}
           onSubmit={(form) => {
             appendSessionFromForm(form);
-            flash("Oturum kaydedildi");
+            flash("Session saved");
           }}
         />
         <div className="actions" style={{ marginTop: "0.75rem" }}>
           <button type="button" className="cta cta--ghost" onClick={takeSnapshot}>
-            Haftalık snapshot
+            Weekly snapshot
           </button>
         </div>
       </Section>
 
-      <Section title="Dışa aktar" lead="Bekleyen satırları Ilerleme-Log.jsonl dosyasına yapıştır (append-only).">
-        <p className="note">Bekleyen: {state.pending.length} satır · geçmiş: {state.history.length}</p>
+      <Section title="Export" lead="Paste pending rows into Ilerleme-Log.jsonl (append-only).">
+        <p className="note">Pending: {state.pending.length} rows · history: {state.history.length}</p>
         <div className="actions">
           <button type="button" className="cta" onClick={exportPending}>
-            Panoya kopyala
+            Copy to clipboard
           </button>
           <button type="button" className="cta cta--ghost" onClick={downloadPending}>
-            JSONL indir
+            Download JSONL
           </button>
-          <button type="button" className="cta cta--ghost" onClick={() => { clearPending(); flash("Bekleyen temizlendi"); }}>
-            Bekleyeni temizle
+          <button type="button" className="cta cta--ghost" onClick={() => { clearPending(); flash("Pending cleared"); }}>
+            Clear pending
           </button>
         </div>
         {state.pending.length > 0 && (
@@ -154,17 +154,17 @@ export function LogPage() {
         )}
       </Section>
 
-      <Section title="Tam Veri Yedekleme & Cihazlar Arası Aktarım" lead="Telefon, tablet veya başka bir tarayıcıya geçerken tüm ilerlemenizi (beceriler, loglar, tekrarlar, harita durumları) tek tıkla aktarın.">
+      <Section title="Full Backup & Cross-Device Transfer" lead="Move all progress (skills, logs, reviews, map statuses) to phone, tablet, or another browser in one step.">
         <div className="actions" style={{ marginBottom: "1rem" }}>
           <button type="button" className="cta" onClick={handleDownloadFullBackup}>
-            Tüm Veriyi İndir (.json)
+            Download All Data (.json)
           </button>
           <button type="button" className="cta cta--ghost" onClick={handleCopyFullBackup}>
-            Yedeği Panoya Kopyala
+            Copy Backup to Clipboard
           </button>
         </div>
         <div className="field">
-          <label htmlFor="log-backup-json">Yedekten Geri Yükle (JSON Yapıştır)</label>
+          <label htmlFor="log-backup-json">Restore from Backup (Paste JSON)</label>
           <textarea
             id="log-backup-json"
             value={backupPaste}
@@ -177,11 +177,11 @@ export function LogPage() {
           className="cta cta--ghost"
           onClick={handleRestoreBackup}
         >
-          Yedeği Sisteme Yükle ve Uygula
+          Load Backup and Apply
         </button>
       </Section>
 
-      <Section title="İçe aktar (Yalnızca JSONL Log Satırları)" lead="JSONL yapıştır — satırlar geçmişe eklenir.">
+      <Section title="Import (JSONL Log Rows Only)" lead="Paste JSONL — rows are appended to history.">
         <div className="field">
           <label htmlFor="log-jsonl">JSONL</label>
           <textarea
@@ -197,21 +197,21 @@ export function LogPage() {
           onClick={() => {
             const n = importJsonl(paste);
             setPaste("");
-            flash(`${n} satır eklendi`);
+            flash(`${n} rows added`);
           }}
         >
-          Yapıştırılanı içe aktar
+          Import pasted rows
         </button>
       </Section>
 
-      <Section title="Son kayıtlar">
+      <Section title="Recent records">
         <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
-                <th>Zaman</th>
-                <th>Tür</th>
-                <th>Özet</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Summary</th>
               </tr>
             </thead>
             <tbody>
@@ -229,10 +229,10 @@ export function LogPage() {
         </div>
       </Section>
 
-      <Section title="Sıfırla">
+      <Section title="Reset">
         {!confirmReset ? (
           <button type="button" className="cta cta--ghost" onClick={() => setConfirmReset(true)}>
-            Seed'e dön
+            Restore seed
           </button>
         ) : (
           <div className="actions">
@@ -242,13 +242,13 @@ export function LogPage() {
               onClick={() => {
                 resetSeed();
                 setConfirmReset(false);
-                flash("Diagnostic seed yüklendi");
+                flash("Diagnostic seed loaded");
               }}
             >
-              Evet, sıfırla
+              Yes, reset
             </button>
             <button type="button" className="cta cta--ghost" onClick={() => setConfirmReset(false)}>
-              Vazgeç
+              Cancel
             </button>
           </div>
         )}

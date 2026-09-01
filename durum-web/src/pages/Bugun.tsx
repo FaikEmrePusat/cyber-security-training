@@ -30,26 +30,26 @@ const METRIC_HELP = [
   {
     key: "r",
     mark: "R",
-    label: "Hazırlık",
-    line: "Almanya junior'a ne kadar yakınsın (0–100)",
+    label: "Readiness",
+    line: "How close you are to Germany junior target (0–100)",
   },
   {
     key: "gm",
     mark: "GM",
-    label: "Güven payı",
-    line: "Bir kapı becerisinin unutulmadan önceki gün marjı; — = henüz ölçülmedi",
+    label: "Safety margin",
+    line: "Days before a gate skill decays; — = not measured yet",
   },
   {
     key: "tsb",
     mark: "TSB",
-    label: "Yorgunluk",
-    line: "Son günlerin yükü; yüksekse dinlen",
+    label: "Fatigue",
+    line: "Recent training load; rest when high",
   },
   {
     key: "gates",
     mark: "0–F",
-    label: "Kapılar",
-    line: "Doluluk = ne kadar açığa yakın; vurgulu halka = sıradaki engel",
+    label: "Gates",
+    line: "Fill = how close to open; highlighted ring = next blocker",
   },
 ] as const;
 
@@ -81,29 +81,29 @@ function GorevCard({
       <div className="gorev-card__body">
         <div className="gorev-card__top">
           <p className="gorev-card__kind">{gorev.kindLabel}</p>
-          {gorev.carried && <span className="gorev-card__badge gorev-card__badge--carry">Taşınan</span>}
+          {gorev.carried && <span className="gorev-card__badge gorev-card__badge--carry">Carried</span>}
         </div>
         <h2 className="gorev-card__title">{gorev.baslik}</h2>
         {gorev.detay && <p className="gorev-card__detay">{gorev.detay}</p>}
         {gorev.neden && <p className="gorev-card__neden">{gorev.neden}</p>}
         <div className="gorev-card__meta">
           {gorev.sure && <span>{gorev.sure}</span>}
-          {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">TEMEL</span>}
-          {gorev.kind === "konu" && <span className="gorev-card__badge gorev-card__badge--zayif">ZAYIF ALAN</span>}
-          {gorev.kind === "lab" && <span className="gorev-card__badge gorev-card__badge--lab">LAB PRATİĞİ</span>}
-          {gorev.kind === "dil" && <span className="gorev-card__badge gorev-card__badge--dil">ALMANCA</span>}
-          {gorev.carried && <span className="gorev-card__badge">Dünden kalan</span>}
+          {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">FOUNDATION</span>}
+          {gorev.kind === "konu" && <span className="gorev-card__badge gorev-card__badge--zayif">WEAK AREA</span>}
+          {gorev.kind === "lab" && <span className="gorev-card__badge gorev-card__badge--lab">LAB PRACTICE</span>}
+          {gorev.kind === "dil" && <span className="gorev-card__badge gorev-card__badge--dil">GERMAN</span>}
+          {gorev.carried && <span className="gorev-card__badge">From yesterday</span>}
         </div>
         {(onComplete || onDefer) && (
           <div className="gorev-card__actions">
             {onComplete && (
               <button type="button" className="cta cta--sm" onClick={onComplete}>
-                Bitti
+                Done
               </button>
             )}
             {onDefer && (
               <button type="button" className="cta cta--ghost cta--sm" onClick={onDefer}>
-                Yarına aktar
+                Defer to tomorrow
               </button>
             )}
           </div>
@@ -124,29 +124,29 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
         </span>
         <span className="plan-day__date">{day.dateIso.slice(5).replace("-", ".")}</span>
         {day.tasima > 0 && (
-          <span className="plan-day__slide" title="Kapasite yetmedi — görevler kayıyor">
-            +{day.tasima} kayıyor
+          <span className="plan-day__slide" title="Capacity full — tasks rolling over">
+            +{day.tasima} rolling
           </span>
         )}
       </header>
       {day.tasks.length === 0 ? (
-        <p className="plan-day__empty">Boş gün (kapasite dolu veya dinlenme)</p>
+        <p className="plan-day__empty">Empty day (capacity full or rest)</p>
       ) : (
         <ul className="plan-day__list">
           {day.tasks.map((t) => (
             <li key={t.id} className={`plan-day__item plan-day__item--${t.kind}`}>
               <span className="plan-day__kind">
                 {t.kind === "tekrar"
-                  ? "Tekrar"
+                  ? "Review"
                   : t.kind === "temel"
-                    ? "Temel"
+                    ? "Foundation"
                     : t.kind === "konu"
-                      ? "Zayıf"
+                      ? "Weak"
                       : t.kind === "lab"
                         ? "Lab"
                         : t.kind === "dil"
-                          ? "Dil"
-                          : "Dinlen"}
+                          ? "Lang"
+                          : "Rest"}
               </span>
               <span className="plan-day__task">{t.baslik}</span>
               {t.carried && <span className="plan-day__carry">↩</span>}
@@ -210,53 +210,53 @@ export function BugunPage() {
       <header className="hero">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">Durum</p>
-        <h1 className="hero__headline">Bugün</h1>
-        <p className="hero__sub hero__sub--short" title="Hazırlık skoru (R) — Almanya junior hedefine yakınlık">
-          {round1(d.live.R)} hazırlık · {d.band}
+        <h1 className="hero__headline">Today</h1>
+        <p className="hero__sub hero__sub--short" title="Readiness score (R) — proximity to Germany junior target">
+          {round1(d.live.R)} readiness · {d.band}
         </p>
 
-        <section className="yolculuk-strip" aria-label="Müfredat yolculuğu">
+        <section className="yolculuk-strip" aria-label="Curriculum journey">
           <div className="yolculuk-strip__progress">
             <div className="yolculuk-strip__bar" aria-hidden>
               <span className="yolculuk-strip__fill" style={{ width: `${schedule.journey.yuzde}%` }} />
             </div>
             <p className="yolculuk-strip__stat">
-              Oak yolu · {schedule.journey.konuTamamlanan}/{schedule.journey.konuToplam} konu ·{" "}
+              Oak path · {schedule.journey.konuTamamlanan}/{schedule.journey.konuToplam} topics ·{" "}
               %{schedule.journey.yuzde}
             </p>
           </div>
           <p className="yolculuk-strip__konum">{schedule.journey.konumMetni}</p>
           {schedule.journey.kapıAd && (
             <p className="yolculuk-strip__gate">
-              Sıradaki kapı: {schedule.journey.kapıAd} · %{Math.round(schedule.journey.kapıPi * 100)}
+              Next gate: {schedule.journey.kapıAd} · %{Math.round(schedule.journey.kapıPi * 100)}
             </p>
           )}
           <Link className="yolculuk-strip__link" to="/harita">
-            Haritada gör →
+            View on map →
           </Link>
         </section>
 
-        <section className="bugun-gorevler" aria-label="Bugünün görevleri">
+        <section className="bugun-gorevler" aria-label="Today's tasks">
           <div className="bugun-gorevler__head">
             <div className="bugun-gorevler__headline-row">
-              <h2 className="bugun-gorevler__title">Bugün ne yapacağım?</h2>
+              <h2 className="bugun-gorevler__title">What should I do today?</h2>
               <span className={`bugun-day-badge bugun-day-badge--${schedule.todayType}`}>
-                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Konu & Tekrar" : "Lab & SOC"})
+                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Lab & SOC"})
               </span>
             </div>
             {schedule.carryCount > 0 && (
               <div className="bugun-gorevler__carry-wrap">
-                <span className="bugun-gorevler__carry">{schedule.carryCount} taşınan görev (tavan: 2)</span>
+                <span className="bugun-gorevler__carry">{schedule.carryCount} carried tasks (cap: 2)</span>
                 <button
                   type="button"
                   className="bugun-gorevler__clear-carry"
                   onClick={() => {
                     clearScheduleCarry();
-                    flash("Taşınan görevler müfredat havuzuna iade edildi");
+                    flash("Carried tasks returned to curriculum pool");
                   }}
-                  title="Taşınan görevleri temizle ve müfredat havuzuna geri döndür"
+                  title="Clear carried tasks and return them to the curriculum pool"
                 >
-                  Havuza İade Et
+                  Return to Pool
                 </button>
               </div>
             )}
@@ -269,22 +269,22 @@ export function BugunPage() {
                   onComplete={() => setLoggingTaskId(g.id)}
                   onDefer={() => {
                     deferScheduleTask(toCarryItem(g));
-                    flash("Yarına aktarıldı");
+                    flash("Deferred to tomorrow");
                   }}
                 />
                 {loggingTaskId === g.id && (
-                  <div className="session-log-panel" role="region" aria-label="Oturum kaydı">
-                    <p className="session-log-panel__title">Ne yaptın? — kısa log</p>
+                  <div className="session-log-panel" role="region" aria-label="Session log">
+                    <p className="session-log-panel__title">What did you do? — quick log</p>
                     <SessionLogForm
                       initial={defaultFormFromGorev(g, state.tempo.quality)}
                       skills={state.skills}
                       onSubmit={(form) => {
                         completeScheduleTaskWithLog(toTaskRef(g), form);
                         setLoggingTaskId(null);
-                        flash("Görev tamamlandı ve log kaydedildi");
+                        flash("Task completed and log saved");
                       }}
                       onCancel={() => setLoggingTaskId(null)}
-                      submitLabel="Kaydet ve bitir"
+                      submitLabel="Save and finish"
                     />
                   </div>
                 )}
@@ -292,35 +292,35 @@ export function BugunPage() {
             ))}
           </div>
           <div className="actions bugun-gorevler__links">
-            <Link className="cta" to="/log" title="Çalışmayı Log sayfasına kaydet">
-              Log&apos;a yaz
+            <Link className="cta" to="/log" title="Log your work on the Log page">
+              Write to Log
             </Link>
-            <Link className="cta cta--ghost" to="/tekrar" title="Vadesi gelen tekrar listesi">
-              Tekrar kuyruğu
+            <Link className="cta cta--ghost" to="/tekrar" title="Due review list">
+              Review queue
             </Link>
-            <Link className="cta cta--ghost" to="/harita" title="Müfredat haritası">
-              Konu haritası
+            <Link className="cta cta--ghost" to="/harita" title="Curriculum map">
+              Topic map
             </Link>
-            <Link className="map-affordance" to="/harita" title="Müfredat haritası">
+            <Link className="map-affordance" to="/harita" title="Curriculum map">
               <MapGlyph />
-              Harita
+              Map
             </Link>
           </div>
         </section>
 
-        <section className="plan-timeline" aria-label="Yaklaşan günler">
-          <h2 className="plan-timeline__title">Önümüzdeki günler</h2>
+        <section className="plan-timeline" aria-label="Upcoming days">
+          <h2 className="plan-timeline__title">Days ahead</h2>
           <p className="plan-timeline__note">
-            Tahmini plan — bitmeyen görevler ertesi güne kayar; tempo: ~
-            {round1(state.tempo.hoursCyber / 7)} sa/gün siber · ~
-            {round1(state.tempo.hoursLang / 7)} sa/gün dil.
+            Estimated plan — unfinished tasks roll to the next day; pace: ~
+            {round1(state.tempo.hoursCyber / 7)} h/day cyber · ~
+            {round1(state.tempo.hoursLang / 7)} h/day language.
           </p>
           <div className="plan-timeline__today">
             <ScheduleDayCard day={schedule.days[0]} />
           </div>
           {buHafta.length > 0 && (
             <>
-              <h3 className="plan-timeline__section">Bu hafta</h3>
+              <h3 className="plan-timeline__section">This week</h3>
               <div className="plan-timeline__grid">
                 {buHafta.map((day) => (
                   <ScheduleDayCard key={day.dateIso} day={day} />
@@ -330,7 +330,7 @@ export function BugunPage() {
           )}
           {gelecekHafta.length > 0 && (
             <>
-              <h3 className="plan-timeline__section">Gelecek hafta</h3>
+              <h3 className="plan-timeline__section">Next week</h3>
               <div className="plan-timeline__grid plan-timeline__grid--compact">
                 {gelecekHafta.slice(0, 7).map((day) => (
                   <ScheduleDayCard key={day.dateIso} day={day} />
@@ -344,30 +344,30 @@ export function BugunPage() {
 
         <div className="gauge-strip">
           <GaugeRing
-            label="Hazırlık"
+            label="Readiness"
             display={String(round1(d.live.R))}
             ratio={rRatio}
             tone="accent"
-            title="Hazırlık (R): Almanya junior'a ne kadar yakınsın (0–100)"
+            title="Readiness (R): how close you are to Germany junior (0–100)"
           />
           <GaugeRing
-            label="Güven payı"
+            label="Safety margin"
             display={gmDisplay}
             ratio={gmRatio}
             tone={d.gmMin < 14 ? "warn" : "ok"}
-            title="Güven payı (GM): bir kapı becerisinin unutulmadan önceki gün marjı; — = henüz ölçülmedi"
+            title="Safety margin (GM): days before a gate skill decays; — = not measured yet"
           />
           <GaugeRing
-            label="Yorgunluk"
+            label="Fatigue"
             display={String(d.pmc.tsb)}
             ratio={tsbNorm}
             tone={tsbTone}
-            title="Yorgunluk (TSB): son günlerin yükü; yüksekse dinlen (form = CTL − ATL)"
+            title="Fatigue (TSB): recent training load; rest when high (form = CTL − ATL)"
           />
         </div>
 
         <details className="metric-legend">
-          <summary className="metric-legend__summary">Ne anlama geliyor?</summary>
+          <summary className="metric-legend__summary">What do these mean?</summary>
           <ul className="metric-legend__list">
             {METRIC_HELP.map((m) => (
               <li key={m.key}>

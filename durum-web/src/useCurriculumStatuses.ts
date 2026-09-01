@@ -7,7 +7,7 @@ import {
 } from "./data/oakCurriculum";
 
 type CurriculumStore = {
-  /** Konu id → durum. Upcoming her zaman sonra. */
+  /** Topic id → status. Upcoming is always sonra. */
   statuses: Record<string, CurriculumStatus>;
 };
 

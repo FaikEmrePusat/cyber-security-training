@@ -6,8 +6,8 @@ export const MODEL = {
   R: { T: 0.4, P: 0.25, L: 0.2, C: 0.15 },
   kanitOrani: { yok: 0.5, kayit: 0.8, public: 1.0 } as Record<EvidenceTier, number>,
   kanitAd: {
-    yok: "Kanıt yok",
-    kayit: "Lab kaydı / ekran / dosya",
+    yok: "No evidence",
+    kayit: "Lab recording / screenshot / file",
     public: "Public URL",
   } as Record<EvidenceTier, string>,
   pKappa: 5,
@@ -31,9 +31,9 @@ export const MODEL = {
     "soc-lab": "SOC lab (Sysmon / Wazuh / Splunk)",
     "ad-lab": "AD lab (Windows Event / Kerberos)",
     "vm-lab": "VM lab",
-    arac: "Araç / script",
+    arac: "Tool / script",
     writeup: "Write-up",
-    "lab-egzersizi": "Lab egzersizi (rehberli oda)",
+    "lab-egzersizi": "Lab exercise (guided room)",
   } as Record<ArtifactType, string>,
   projeTurleri: ["soc-lab", "ad-lab", "vm-lab", "arac"] as ArtifactType[],
   tHaric: ["port"] as string[],
@@ -81,7 +81,7 @@ export const MODEL = {
     yasEsik: { tam: 35, kismi: 40 },
     yasPuan: { tam: 2, kismi: 1 },
     gecimAy2026: 1091,
-    yasaDogrulama: "2026-02 — bamf.de / gesetze-im-internet.de ile teyit et",
+    yasaDogrulama: "2026-02 — verify at bamf.de / gesetze-im-internet.de",
   },
   roi: { lambda: 1.5, saatPuanTeknik: 20, saatKanit: { kayit: 2, public: 4 } },
   wip: { teknik: 2, dil: 1 },
@@ -92,7 +92,7 @@ export const MODEL = {
 export const TEMPO_TABLOSU: Array<{ ad: string; siber: number; dil: number; kalite: number; alt: number; ust: number }> = [
   { ad: "Minimum", siber: 20.6, dil: 7.4, kalite: 0.85, alt: 1.0, ust: 1.5 },
   { ad: "Normal", siber: 28, dil: 10, kalite: 0.85, alt: 1.8, ust: 2.5 },
-  { ad: "Agresif", siber: 36.1, dil: 12.9, kalite: 1.0, alt: 2.5, ust: 3.5 },
+  { ad: "Aggressive", siber: 36.1, dil: 12.9, kalite: 1.0, alt: 2.5, ust: 3.5 },
 ];
 
 export const CEFR: Array<{ ad: string; skor: number }> = [
@@ -104,13 +104,13 @@ export const CEFR: Array<{ ad: string; skor: number }> = [
 ];
 
 export const KAPI_IF_THEN: Record<string, string> = {
-  A: "Eğer Linux S≥6 olursa, o hafta THM SOC L1 log analizi modülüne başlayacağım.",
-  B: "Eğer Gate A açılırsa, o hafta Mini SOC lab (Sysmon) kurulumuna başlayacağım.",
-  C: "Eğer ilk public SOC lab hazırsa, o hafta CV'ye proje satırı ekleyeceğim.",
-  D: "Eğer Gate C + R≥55 olursa, haftada ≥2 Almanya başvurusu göndereceğim.",
-  E: "Eğer Gate D açılırsa, haftada ≥2 mülakat pratiği yapacağım.",
-  "0": "Denklik sonucu netleşince uygun vize rotasını seçeceğim.",
-  F: "Runway ≥12 ay olunca Chancenkarte başvurusunu tamamlayacağım.",
+  A: "If Linux S≥6, I will start the THM SOC L1 log analysis module that week.",
+  B: "If Gate A opens, I will start the Mini SOC lab (Sysmon) setup that week.",
+  C: "If the first public SOC lab is ready, I will add a project line to my CV that week.",
+  D: "If Gate C + R≥55, I will send ≥2 Germany applications per week.",
+  E: "If Gate D opens, I will do ≥2 interview practice sessions per week.",
+  "0": "When recognition outcome is clear, I will choose the appropriate visa route.",
+  F: "When runway ≥12 months, I will complete the Chancenkarte application.",
 };
 
 export const STORAGE_KEY = "durum-v22";

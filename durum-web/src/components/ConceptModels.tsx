@@ -1,12 +1,12 @@
 /** Crisp reusable concept SVGs — shown when topic tags match; not per-topic art. */
 
 export function OsiStack({ title = "OSI" }: { title?: string }) {
-  const layers = ["Uyg", "Sun", "Otur", "Taşı", "Ağ", "Bağ", "Fiz"];
+  const layers = ["App", "Pres", "Sess", "Trans", "Net", "Data", "Phys"];
   const h = 10;
   const gap = 2;
   return (
     <div className="concept-model" title={title}>
-      <svg viewBox="0 0 120 90" role="img" aria-label="OSI 7 katman">
+      <svg viewBox="0 0 120 90" role="img" aria-label="OSI 7 layers">
         {layers.map((lab, i) => {
           const y = 8 + i * (h + gap);
           const t = 1 - i / 6;
@@ -63,7 +63,7 @@ export function KillChainChevrons({ title = "Kill Chain" }: { title?: string }) 
 export function CiaTriangle({ title = "CIA" }: { title?: string }) {
   return (
     <div className="concept-model" title={title}>
-      <svg viewBox="0 0 120 90" role="img" aria-label="CIA üçgeni">
+      <svg viewBox="0 0 120 90" role="img" aria-label="CIA triangle">
         <polygon
           points="60,12 102,78 18,78"
           fill="rgba(26,107,92,0.15)"
@@ -80,7 +80,7 @@ export function CiaTriangle({ title = "CIA" }: { title?: string }) {
           A
         </text>
         <text x={60} y={88} textAnchor="middle" fill="var(--ink-mute)" fontSize={7}>
-          Gizlilik · Bütünlük · Erişilebilirlik
+          Confidentiality · Integrity · Availability
         </text>
       </svg>
     </div>
@@ -94,7 +94,7 @@ export function ModelsForTags({ tags }: { tags: string[] }) {
   const showCia = lower.some((t) => /cia|confidential|integrity|gizlilik|bütünlük|security fund/.test(t));
   if (!showOsi && !showKill && !showCia) return null;
   return (
-    <div className="models-strip" aria-label="Kavram modelleri">
+    <div className="models-strip" aria-label="Concept models">
       {showOsi && <OsiStack />}
       {showKill && <KillChainChevrons />}
       {showCia && <CiaTriangle />}

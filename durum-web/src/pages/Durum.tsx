@@ -29,7 +29,7 @@ export function DurumPage() {
       <header className="hero hero--compact">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">Durum</p>
-        <h1 className="hero__headline">Skor</h1>
+        <h1 className="hero__headline">Score</h1>
         <p className="hero__sub hero__sub--short">{d.band}</p>
       </header>
 
@@ -76,8 +76,8 @@ export function DurumPage() {
           </svg>
           <span className="r-hero__band">{d.band}</span>
           <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
-            <GaugeRing label="Açık" display={String(round1(d.kanitAcigi))} ratio={Math.min(1, d.kanitAcigi / 20)} tone="warn" size={56} />
-            <GaugeRing label="Çürüme" display={String(round1(d.curumeKaybi))} ratio={Math.min(1, d.curumeKaybi / 15)} tone="mute" size={56} />
+            <GaugeRing label="Gap" display={String(round1(d.kanitAcigi))} ratio={Math.min(1, d.kanitAcigi / 20)} tone="warn" size={56} />
+            <GaugeRing label="Decay" display={String(round1(d.curumeKaybi))} ratio={Math.min(1, d.curumeKaybi / 15)} tone="mute" size={56} />
           </div>
         </div>
 
@@ -89,7 +89,7 @@ export function DurumPage() {
         </div>
       </div>
 
-      <Section title="Boyutlar" lead="T · P · L · C">
+      <Section title="Dimensions" lead="T · P · L · C">
         <div className="dim-bars">
           {d.boyutlar.map((b) => {
             const ratio = Math.min(1, b.v / b.hedef);
@@ -110,11 +110,11 @@ export function DurumPage() {
           })}
         </div>
         <p className="note" style={{ marginTop: "0.75rem" }}>
-          Darboğaz: {d.darbogaz.ad}
+          Bottleneck: {d.darbogaz.ad}
         </p>
       </Section>
 
-      <Section title="Dil & kariyer">
+      <Section title="Language & career">
         <div className="dim-row">
           <div className="dim" style={{ borderBottomColor: "var(--dim-l)" }}>
             <div className="dim__label">DE</div>
@@ -127,7 +127,7 @@ export function DurumPage() {
             <div className="dim__sub">{d.enCefr}</div>
           </div>
           <div className="dim" style={{ borderBottomColor: "var(--dim-c)" }}>
-            <div className="dim__label">P tavan</div>
+            <div className="dim__label">P cap</div>
             <div className="dim__value" style={{ fontSize: "1.4rem" }}>
               {d.live.pTavan}
             </div>

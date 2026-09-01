@@ -23,7 +23,7 @@ export function SessionLogForm({
   skills,
   onSubmit,
   onCancel,
-  submitLabel = "Kaydet",
+  submitLabel = "Save",
   compact = false,
 }: Props) {
   const [form, setForm] = useState<SessionFormData>(initial);
@@ -46,7 +46,7 @@ export function SessionLogForm({
     <form className={`session-log-form${compact ? " session-log-form--compact" : ""}`} onSubmit={handleSubmit}>
       <div className="session-log-form__grid">
         <div className="field">
-          <label htmlFor="slf-aktivite">Ne yaptın?</label>
+          <label htmlFor="slf-aktivite">What did you do?</label>
           <select
             id="slf-aktivite"
             value={form.aktivite}
@@ -64,18 +64,18 @@ export function SessionLogForm({
 
         {showCustomAktivite && (
           <div className="field">
-            <label htmlFor="slf-aktivite-custom">Ne yaptın? (yaz)</label>
+            <label htmlFor="slf-aktivite-custom">What did you do? (type)</label>
             <input
               id="slf-aktivite-custom"
               value={form.aktiviteCustom ?? ""}
               onChange={(e) => patch({ aktiviteCustom: e.target.value })}
-              placeholder="Kısa açıklama"
+              placeholder="Short description"
             />
           </div>
         )}
 
         <div className="field">
-          <label htmlFor="slf-kaynak">Nereden?</label>
+          <label htmlFor="slf-kaynak">Source?</label>
           <select id="slf-kaynak" value={form.kaynak} onChange={(e) => patch({ kaynak: e.target.value })}>
             {KAYNAK_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -84,7 +84,7 @@ export function SessionLogForm({
         </div>
 
         <div className="field">
-          <label htmlFor="slf-dakika">Süre (dk)</label>
+          <label htmlFor="slf-dakika">Duration (min)</label>
           <input
             id="slf-dakika"
             type="number"
@@ -96,7 +96,7 @@ export function SessionLogForm({
         </div>
 
         <div className="field">
-          <label htmlFor="slf-mod">Mod</label>
+          <label htmlFor="slf-mod">Mode</label>
           <select id="slf-mod" value={form.mod} onChange={(e) => patch({ mod: e.target.value })}>
             {MOD_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -105,13 +105,13 @@ export function SessionLogForm({
         </div>
 
         <div className="field">
-          <label htmlFor="slf-alan">Alan</label>
+          <label htmlFor="slf-alan">Area</label>
           <select id="slf-alan" value={form.alan} onChange={(e) => patch({ alan: e.target.value })}>
             {skills.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
-            <option value="dil-de">Dil — Almanca</option>
-            <option value="dil-en">Dil — İngilizce</option>
+            <option value="dil-de">Language — German</option>
+            <option value="dil-en">Language — English</option>
           </select>
         </div>
       </div>
@@ -119,17 +119,17 @@ export function SessionLogForm({
       {!compact && (
         <>
           <div className="field">
-            <label htmlFor="slf-kanit">Kanıt / not (opsiyonel)</label>
+            <label htmlFor="slf-kanit">Evidence / note (optional)</label>
             <input
               id="slf-kanit"
               value={form.kanit ?? ""}
               onChange={(e) => patch({ kanit: e.target.value })}
-              placeholder="URL, dosya veya kısa not"
+              placeholder="URL, file, or short note"
             />
           </div>
 
           <div className="field">
-            <label htmlFor="slf-not">Not (opsiyonel — otomatik üretilir)</label>
+            <label htmlFor="slf-not">Note (optional — auto-generated)</label>
             <textarea
               id="slf-not"
               value={form.not ?? ""}
@@ -140,7 +140,7 @@ export function SessionLogForm({
           </div>
 
           <div className="field">
-            <label htmlFor="slf-kalite">Kalite ({form.kalite.toFixed(2)})</label>
+            <label htmlFor="slf-kalite">Quality ({form.kalite.toFixed(2)})</label>
             <input
               id="slf-kalite"
               type="range"
@@ -171,12 +171,12 @@ export function SessionLogForm({
         <button type="submit" className="cta cta--sm">{submitLabel}</button>
         {compact && (
           <button type="button" className="cta cta--ghost cta--sm" onClick={handleQuickSave}>
-            Hızlı kaydet
+            Quick save
           </button>
         )}
         {onCancel && (
           <button type="button" className="cta cta--ghost cta--sm" onClick={onCancel}>
-            Vazgeç
+            Cancel
           </button>
         )}
       </div>
