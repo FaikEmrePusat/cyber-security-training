@@ -184,6 +184,40 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     },
   },
   {
+    id: "proj-offensive-writeup",
+    title: "Authorized Offensive Lab — Attack + Detection Write-up",
+    gate: "C",
+    artifactType: "writeup",
+    value: 2.0,
+    hoursEstimate: 25,
+    summary:
+      "Complete one TryHackMe Jr Pentest or HTB Starting Point machine; publish write-up with attack timeline AND blue-team detection points (legal scope only).",
+    guide: {
+      topic: "Authorized Offensive Lab Write-up",
+      resources: [
+        { label: "TryHackMe — Jr Penetration Tester path", url: "https://tryhackme.com/path/outline/jrpenetrationtester", type: "thm" },
+        { label: "Hack The Box — Starting Point tracks", url: "https://app.hackthebox.com/tracks", type: "htb" },
+        { label: "MITRE ATT&CK — techniques", url: "https://attack.mitre.org/", type: "doc" },
+        { label: "LOLBAS — living-off-the-land binaries", url: "https://lolbas-project.github.io/", type: "doc" },
+        INVESTIGATION_TEMPLATE,
+      ],
+      actions: [
+        "Pick one in-scope machine (THM room or HTB Starting Point — no production targets)",
+        "Document recon → exploit → privilege steps with commands used",
+        "For each step: note which log/Event ID a SOC analyst would see",
+        "Map at least 3 techniques to MITRE ATT&CK",
+        "Publish public GitHub write-up (attack + defender sections)",
+      ],
+      steps: steps(
+        { action: "Select machine; read rules of engagement and scope", durationMin: 10, logHint: "Machine name" },
+        { action: "Complete machine to user flag (or room completion)", durationMin: 90, logHint: "Flag or room %" },
+        { action: "Draft attack timeline with commands and screenshots", durationMin: 30, logHint: "Timeline bullets" },
+        { action: "Add 'Blue team view' section: detections, Event IDs, mitigations", durationMin: 25, logHint: "3 detection ideas" },
+        { action: "Publish GitHub repo; add public URL to portfolio artifact", durationMin: 20, logHint: "Public URL" },
+      ),
+    },
+  },
+  {
     id: "proj-python-soc",
     title: "Python SOC Tool — Log Parser Script",
     gate: "C",

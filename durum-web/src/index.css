@@ -349,8 +349,16 @@ button {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 0.95;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.35rem;
   color: var(--ink);
+}
+
+.hero__tagline {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  max-width: 42ch;
+  line-height: 1.4;
 }
 
 .hero__headline {

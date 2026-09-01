@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { ALAN_COLOR } from "../data/oakCurriculum";
 import { stepLabel, type StudyGuide } from "../data/studyPlans";
-import { APP_NAME } from "../model/brand";
+import { APP_NAME, APP_TAGLINE } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
 import { GaugeRing } from "../components/GaugeRing";
 import { SiemGapCallout } from "../components/SiemGapCallout";
@@ -259,6 +259,7 @@ export function BugunPage() {
       <header className="hero">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">{APP_NAME}</p>
+        <p className="hero__tagline">{APP_TAGLINE}</p>
         <h1 className="hero__headline">Today</h1>
         <p className="hero__sub hero__sub--short" title="Readiness score (R) — proximity to Germany junior target">
           {round1(d.live.R)} readiness · {d.band}
@@ -290,7 +291,7 @@ export function BugunPage() {
             <div className="bugun-gorevler__headline-row">
               <h2 className="bugun-gorevler__title">What should I do today?</h2>
               <span className={`bugun-day-badge bugun-day-badge--${schedule.todayType}`}>
-                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Lab & SOC"})
+                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Lab · SOC + offensive"})
               </span>
             </div>
             {schedule.carryCount > 0 && (

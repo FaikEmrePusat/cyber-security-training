@@ -57,6 +57,8 @@ function mkGuide(
 
 const SOC_L1 = thmPath("soclevel1", "TryHackMe — SOC Level 1 path");
 const PRE_SEC = thmPath("presecurity", "TryHackMe — Pre-Security path");
+const JR_PENTEST = thmPath("jrpenetrationtester", "TryHackMe — Jr Penetration Tester path");
+const HTB_START = lab("https://app.hackthebox.com/tracks", "Hack The Box — Starting Point tracks");
 const LETS_DEFEND = lab("https://letsdefend.io/", "LetsDefend — free SOC alert triage");
 const CYBER_DEF = lab("https://cyberdefenders.org/blueteam-ctf-challenges/", "CyberDefenders — blue team challenges");
 const MITRE = doc("https://attack.mitre.org/", "MITRE ATT&CK framework");
@@ -361,13 +363,89 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       mkGuide(konu, [thm("introductorydocker", "TryHackMe — Intro to Docker"), doc("https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/", "Microsoft — Hyper-V"), oakResource(konu)], ["Compare Type 1 vs Type 2 hypervisor", "Run one docker command in lab", "Note cloud log sources for SOC"], standardStudySteps(konu)),
   },
   {
-    test: /nmap|network scan|vulnerability scan|nessus|exploitation|sql injection|xss|brute force|lolbin|fileless|hashcat|john|dos|ddos|spoof|sniff/i,
+    test: /nmap|network scan/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("nmap", "TryHackMe — Nmap"), thm("owasptop10", "TryHackMe — OWASP Top 10"), thm("jrpenetrationtesting", "TryHackMe — Jr Penetration Tester path"), oakResource(konu)],
-        ["Understand attack from defender perspective", "Map technique to detection opportunity", "Note LOLBin examples (certutil, bitsadmin)"],
-        standardStudySteps(konu, 30),
+        [thm("nmap", "TryHackMe — Nmap"), JR_PENTEST, HTB_START, doc("https://nmap.org/book/man.html", "Nmap reference manual"), oakResource(konu)],
+        ["Run safe scan on lab target only (-sV -sC)", "Interpret open ports and service versions", "List 3 detections a SOC could build from scan traffic"],
+        [
+          { action: "Read Oak / THM Nmap theory (port states, scan types)", durationMin: 15, logHint: "3 scan types" },
+          { action: "Complete THM Nmap room tasks in lab VPN", durationMin: 35, logHint: "Room progress %" },
+          { action: "Document one command chain and expected defender log", durationMin: 15, logHint: "Command + log source" },
+          { action: "Map findings to MITRE T1046 (Network Service Discovery)", durationMin: 10, logHint: "Technique ID" },
+        ],
+      ),
+  },
+  {
+    test: /vulnerability scan|nessus|vuln.*manage/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [thm("vulnversity", "TryHackMe — Vulnversity"), doc("https://docs.tenable.com/nessus/Content/GettingStarted.htm", "Nessus — getting started"), JR_PENTEST, oakResource(konu)],
+        ["Compare vulnerability scan vs penetration test", "Prioritize findings by CVSS and exploitability", "Draft remediation ticket for one finding"],
+        [
+          { action: "Review vulnerability management lifecycle", durationMin: 15, logHint: "4 lifecycle stages" },
+          { action: "Run or review a scan output (THM room or sample report)", durationMin: 30, logHint: "Top 3 CVEs" },
+          { action: "Write defender detection idea for mass scanning", durationMin: 15, logHint: "1 detection bullet" },
+        ],
+      ),
+  },
+  {
+    test: /exploitation|metasploit|exploit/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [JR_PENTEST, thm("vulnversity", "TryHackMe — Vulnversity"), HTB_START, MITRE, oakResource(konu)],
+        ["Walk through exploit only in authorized lab", "Document attack chain steps for blue-team detection", "Identify patch or control that would block exploit"],
+        [
+          { action: "Review exploit phases: recon → exploit → post-exploit", durationMin: 15, logHint: "3 phases" },
+          { action: "Complete one THM Jr Pentest or Starting Point machine", durationMin: 45, logHint: "Machine name + flag" },
+          { action: "List Event IDs / logs defenders should monitor", durationMin: 15, logHint: "3 log sources" },
+          { action: "Draft mini write-up: attack timeline + detection points", durationMin: 20, logHint: "Public or private notes URL" },
+        ],
+      ),
+  },
+  {
+    test: /sql injection|xss|owasp|injection/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [thm("owasptop10", "TryHackMe — OWASP Top 10"), JR_PENTEST, oakResource(konu)],
+        ["Reproduce safe lab injection; never test without permission", "Explain input validation and WAF role", "Write SOC/web alert indicators"],
+        [
+          { action: "Review OWASP Top 10 entry for this topic", durationMin: 15, logHint: "Risk + mitigation" },
+          { action: "Complete related THM room task block", durationMin: 30, logHint: "Payload or fix applied" },
+          { action: "Note defender controls: WAF, parameterized queries, CSP", durationMin: 10, logHint: "2 controls" },
+        ],
+      ),
+  },
+  {
+    test: /brute force|password attack|hashcat|john/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [JR_PENTEST, thm("owasptop10", "TryHackMe — OWASP Top 10"), doc("https://hashcat.net/wiki/", "Hashcat wiki"), oakResource(konu)],
+        ["Distinguish online brute force vs offline hash crack", "Relate to Event 4625 / lockout policies", "Never attack systems you do not own"],
+        [
+          { action: "Review password policy and lockout best practices", durationMin: 10, logHint: "2 policy settings" },
+          { action: "Crack sample hash in THM lab only", durationMin: 25, logHint: "Hash type" },
+          { action: "List SOC alerts for credential attacks", durationMin: 10, logHint: "Event ID or rule name" },
+        ],
+      ),
+  },
+  {
+    test: /fileless|lolbin|rundll32|certutil|bitsadmin|dos|ddos|spoof|sniff/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [MITRE, doc("https://lolbas-project.github.io/", "LOLBAS — living-off-the-land binaries"), SOC_L1, oakResource(konu)],
+        ["Identify LOLBin abuse in sample alert", "Map to MITRE execution / defense evasion", "Propose one detection rule idea"],
+        [
+          { action: "Read LOLBAS entry for one binary (certutil or bitsadmin)", durationMin: 15, logHint: "Binary + abuse case" },
+          { action: "Review SOC alert example for same technique", durationMin: 15, logHint: "Alert name" },
+          { action: "Write 3-bullet detection hypothesis", durationMin: 10, logHint: "Detection bullets" },
+        ],
       ),
   },
   {
@@ -431,9 +509,18 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
   off: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("nmap", "TryHackMe — Nmap"), thm("owasptop10", "TryHackMe — OWASP Top 10"), oakResource(konu)],
-      ["Learn attack technique for detection context", "Map to MITRE technique ID", "Note defender detection point"],
-      standardStudySteps(konu, 25),
+      [JR_PENTEST, PRE_SEC, thm("nmap", "TryHackMe — Nmap"), thm("owasptop10", "TryHackMe — OWASP Top 10"), HTB_START, MITRE, oakResource(konu)],
+      [
+        "Learn the attack technique in an authorized lab only",
+        "Map to MITRE ATT&CK and one defender detection point",
+        "Log evidence: command, screenshot, or write-up section",
+      ],
+      [
+        { action: `Review Oak / curriculum notes: ${konu}`, durationMin: 15, logHint: "3 attack steps" },
+        { action: "Hands-on: THM Jr Pentest, Nmap, or HTB Starting Point task", durationMin: 35, logHint: "Room or machine name" },
+        { action: "Write defender view: what log or alert would fire?", durationMin: 15, logHint: "Log source + Event ID" },
+        { action: "Add MITRE technique ID to session log", durationMin: 5, logHint: "Txxxx.xxx" },
+      ],
     ),
   cloud: ({ konu }) =>
     mkGuide(
@@ -480,7 +567,8 @@ export const ROI_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
   { test: /active directory|ad lab|kerberos|ntlm detection/i, build: () => PORTFOLIO_PROJECTS[2].guide },
   { test: /letsdefend|alert triage|triage session/i, build: () => PORTFOLIO_PROJECTS[3].guide },
   { test: /cyberdefenders|blue team challenge/i, build: () => PORTFOLIO_PROJECTS[4].guide },
-  { test: /python.*script|log parser|automation tool/i, build: () => PORTFOLIO_PROJECTS[5].guide },
+  { test: /offensive|pentest|htb starting|jr pentest|attack.*write-?up/i, build: () => PORTFOLIO_PROJECTS[5].guide },
+  { test: /python.*script|log parser|automation tool/i, build: () => PORTFOLIO_PROJECTS[6].guide },
   {
     test: /public link|publish|evidence|portfolio|write-up|writeup|artefakt/i,
     build: ({ konu }) =>

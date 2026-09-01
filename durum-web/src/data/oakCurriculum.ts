@@ -50,7 +50,7 @@ export const ALAN_LABEL: Record<string, string> = {
   crypto: "Crypto",
   netsec: "Network Security",
   def: "Defensive/SOC",
-  off: "Offensive",
+  off: "Offensive (purple-team)",
   cloud: "Cloud",
   port: "Portfolio",
   siem: "SIEM",
