@@ -8,10 +8,12 @@ import {
   MOD_OPTIONS,
   generateSessionNot,
 } from "./sessionLogFormUtils";
+import type { StudyPlanStep } from "../data/studyPlans";
 
 type Props = {
   initial: SessionFormData;
   skills: Skill[];
+  studySteps?: StudyPlanStep[];
   onSubmit: (form: SessionFormData) => void;
   onCancel?: () => void;
   submitLabel?: string;
@@ -21,6 +23,7 @@ type Props = {
 export function SessionLogForm({
   initial,
   skills,
+  studySteps,
   onSubmit,
   onCancel,
   submitLabel = "Save",
@@ -31,20 +34,49 @@ export function SessionLogForm({
 
   const patch = (partial: Partial<SessionFormData>) => setForm((f) => ({ ...f, ...partial }));
 
+  const activeStep = studySteps?.find((s) => s.order === (form.studyStep ?? 1));
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const not = form.not?.trim() || generateSessionNot(form);
+    const not = form.not?.trim() || generateSessionNot(form, activeStep);
     onSubmit({ ...form, not });
   };
 
   const handleQuickSave = () => {
-    const not = form.not?.trim() || generateSessionNot(form);
+    const not = form.not?.trim() || generateSessionNot(form, activeStep);
     onSubmit({ ...form, not });
   };
 
   return (
     <form className={`session-log-form${compact ? " session-log-form--compact" : ""}`} onSubmit={handleSubmit}>
       <div className="session-log-form__grid">
+        {studySteps && studySteps.length > 0 && (
+          <div className="field field--full">
+            <label htmlFor="slf-study-step">Study plan step</label>
+            <select
+              id="slf-study-step"
+              value={form.studyStep ?? 1}
+              onChange={(e) => {
+                const order = Number(e.target.value) || 1;
+                const step = studySteps.find((s) => s.order === order);
+                patch({
+                  studyStep: order,
+                  not: step
+                    ? `Step ${step.order} — ${step.action}${step.logHint ? ` (${step.logHint})` : ""}`
+                    : form.not,
+                });
+              }}
+            >
+              {studySteps.map((s) => (
+                <option key={s.order} value={s.order}>
+                  {s.order}. {s.action}
+                  {s.durationMin ? ` (${s.durationMin} min)` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="field">
           <label htmlFor="slf-aktivite">What did you do?</label>
           <select
@@ -134,7 +166,7 @@ export function SessionLogForm({
               id="slf-not"
               value={form.not ?? ""}
               onChange={(e) => patch({ not: e.target.value })}
-              placeholder={generateSessionNot(form)}
+              placeholder={generateSessionNot(form, activeStep)}
               rows={2}
             />
           </div>

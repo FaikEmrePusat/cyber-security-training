@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { ALAN_COLOR } from "../data/oakCurriculum";
+import { stepLabel, type StudyGuide } from "../data/studyPlans";
+import { APP_NAME } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
 import { GaugeRing } from "../components/GaugeRing";
 import { SiemGapCallout } from "../components/SiemGapCallout";
@@ -62,6 +64,52 @@ const KIND_CLASS: Record<string, string> = {
   dinlenme: "gorev-card--dinlenme",
 };
 
+function StudyPlanPanel({ guide }: { guide: StudyGuide }) {
+  return (
+    <details className="study-plan">
+      <summary className="study-plan__summary">Study plan — {guide.steps.length} steps</summary>
+      <div className="study-plan__body">
+        {guide.actions.length > 0 && (
+          <section className="study-plan__section">
+            <h3 className="study-plan__heading">What you can do</h3>
+            <ul className="study-plan__actions">
+              {guide.actions.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {guide.resources.length > 0 && (
+          <section className="study-plan__section">
+            <h3 className="study-plan__heading">Resources</h3>
+            <ul className="study-plan__resources">
+              {guide.resources.map((r) => (
+                <li key={r.url}>
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="study-plan__link">
+                    {r.label}
+                  </a>
+                  <span className="study-plan__rtype">{r.type.toUpperCase()}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section className="study-plan__section">
+          <h3 className="study-plan__heading">Step-by-step</h3>
+          <ol className="study-plan__steps">
+            {guide.steps.map((s) => (
+              <li key={s.order} className="study-plan__step">
+                <span className="study-plan__step-action">{stepLabel(s)}</span>
+                {s.logHint && <span className="study-plan__step-hint">Log: {s.logHint}</span>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      </div>
+    </details>
+  );
+}
+
 function GorevCard({
   gorev,
   onComplete,
@@ -86,6 +134,7 @@ function GorevCard({
         <h2 className="gorev-card__title">{gorev.baslik}</h2>
         {gorev.detay && <p className="gorev-card__detay">{gorev.detay}</p>}
         {gorev.neden && <p className="gorev-card__neden">{gorev.neden}</p>}
+        {gorev.studyGuide && <StudyPlanPanel guide={gorev.studyGuide} />}
         <div className="gorev-card__meta">
           {gorev.sure && <span>{gorev.sure}</span>}
           {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">FOUNDATION</span>}
@@ -209,7 +258,7 @@ export function BugunPage() {
     <div className="page">
       <header className="hero">
         <div className="hero__atmosphere" aria-hidden />
-        <p className="hero__brand">Durum</p>
+        <p className="hero__brand">{APP_NAME}</p>
         <h1 className="hero__headline">Today</h1>
         <p className="hero__sub hero__sub--short" title="Readiness score (R) — proximity to Germany junior target">
           {round1(d.live.R)} readiness · {d.band}
@@ -278,6 +327,7 @@ export function BugunPage() {
                     <SessionLogForm
                       initial={defaultFormFromGorev(g, state.tempo.quality)}
                       skills={state.skills}
+                      studySteps={g.studyGuide?.steps}
                       onSubmit={(form) => {
                         completeScheduleTaskWithLog(toTaskRef(g), form);
                         setLoggingTaskId(null);

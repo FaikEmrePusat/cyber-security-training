@@ -8,6 +8,7 @@ import {
   type CurriculumStatus,
   type CurriculumTopic,
 } from "./data/oakCurriculum";
+import { buildStudyGuide, type StudyGuide, type StudyGuideGateContext, type StudyGuideInput } from "./data/studyPlans";
 import {
   MODEL,
   daysSince,
@@ -57,6 +58,7 @@ export type BugunGorev = ScheduleTask & {
   sure: string;
   dayType?: DayType;
   dayTypeLabel?: string;
+  studyGuide?: StudyGuide;
 };
 
 export type JourneySnapshot = {
@@ -250,6 +252,25 @@ function labTask(a: RoiAction): ScheduleTask {
     saat: Math.max(LAB_SAAT_MIN, Math.min(a.saat, 2)),
     roiId: a.id,
   };
+}
+
+function taskToGuideInput(
+  task: ScheduleTask,
+  gateContext: StudyGuideGateContext,
+): StudyGuideInput {
+  return {
+    kind: task.kind,
+    baslik: task.baslik,
+    topicId: task.topicId,
+    alan: task.alan,
+    detay: task.detay,
+    roiId: task.roiId,
+    gateContext,
+  };
+}
+
+function buildTaskGuide(task: ScheduleTask, gateContext: StudyGuideGateContext): StudyGuide {
+  return buildStudyGuide(taskToGuideInput(task, gateContext));
 }
 
 function dilTask(offset: number, lang: "de" | "en" = "de"): ScheduleTask {
@@ -531,6 +552,16 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     const todayDayTypeLabel = days[0]?.dayTypeLabel ?? "Topic Day";
     const bugunFromSchedule = days[0]?.tasks ?? [];
 
+    const gateC = d.gates.find((g) => g.id === "C");
+    const gateContext: StudyGuideGateContext = {
+      nextGateId: d.nextGate?.id ?? null,
+      gateCBlocked: gateC ? !gateC.open : true,
+      portfolioBlocked: gateC ? !gateC.open : true,
+      siemBlocked: !d.gates.find((g) => g.id === "B")?.open,
+    };
+
+    const guideFor = (task: ScheduleTask) => buildTaskGuide(task, gateContext);
+
     const bugunGorevler: BugunGorev[] = (() => {
       if (d.geriDonusModu) {
         return [
@@ -547,6 +578,14 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             sure: "~15 min",
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
+            studyGuide: buildStudyGuide({
+              kind: "tekrar",
+              baslik:
+                overdue.length > 0
+                  ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
+                  : "15 min light practice",
+              gateContext,
+            }),
             neden: "You have been away a few days — start light first.",
           },
         ];
@@ -559,6 +598,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           sure: formatSure(t.saat),
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
+          studyGuide: guideFor(t),
           neden: t.carried
             ? "Carried-over task from yesterday — recommended to finish first."
             : t.kind === "tekrar"
@@ -584,6 +624,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           sure: formatSure(TEKRAR_SAAT * Math.min(overdue.length, lim)),
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
+          studyGuide: guideFor(tekrarTask(overdue[0], Math.min(overdue.length, lim))),
           neden: "Overdue reviews take priority.",
         });
       }
@@ -595,6 +636,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             sure: formatSure(KONU_SAAT),
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
+            studyGuide: guideFor(temelTask(nextTemel)),
             neden: `${ALAN_LABEL[nextTemel.alan] ?? nextTemel.alan} foundation — daily baseline.`,
           });
         }
@@ -605,6 +647,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
             sure: formatSure(KONU_SAAT),
             dayType: todayDayType,
             dayTypeLabel: todayDayTypeLabel,
+            studyGuide: guideFor(zayifAlanTask(nextStudy)),
             neden: `New topic in weak ${alanLabel} area.`,
           });
         }
@@ -622,6 +665,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
           sure: formatSure(labItem.saat),
           dayType: todayDayType,
           dayTypeLabel: todayDayTypeLabel,
+          studyGuide: guideFor(labItem),
           neden: "Full SOC lab practice — produces portfolio evidence for Gate B & C.",
         });
       }
@@ -691,5 +735,6 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     d.pmc.tsb,
     d.roiList,
     d.nextGate,
+    d.gates,
   ]);
 }

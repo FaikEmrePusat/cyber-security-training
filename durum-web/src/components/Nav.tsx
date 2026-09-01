@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useDurum } from "../store";
 
+import { APP_NAME } from "../model/brand";
+
 const PRIMARY = [
   { to: "/", label: "Today", end: true },
   { to: "/harita", label: "Map" },
@@ -50,7 +52,7 @@ export function Nav() {
   return (
     <nav className="site-nav" aria-label="Main menu">
       <NavLink to="/" className="site-nav__brand" end>
-        Durum
+        {APP_NAME}
       </NavLink>
       <div className="site-nav__links">
         <div className="site-nav__primary">

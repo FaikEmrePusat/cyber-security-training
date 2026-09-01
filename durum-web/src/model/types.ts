@@ -166,6 +166,8 @@ export type SessionFormData = {
   kanit?: string;
   kalite: number;
   not?: string;
+  /** Study plan step (1-based) when logging from Today's task. */
+  studyStep?: number;
 };
 
 /** Incomplete task from today — carries to the next day. */

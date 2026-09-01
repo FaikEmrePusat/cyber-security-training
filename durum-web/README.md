@@ -1,8 +1,8 @@
-# Durum — Progress State Web
+# SOC Ledger — Progress State Web
 
 Model **2.1** progress panel: state, gates, Chancenkarte, FSRS review, log.
 
-Browser version of Canvas (`ilerleme-durum-dashboard.canvas.tsx`) formulas. State is stored under `localStorage` key `durum-v22`.
+Browser version of Canvas (`ilerleme-durum-dashboard.canvas.tsx`) formulas. State is stored under `localStorage` key `durum-v22` (legacy key — unchanged for compatibility).
 
 Technical reference: [TECHNICAL-DOCUMENTATION.md](./TECHNICAL-DOCUMENTATION.md)
 
@@ -48,6 +48,18 @@ npm run preview
 | `Ctrl+Y` or `Ctrl+Shift+Z` | Redo |
 
 Skills, evidence, log, Germany fields, review, Map→queue add, reset — all undoable. While typing (savings, session notes, etc.) keystrokes within ~0.8 s count as one step; accidentally deleting one character won't lose the whole sentence.
+
+## Study plans (Today page)
+
+Each scheduled task on **Today** includes an expandable **Study plan** with:
+
+- **Resources** — THM rooms, docs, lab links (keyword-matched per topic or kind template)
+- **What you can do** — concrete actions for the session
+- **Step-by-step** — ordered steps with duration hints and log prompts
+
+Custom plans: add keyword rules in `src/data/studyPlans.ts` (`TOPIC_GUIDES` array). Generic fallbacks exist per task kind (`tekrar`, `konu`, `temel`, `lab`, `dil`).
+
+Session log form pre-fills step 1 and lets you pick which plan step you completed.
 
 ## Curriculum (Map)
 

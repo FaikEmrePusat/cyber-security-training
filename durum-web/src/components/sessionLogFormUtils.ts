@@ -1,5 +1,6 @@
 import type { BugunGorev } from "../useRollingSchedule";
 import type { SessionFormData } from "../model";
+import type { StudyPlanStep } from "../data/studyPlans";
 
 export const AKTIVITE_OPTIONS = [
   { value: "konu-tekrar", label: "Topic review" },
@@ -81,17 +82,24 @@ export function modLabel(value: string): string {
   return opt?.label ?? value;
 }
 
-export function generateSessionNot(form: SessionFormData): string {
+export function generateSessionNot(form: SessionFormData, studyStep?: StudyPlanStep): string {
   const parts = [
     kaynakLabel(form.kaynak),
     aktiviteLabel(form.aktivite, form.aktiviteCustom),
     `${form.dakika} min`,
     modLabel(form.mod),
   ];
+  if (studyStep) {
+    parts.push(`Step ${studyStep.order}: ${studyStep.logHint ?? studyStep.action}`);
+  }
   return parts.join(" · ");
 }
 
 export function defaultFormFromGorev(g: BugunGorev, defaultKalite = 0.85): SessionFormData {
+  const firstStep = g.studyGuide?.steps[0];
+  const stepNote = firstStep
+    ? `Step 1 — ${firstStep.action}${firstStep.logHint ? ` (${firstStep.logHint})` : ""}`
+    : g.baslik;
   return {
     aktivite: AKTIVITE_BY_KIND[g.kind] ?? "diger",
     aktiviteCustom: undefined,
@@ -101,7 +109,8 @@ export function defaultFormFromGorev(g: BugunGorev, defaultKalite = 0.85): Sessi
     alan: g.alan ?? (g.kind === "dil" ? "dil-de" : "net"),
     kanit: "",
     kalite: defaultKalite,
-    not: g.baslik,
+    not: stepNote,
+    studyStep: firstStep?.order ?? 1,
   };
 }
 

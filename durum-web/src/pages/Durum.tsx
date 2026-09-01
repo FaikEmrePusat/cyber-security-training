@@ -4,6 +4,7 @@ import { RadarChart } from "../components/RadarChart";
 import { Section } from "../components/Section";
 import { ProgressBar } from "../components/ProgressBar";
 import { round1 } from "../model";
+import { APP_NAME } from "../model/brand";
 import { useDerived } from "../useDerived";
 import { useDurum } from "../store";
 
@@ -28,7 +29,7 @@ export function DurumPage() {
     <div className="page">
       <header className="hero hero--compact">
         <div className="hero__atmosphere" aria-hidden />
-        <p className="hero__brand">Durum</p>
+        <p className="hero__brand">{APP_NAME}</p>
         <h1 className="hero__headline">Score</h1>
         <p className="hero__sub hero__sub--short">{d.band}</p>
       </header>

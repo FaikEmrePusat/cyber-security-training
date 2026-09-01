@@ -1261,6 +1261,140 @@
   margin-top: 0.55rem;
 }
 
+/* ——— Study plan (Today task cards) ——— */
+.study-plan {
+  margin-top: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(26, 107, 92, 0.04);
+}
+
+.study-plan__summary {
+  cursor: pointer;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  list-style: none;
+}
+
+.study-plan__summary::-webkit-details-marker {
+  display: none;
+}
+
+.study-plan__body {
+  padding: 0 0.75rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.study-plan__heading {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.study-plan__actions,
+.study-plan__resources,
+.study-plan__steps {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.study-plan__resources {
+  list-style: none;
+  padding-left: 0;
+}
+
+.study-plan__resources li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.study-plan__link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.study-plan__rtype {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-mute);
+}
+
+.study-plan__step {
+  margin-bottom: 0.35rem;
+}
+
+.study-plan__step-action {
+  display: block;
+}
+
+.study-plan__step-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+  margin-top: 0.1rem;
+}
+
+.portfolio-projects {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portfolio-project {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  background: var(--paper);
+}
+
+.portfolio-project__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.portfolio-project__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.portfolio-project__meta {
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+}
+
+.portfolio-project__summary {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.portfolio-project__plan {
+  margin-top: 0.35rem;
+}
+
 .cta--sm {
   padding: 0.35rem 0.75rem;
   font-size: 0.82rem;
@@ -1295,6 +1429,10 @@
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
   gap: 0.65rem 0.85rem;
   margin-bottom: 0.65rem;
+}
+
+.session-log-form__grid .field--full {
+  grid-column: 1 / -1;
 }
 
 .session-log-form__actions {
