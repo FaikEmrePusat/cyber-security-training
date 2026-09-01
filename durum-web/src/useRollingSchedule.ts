@@ -88,7 +88,7 @@ export function getDayType(offset: number): { dayType: DayType; dayTypeLabel: st
   const isLab = offset % 3 === 2;
   return {
     dayType: isLab ? "B" : "A",
-    dayTypeLabel: isLab ? "Lab Day" : "Topic Day",
+    dayTypeLabel: isLab ? "Integrated Lab Day" : "Topic Day",
   };
 }
 

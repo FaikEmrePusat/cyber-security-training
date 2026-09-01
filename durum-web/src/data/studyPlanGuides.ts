@@ -64,13 +64,60 @@ const CYBER_DEF = lab("https://cyberdefenders.org/blueteam-ctf-challenges/", "Cy
 const MITRE = doc("https://attack.mitre.org/", "MITRE ATT&CK framework");
 const SIGMA = doc("https://github.com/SigmaHQ/sigma", "Sigma HQ — detection rules");
 
-function standardStudySteps(konu: string, labMin = 25): Omit<StudyPlanStep, "order">[] {
+function integratedStudySteps(konu: string, labMin = 25): Omit<StudyPlanStep, "order">[] {
   return [
-    { action: `Read Oak section: ${konu}`, durationMin: 15, logHint: "3 bullet summary" },
-    { action: "Hands-on lab or command practice in VM", durationMin: labMin, logHint: "Command or screenshot" },
-    { action: "Write 3 recall questions; explain topic aloud", durationMin: 10, logHint: "Hardest question" },
-    { action: "Log session with evidence note", durationMin: 5, logHint: "Evidence field" },
+    {
+      action: `Concept — both sides: how "${konu}" works (attacker view) and why defenders monitor it`,
+      durationMin: 15,
+      logHint: "Attacker goal + defender goal (2 bullets each)",
+    },
+    {
+      action: "Technique — hands-on in authorized lab (room, command, or simulation)",
+      durationMin: labMin,
+      logHint: "Technique observed or command used",
+    },
+    {
+      action: "Detection — logs, alerts, Event IDs, controls, or mitigations for the same activity",
+      durationMin: 15,
+      logHint: "Log source + detection or mitigation idea",
+    },
+    {
+      action: "Map to MITRE ATT&CK; write 3 recall questions linking attack and defense",
+      durationMin: 10,
+      logHint: "Technique ID + hardest question",
+    },
+    { action: "Log session — evidence from both technique and detection work", durationMin: 5, logHint: "Dual-perspective evidence" },
   ];
+}
+
+function integratedSecurityGuide(konu: string, labMin = 30): StudyGuide {
+  return mkGuide(
+    konu,
+    [
+      SOC_L1,
+      LETS_DEFEND,
+      CYBER_DEF,
+      JR_PENTEST,
+      PRE_SEC,
+      MITRE,
+      thm("nmap", "TryHackMe — Nmap"),
+      thm("owasptop10", "TryHackMe — OWASP Top 10"),
+      HTB_START,
+      oakResource(konu),
+    ],
+    [
+      `Study "${konu}" as one story: technique → telemetry → detection → response`,
+      "Never stop at attack-only or reading-only — pair each action with defender visibility",
+      "Authorized labs only (THM, HTB, local VM)",
+      "Log MITRE technique ID and at least one detection idea",
+    ],
+    integratedStudySteps(konu, labMin),
+  );
+}
+
+/** @deprecated Use integratedStudySteps — kept as alias for gradual migration */
+function standardStudySteps(konu: string, labMin = 25): Omit<StudyPlanStep, "order">[] {
+  return integratedStudySteps(konu, labMin);
 }
 
 /** Specific topic patterns — ordered most-specific first. */
@@ -499,29 +546,8 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
       ["Sketch policy or rule order", "Compare host vs network control", "Relate to alert types in NGFW"],
       standardStudySteps(konu, 25),
     ),
-  def: ({ konu }) =>
-    mkGuide(
-      konu,
-      [SOC_L1, LETS_DEFEND, CYBER_DEF, oakResource(konu)],
-      ["Follow SOC triage workflow", "Produce one artifact or screenshot", "Tie to Gate B/C evidence if lab"],
-      standardStudySteps(konu, 30),
-    ),
-  off: ({ konu }) =>
-    mkGuide(
-      konu,
-      [JR_PENTEST, PRE_SEC, thm("nmap", "TryHackMe — Nmap"), thm("owasptop10", "TryHackMe — OWASP Top 10"), HTB_START, MITRE, oakResource(konu)],
-      [
-        "Learn the attack technique in an authorized lab only",
-        "Map to MITRE ATT&CK and one defender detection point",
-        "Log evidence: command, screenshot, or write-up section",
-      ],
-      [
-        { action: `Review Oak / curriculum notes: ${konu}`, durationMin: 15, logHint: "3 attack steps" },
-        { action: "Hands-on: THM Jr Pentest, Nmap, or HTB Starting Point task", durationMin: 35, logHint: "Room or machine name" },
-        { action: "Write defender view: what log or alert would fire?", durationMin: 15, logHint: "Log source + Event ID" },
-        { action: "Add MITRE technique ID to session log", durationMin: 5, logHint: "Txxxx.xxx" },
-      ],
-    ),
+  def: ({ konu }) => integratedSecurityGuide(konu, 30),
+  off: ({ konu }) => integratedSecurityGuide(konu, 30),
   cloud: ({ konu }) =>
     mkGuide(
       konu,
@@ -567,7 +593,7 @@ export const ROI_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
   { test: /active directory|ad lab|kerberos|ntlm detection/i, build: () => PORTFOLIO_PROJECTS[2].guide },
   { test: /letsdefend|alert triage|triage session/i, build: () => PORTFOLIO_PROJECTS[3].guide },
   { test: /cyberdefenders|blue team challenge/i, build: () => PORTFOLIO_PROJECTS[4].guide },
-  { test: /offensive|pentest|htb starting|jr pentest|attack.*write-?up/i, build: () => PORTFOLIO_PROJECTS[5].guide },
+  { test: /integrated lab|pentest|htb starting|jr pentest|attack.*write-?up/i, build: () => PORTFOLIO_PROJECTS[5].guide },
   { test: /python.*script|log parser|automation tool/i, build: () => PORTFOLIO_PROJECTS[6].guide },
   {
     test: /public link|publish|evidence|portfolio|write-up|writeup|artefakt/i,
@@ -626,13 +652,18 @@ export function labStudyGuide(konu: string, gateContext?: StudyGuideGateContext)
   }
   return mkGuide(
     konu,
-    [SOC_L1, doc("https://documentation.wazuh.com/current/getting-started/index.html", "Wazuh getting started"), LETS_DEFEND],
-    ["Boot lab VMs; verify log ingestion", "Produce screenshot, PCAP, or detection rule", "Tie output to Gate B/C portfolio evidence"],
+    [SOC_L1, doc("https://documentation.wazuh.com/current/getting-started/index.html", "Wazuh getting started"), LETS_DEFEND, JR_PENTEST, MITRE],
     [
-      { action: "Boot lab VMs; verify stack status", durationMin: 15, logHint: "Stack status" },
-      { action: "Complete core lab task (detection or analysis)", durationMin: 45, logHint: "Task name" },
-      { action: "Capture evidence (screenshot/PCAP/export)", durationMin: 10, logHint: "Evidence path or URL" },
-      { action: "Log lab session with artifact reference", durationMin: 5, logHint: "Artifact type" },
+      "Boot lab VMs; run technique and capture defender telemetry in the same session",
+      "Produce screenshot, PCAP, detection rule, or triage note",
+      "Tie output to Gate B/C portfolio evidence",
+    ],
+    [
+      { action: "Boot lab VMs; verify stack and logging pipeline", durationMin: 15, logHint: "Stack status" },
+      { action: "Execute lab task (technique or simulated attack in scope)", durationMin: 30, logHint: "Technique / task name" },
+      { action: "Analyze logs or alerts generated by the same activity", durationMin: 20, logHint: "Event ID or alert name" },
+      { action: "Capture dual evidence (attack step + detection output)", durationMin: 10, logHint: "Screenshot or export path" },
+      { action: "Log lab session with MITRE ID and artifact reference", durationMin: 5, logHint: "Artifact type + technique" },
     ],
   );
 }
@@ -678,9 +709,9 @@ export function templateByKind(
         [oakResource(konu), PRE_SEC, doc(`https://tryhackme.com/hacktivities/search?query=${encodeURIComponent(alanLabel)}`, "TryHackMe search")],
         [`Follow Oak order for ${alanLabel} foundation`, "Take structured notes with diagrams", "Add to review queue when first pass done"],
         [
-          { action: `Read Oak section: ${konu}`, durationMin: 20, logHint: "3 bullet summary" },
-          { action: "Hands-on: one command or diagram in lab", durationMin: 15, logHint: "Command or diagram" },
-          { action: "Write 3 exam-style questions", durationMin: 10, logHint: "Question headlines" },
+          { action: `Read Oak section: ${konu} — note attacker and defender angles`, durationMin: 20, logHint: "2 bullets per angle" },
+          { action: "Hands-on: one technique or command, then find its log footprint", durationMin: 15, logHint: "Command + log source" },
+          { action: "Write 3 exam-style questions (include one detection question)", durationMin: 10, logHint: "Question headlines" },
           { action: "Mark topic on map; log session", durationMin: 5, logHint: "Map status" },
         ],
       );
@@ -688,8 +719,8 @@ export function templateByKind(
       return mkGuide(
         konu,
         [oakResource(konu), doc(`https://tryhackme.com/hacktivities/search?query=${encodeURIComponent(konu)}`, "TryHackMe search")],
-        [`Study ${konu} in weak ${alanLabel} area`, "Connect theory to one SOC-relevant example", "Queue for spaced repetition after session"],
-        standardStudySteps(konu),
+        [`Study ${konu} in ${alanLabel} — technique and detection in one pass`, "Connect theory to logs, alerts, or controls", "Queue for spaced repetition after session"],
+        integratedStudySteps(konu),
       );
   }
 }

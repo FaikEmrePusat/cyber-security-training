@@ -1262,6 +1262,15 @@
 }
 
 /* ——— Study plan (Today task cards) ——— */
+.study-plan__approach {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid var(--accent);
+  line-height: 1.45;
+}
+
 .study-plan {
   margin-top: 0.35rem;
   border: 1px solid var(--line);

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { ALAN_COLOR } from "../data/oakCurriculum";
 import { stepLabel, type StudyGuide } from "../data/studyPlans";
-import { APP_NAME, APP_TAGLINE } from "../model/brand";
+import { APP_NAME, APP_TAGLINE, STUDY_APPROACH_NOTE } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
 import { GaugeRing } from "../components/GaugeRing";
 import { SiemGapCallout } from "../components/SiemGapCallout";
@@ -69,6 +69,7 @@ function StudyPlanPanel({ guide }: { guide: StudyGuide }) {
     <details className="study-plan">
       <summary className="study-plan__summary">Study plan — {guide.steps.length} steps</summary>
       <div className="study-plan__body">
+        <p className="study-plan__approach">{STUDY_APPROACH_NOTE}</p>
         {guide.actions.length > 0 && (
           <section className="study-plan__section">
             <h3 className="study-plan__heading">What you can do</h3>
@@ -291,7 +292,7 @@ export function BugunPage() {
             <div className="bugun-gorevler__headline-row">
               <h2 className="bugun-gorevler__title">What should I do today?</h2>
               <span className={`bugun-day-badge bugun-day-badge--${schedule.todayType}`}>
-                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Lab · SOC + offensive"})
+                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Integrated lab"})
               </span>
             </div>
             {schedule.carryCount > 0 && (

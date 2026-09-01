@@ -184,16 +184,16 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     },
   },
   {
-    id: "proj-offensive-writeup",
-    title: "Authorized Offensive Lab — Attack + Detection Write-up",
+    id: "proj-integrated-lab-writeup",
+    title: "Integrated Lab — Attack Timeline + Detection Write-up",
     gate: "C",
     artifactType: "writeup",
     value: 2.0,
     hoursEstimate: 25,
     summary:
-      "Complete one TryHackMe Jr Pentest or HTB Starting Point machine; publish write-up with attack timeline AND blue-team detection points (legal scope only).",
+      "Complete one TryHackMe Jr Pentest or HTB Starting Point machine in one session: document the attack timeline and the detection/response view (legal scope only).",
     guide: {
-      topic: "Authorized Offensive Lab Write-up",
+      topic: "Integrated lab write-up (attack + detection)",
       resources: [
         { label: "TryHackMe — Jr Penetration Tester path", url: "https://tryhackme.com/path/outline/jrpenetrationtester", type: "thm" },
         { label: "Hack The Box — Starting Point tracks", url: "https://app.hackthebox.com/tracks", type: "htb" },
