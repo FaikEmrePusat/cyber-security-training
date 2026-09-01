@@ -168,7 +168,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)], ["Explain VLAN tagging purpose", "Compare collision vs broadcast domain", "Sketch small office VLAN layout"], standardStudySteps(konu)),
   },
   {
-    test: /nat|private vs public|default gateway|loopback|link-local/i,
+    test: /\bnat\b|private vs public|default gateway|loopback|link-local/i,
     build: ({ konu }) =>
       mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://www.cloudflare.com/learning/network-layer/what-is-nat/", "Cloudflare — NAT"), oakResource(konu)], ["Identify private RFC1918 ranges", "Explain SNAT vs DNAT in one sentence each", "Trace packet path through gateway"], standardStudySteps(konu)),
   },

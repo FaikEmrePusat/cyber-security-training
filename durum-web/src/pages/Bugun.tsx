@@ -64,12 +64,13 @@ const KIND_CLASS: Record<string, string> = {
   dinlenme: "gorev-card--dinlenme",
 };
 
-function StudyPlanPanel({ guide }: { guide: StudyGuide }) {
+function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev["kind"] }) {
+  const showApproach = kind !== "dil" && kind !== "dinlenme";
   return (
     <details className="study-plan">
       <summary className="study-plan__summary">Study plan — {guide.steps.length} steps</summary>
       <div className="study-plan__body">
-        <p className="study-plan__approach">{STUDY_APPROACH_NOTE}</p>
+        {showApproach && <p className="study-plan__approach">{STUDY_APPROACH_NOTE}</p>}
         {guide.actions.length > 0 && (
           <section className="study-plan__section">
             <h3 className="study-plan__heading">What you can do</h3>
@@ -135,7 +136,7 @@ function GorevCard({
         <h2 className="gorev-card__title">{gorev.baslik}</h2>
         {gorev.detay && <p className="gorev-card__detay">{gorev.detay}</p>}
         {gorev.neden && <p className="gorev-card__neden">{gorev.neden}</p>}
-        {gorev.studyGuide && <StudyPlanPanel guide={gorev.studyGuide} />}
+        {gorev.studyGuide && <StudyPlanPanel guide={gorev.studyGuide} kind={gorev.kind} />}
         <div className="gorev-card__meta">
           {gorev.sure && <span>{gorev.sure}</span>}
           {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">FOUNDATION</span>}
