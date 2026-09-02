@@ -111,6 +111,7 @@ export type LogRecord = {
   kanit?: string;
   konu?: string;
   sonuc?: string;
+  tags?: string[];
   s_once?: number;
   s_sonra?: number;
   n_once?: number;
@@ -168,6 +169,7 @@ export type SessionFormData = {
   not?: string;
   /** Study plan step (1-based) when logging from Today's task. */
   studyStep?: number;
+  tags?: string[];
 };
 
 /** Incomplete task from today — carries to the next day. */

@@ -67,6 +67,7 @@ type StoreApi = {
   appendLog: (rec: LogRecord) => void;
   appendSessionFromForm: (form: SessionFormData) => void;
   completeScheduleTaskWithLog: (task: ScheduleTaskRef, form: SessionFormData) => void;
+  completeScheduleTasksWithLogs: (items: Array<{ task: ScheduleTaskRef; form: SessionFormData }>) => void;
   /** State + log in one undo step (e.g. marking a review). */
   commitWithLog: (updater: (s: AppState) => AppState, rec: LogRecord) => void;
   resetSeed: () => void;
@@ -128,6 +129,8 @@ function formToLogRecord(form: SessionFormData): LogRecord {
     kanit: form.kanit?.trim() || undefined,
     kaynak: form.kaynak,
     konu: form.aktiviteCustom?.trim() || undefined,
+    sonuc: form.tags?.length ? form.tags.join(", ") : undefined,
+    tags: form.tags?.length ? form.tags : undefined,
     not,
   };
 }
@@ -531,6 +534,28 @@ export function DurumProvider({ children }: { children: ReactNode }) {
               ...next,
               history: next.history.concat([rec]),
               pending: next.pending.concat([JSON.stringify(rec)]),
+            };
+          },
+          { forceHistory: true },
+        );
+      },
+      completeScheduleTasksWithLogs: (items) => {
+        if (items.length === 0) return;
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const nowMs = Date.now();
+        const nowIso = new Date().toISOString();
+        commit(
+          (s) => {
+            let next = s;
+            const recs: LogRecord[] = [];
+            for (const item of items) {
+              next = applyScheduleTaskCompletion(next, item.task, todayIso, nowMs, nowIso);
+              recs.push(formToLogRecord(item.form));
+            }
+            return {
+              ...next,
+              history: next.history.concat(recs),
+              pending: next.pending.concat(recs.map((r) => JSON.stringify(r))),
             };
           },
           { forceHistory: true },

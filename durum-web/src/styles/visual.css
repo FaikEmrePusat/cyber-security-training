@@ -1707,6 +1707,79 @@
   margin: 0;
 }
 
+.day-log {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.day-log__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-family: var(--font-display);
+}
+
+.day-log__lead {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.day-log__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+}
+
+.day-log__chip {
+  border: 1px solid var(--line);
+  background: var(--paper-raised, var(--mist));
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+button.day-log__chip {
+  cursor: pointer;
+}
+
+button.day-log__chip.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.day-log__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.day-log__paste {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  margin-bottom: 0.65rem;
+}
+
+.day-log__error {
+  margin: 0 0 0.5rem;
+  color: var(--warn, #8b3a3a);
+  font-size: 0.85rem;
+}
+
+.record-work__tags {
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+}
+
 .return-work {
   margin: 0 0 0.35rem;
   padding: 0.9rem 1rem 1rem;

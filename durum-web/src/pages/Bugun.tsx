@@ -10,6 +10,8 @@ import { round1 } from "../model";
 import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
 import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRollingSchedule";
+import { DayLogJsonPanel } from "../components/DayLogJsonPanel";
+import { LOG_TAGS, suggestedTags } from "../data/dayLog";
 import { useDurum } from "../store";
 import type { SessionFormData } from "../model";
 
@@ -131,6 +133,11 @@ function ReturnWorkPanel({
   const [note, setNote] = useState("");
   const [evidence, setEvidence] = useState("");
   const [minutes, setMinutes] = useState(Math.max(15, Math.round(gorev.saat * 60)));
+  const [tags, setTags] = useState<string[]>(() => suggestedTags(gorev));
+
+  const toggleTag = (id: string) => {
+    setTags((cur) => (cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id]));
+  };
 
   return (
     <form
@@ -147,14 +154,29 @@ function ReturnWorkPanel({
           alan: gorev.alan && gorev.alan.length < 12 ? gorev.alan : "net",
           kanit: evidence.trim() || undefined,
           kalite: 0.85,
-          not: note.trim() || `Completed with mentor: ${gorev.baslik}`,
+          not: [note.trim(), tags.length ? `Tags: ${tags.join(", ")}` : ""].filter(Boolean).join("\n"),
+          tags,
         });
       }}
     >
       <p className="return-work__title">Back from ChatGPT — what did you do?</p>
       <p className="return-work__topic">{gorev.baslik}</p>
+      <p className="return-work__label">Tags</p>
+      <div className="day-log__chips" role="group" aria-label="Tags">
+        {LOG_TAGS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`day-log__chip${tags.includes(t.id) ? " is-on" : ""}`}
+            aria-pressed={tags.includes(t.id)}
+            onClick={() => toggleTag(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
       <label className="return-work__label" htmlFor={`rw-note-${gorev.id}`}>
-        What you did (commands, rooms, answers — paste from the chat)
+        What you did
       </label>
       <textarea
         id={`rw-note-${gorev.id}`}
@@ -162,7 +184,7 @@ function ReturnWorkPanel({
         rows={4}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="e.g. Explained kernel vs distro vs shell; uname -a on Ubuntu; THM Linux Fundamentals Part 1 tasks 1–5"
+        placeholder="Paste summary from ChatGPT, or use Day log JSON above for the whole day."
         required
       />
       <div className="return-work__row">
@@ -303,7 +325,8 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
 
 export function BugunPage() {
   const d = useDerived();
-  const { state, completeScheduleTaskWithLog, deferScheduleTask, clearScheduleCarry } = useDurum();
+  const { state, completeScheduleTaskWithLog, completeScheduleTasksWithLogs, deferScheduleTask, clearScheduleCarry } =
+    useDurum();
   const [toast, setToast] = useState<string | null>(null);
   const [returningId, setReturningId] = useState<string | null>(null);
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
@@ -416,6 +439,22 @@ export function BugunPage() {
               </div>
             )}
           </div>
+          <DayLogJsonPanel
+            tasks={schedule.bugunGorevler}
+            onImport={(items, unmatched) => {
+              completeScheduleTasksWithLogs(items);
+              for (const item of items) {
+                if (item.task.topicId && (item.task.kind === "konu" || item.task.kind === "temel")) {
+                  setStatus(item.task.topicId, "pekiştirildi");
+                }
+              }
+              flash(
+                unmatched > 0
+                  ? `Imported ${items.length} · ${unmatched} entries did not match today’s titles`
+                  : `Imported ${items.length} log ${items.length === 1 ? "entry" : "entries"}`,
+              );
+            }}
+          />
           <div className="bugun-gorevler__list">
             {schedule.bugunGorevler.map((g) => (
               <div key={g.id} className="bugun-gorevler__item">

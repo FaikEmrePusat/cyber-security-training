@@ -90,6 +90,9 @@ export function RecordPage() {
                 <time dateTime={r.t}>{r.t.slice(0, 16).replace("T", " ")}</time>
                 {r.konu && <strong> {r.konu}</strong>}
                 {typeof r.dur_min === "number" && <span> · {r.dur_min} min</span>}
+                {(r.tags?.length || r.sonuc) && (
+                  <p className="record-work__tags">{(r.tags ?? r.sonuc?.split(",").map((s) => s.trim()) ?? []).join(" · ")}</p>
+                )}
                 {r.not && <p>{r.not}</p>}
                 {r.kanit && (
                   <p>
