@@ -7,9 +7,9 @@ import { APP_NAME } from "../model/brand";
 const PRIMARY = [
   { to: "/", label: "Today", end: true },
   { to: "/harita", label: "Map" },
+  { to: "/record", label: "Record" },
   { to: "/beceriler", label: "Skills" },
   { to: "/tekrar", label: "Review" },
-  { to: "/log", label: "Log" },
   { to: "/almanya", label: "Germany" },
 ];
 
@@ -18,6 +18,7 @@ const MORE = [
   { to: "/kapilar", label: "Gates" },
   { to: "/hiz", label: "Pace" },
   { to: "/formuller", label: "Formulas" },
+  { to: "/data", label: "Data" },
 ];
 
 export function Nav() {

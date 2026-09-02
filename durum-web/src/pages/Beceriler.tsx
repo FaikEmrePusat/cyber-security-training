@@ -34,7 +34,7 @@ export function BecerilerPage() {
       <Section
         as="h1"
         title="Skills"
-        lead="Raising score requires evidence reference; lowering is free. Changes are written to the log."
+        lead="Claimed level vs evidence-capped skill. Raising a score needs an evidence reference; lowering is free."
       >
         <div className="table-wrap">
           <table className="data">

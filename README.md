@@ -8,4 +8,5 @@ A formula-driven, date-less progress & competency tracking system for Junior SOC
 - **Client-Side State:** All user progress, log history, and custom curriculum statuses persist locally in browser `localStorage`.
 - **FSRS Spaced Repetition:** Smart decay and memory stability queue.
 - **Competency & Gate Pipeline:** Visual gate metrics and readiness score ($R$).
-- **Export / Import:** Full JSON backup and restore capabilities from the Log page.
+- **Export / Import:** Full JSON backup and restore from **More → Data**.
+- **Public record:** Shareable competency snapshot at `#/record` (topics, skills, evidence, gates).

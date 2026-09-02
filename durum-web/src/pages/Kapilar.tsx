@@ -92,7 +92,7 @@ export function KapilarPage() {
                         {p.guide.steps.map((s) => (
                           <li key={s.order} className="study-plan__step">
                             <span className="study-plan__step-action">{stepLabel(s)}</span>
-                            {s.logHint && <span className="study-plan__step-hint">Log: {s.logHint}</span>}
+                            {s.logHint && <span className="study-plan__step-hint">{s.logHint}</span>}
                           </li>
                         ))}
                       </ol>

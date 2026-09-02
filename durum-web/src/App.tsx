@@ -7,7 +7,8 @@ import { DurumPage } from "./pages/Durum";
 import { FormullerPage } from "./pages/Formuller";
 import { HizPage } from "./pages/Hiz";
 import { KapilarPage } from "./pages/Kapilar";
-import { LogPage } from "./pages/Log";
+import { DataPage } from "./pages/Data";
+import { RecordPage } from "./pages/Record";
 import { HaritaPage } from "./pages/Harita";
 import { TekrarPage } from "./pages/Tekrar";
 import { DurumProvider } from "./store";
@@ -26,7 +27,9 @@ export default function App() {
           <Route path="/hiz" element={<HizPage />} />
           <Route path="/harita" element={<HaritaPage />} />
           <Route path="/tekrar" element={<TekrarPage />} />
-          <Route path="/log" element={<LogPage />} />
+          <Route path="/record" element={<RecordPage />} />
+          <Route path="/data" element={<DataPage />} />
+          <Route path="/log" element={<Navigate to="/record" replace />} />
           <Route path="/formuller" element={<FormullerPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

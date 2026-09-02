@@ -10,8 +10,6 @@ import { round1 } from "../model";
 import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
 import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRollingSchedule";
-import { SessionLogForm } from "../components/SessionLogForm";
-import { defaultFormFromGorev } from "../components/sessionLogFormUtils";
 import { useDurum } from "../store";
 
 function MapGlyph() {
@@ -102,7 +100,7 @@ function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev[
             {guide.steps.map((s) => (
               <li key={s.order} className="study-plan__step">
                 <span className="study-plan__step-action">{stepLabel(s)}</span>
-                {s.logHint && <span className="study-plan__step-hint">Log: {s.logHint}</span>}
+                {s.logHint && <span className="study-plan__step-hint">{s.logHint}</span>}
               </li>
             ))}
           </ol>
@@ -149,7 +147,7 @@ function GorevCard({
           <div className="gorev-card__actions">
             {onComplete && (
               <button type="button" className="cta cta--sm" onClick={onComplete}>
-                Done
+                Mark done
               </button>
             )}
             {onDefer && (
@@ -211,11 +209,10 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
 
 export function BugunPage() {
   const d = useDerived();
-  const { state, completeScheduleTaskWithLog, deferScheduleTask, clearScheduleCarry } = useDurum();
+  const { state, completeScheduleTask, deferScheduleTask, clearScheduleCarry } = useDurum();
   const [toast, setToast] = useState<string | null>(null);
-  const [loggingTaskId, setLoggingTaskId] = useState<string | null>(null);
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
-  const { getStatus } = useCurriculumStatuses(queueKeys);
+  const { getStatus, setStatus } = useCurriculumStatuses(queueKeys);
   const schedule = useRollingSchedule(getStatus);
 
   const flash = (message: string) => {
@@ -318,35 +315,24 @@ export function BugunPage() {
               <div key={g.id} className="bugun-gorevler__item">
                 <GorevCard
                   gorev={g}
-                  onComplete={() => setLoggingTaskId(g.id)}
+                  onComplete={() => {
+                    completeScheduleTask(toTaskRef(g));
+                    if (g.topicId && (g.kind === "konu" || g.kind === "temel")) {
+                      setStatus(g.topicId, "pekiştirildi");
+                    }
+                    flash("Marked done — map and reviews updated");
+                  }}
                   onDefer={() => {
                     deferScheduleTask(toCarryItem(g));
                     flash("Deferred to tomorrow");
                   }}
                 />
-                {loggingTaskId === g.id && (
-                  <div className="session-log-panel" role="region" aria-label="Session log">
-                    <p className="session-log-panel__title">What did you do? — quick log</p>
-                    <SessionLogForm
-                      initial={defaultFormFromGorev(g, state.tempo.quality)}
-                      skills={state.skills}
-                      studySteps={g.studyGuide?.steps}
-                      onSubmit={(form) => {
-                        completeScheduleTaskWithLog(toTaskRef(g), form);
-                        setLoggingTaskId(null);
-                        flash("Task completed and log saved");
-                      }}
-                      onCancel={() => setLoggingTaskId(null)}
-                      submitLabel="Save and finish"
-                    />
-                  </div>
-                )}
               </div>
             ))}
           </div>
           <div className="actions bugun-gorevler__links">
-            <Link className="cta" to="/log" title="Log your work on the Log page">
-              Write to Log
+            <Link className="cta" to="/record" title="Public competency record">
+              Open record
             </Link>
             <Link className="cta cta--ghost" to="/tekrar" title="Due review list">
               Review queue

@@ -106,7 +106,7 @@ export function HizPage() {
       </Section>
 
       {showCtl && (
-        <Section title="CTL series" lead="TrainingPeaks PMC from session log — at least 2 days of sessions.">
+        <Section title="CTL series" lead="Training load from completed practice history — needs at least two days of activity.">
           <LineChart
             series={[d.pmc.series]}
             labels={d.pmc.series.map((_, i) => String(i))}
