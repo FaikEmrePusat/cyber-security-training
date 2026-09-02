@@ -127,6 +127,7 @@ function formToLogRecord(form: SessionFormData): LogRecord {
     kalite: clamp(form.kalite, 0.3, 1),
     kanit: form.kanit?.trim() || undefined,
     kaynak: form.kaynak,
+    konu: form.aktiviteCustom?.trim() || undefined,
     not,
   };
 }

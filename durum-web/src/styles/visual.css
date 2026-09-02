@@ -1692,6 +1692,92 @@
   color: var(--ink-soft);
 }
 
+.work-loop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.work-loop li {
+  margin: 0;
+}
+
+.return-work {
+  margin: 0 0 0.35rem;
+  padding: 0.9rem 1rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.return-work__title {
+  margin: 0 0 0.2rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.return-work__topic {
+  margin: 0 0 0.75rem;
+  color: var(--ink-mute);
+  font-size: 0.85rem;
+}
+
+.return-work__label {
+  display: block;
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.return-work__note,
+.return-work input {
+  width: 100%;
+}
+
+.return-work__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.return-work__grow {
+  flex: 1 1 12rem;
+}
+
+.return-work__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.record-work {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.record-work li {
+  margin: 0 0 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.record-work time {
+  font-size: 0.75rem;
+  color: var(--ink-mute);
+}
+
+.record-work p {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+}
+
 .record-now {
   margin: 0;
   font-size: 1.05rem;

@@ -11,6 +11,7 @@ import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
 import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRollingSchedule";
 import { useDurum } from "../store";
+import type { SessionFormData } from "../model";
 
 function MapGlyph() {
   return (
@@ -110,6 +111,99 @@ function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev[
   );
 }
 
+function kindToForm(g: BugunGorev): Pick<SessionFormData, "aktivite" | "mod"> {
+  if (g.kind === "tekrar") return { aktivite: "konu-tekrar", mod: "tekrar" };
+  if (g.kind === "temel") return { aktivite: "temel-konu", mod: "lab" };
+  if (g.kind === "lab") return { aktivite: "lab-pratik", mod: "lab" };
+  if (g.kind === "dil") return { aktivite: "almanca", mod: "dil" };
+  return { aktivite: "yeni-konu", mod: "lab" };
+}
+
+function ReturnWorkPanel({
+  gorev,
+  onSave,
+  onCancel,
+}: {
+  gorev: BugunGorev;
+  onSave: (form: SessionFormData) => void;
+  onCancel: () => void;
+}) {
+  const [note, setNote] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const [minutes, setMinutes] = useState(Math.max(15, Math.round(gorev.saat * 60)));
+
+  return (
+    <form
+      className="return-work"
+      aria-label="Record what you did"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const mapped = kindToForm(gorev);
+        onSave({
+          ...mapped,
+          aktiviteCustom: gorev.baslik,
+          kaynak: "chatgpt",
+          dakika: minutes,
+          alan: gorev.alan && gorev.alan.length < 12 ? gorev.alan : "net",
+          kanit: evidence.trim() || undefined,
+          kalite: 0.85,
+          not: note.trim() || `Completed with mentor: ${gorev.baslik}`,
+        });
+      }}
+    >
+      <p className="return-work__title">Back from ChatGPT — what did you do?</p>
+      <p className="return-work__topic">{gorev.baslik}</p>
+      <label className="return-work__label" htmlFor={`rw-note-${gorev.id}`}>
+        What you did (commands, rooms, answers — paste from the chat)
+      </label>
+      <textarea
+        id={`rw-note-${gorev.id}`}
+        className="return-work__note"
+        rows={4}
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="e.g. Explained kernel vs distro vs shell; uname -a on Ubuntu; THM Linux Fundamentals Part 1 tasks 1–5"
+        required
+      />
+      <div className="return-work__row">
+        <div>
+          <label className="return-work__label" htmlFor={`rw-min-${gorev.id}`}>
+            Minutes
+          </label>
+          <input
+            id={`rw-min-${gorev.id}`}
+            type="number"
+            min={5}
+            max={300}
+            value={minutes}
+            onChange={(e) => setMinutes(Number(e.target.value) || 30)}
+          />
+        </div>
+        <div className="return-work__grow">
+          <label className="return-work__label" htmlFor={`rw-ev-${gorev.id}`}>
+            Evidence URL (optional)
+          </label>
+          <input
+            id={`rw-ev-${gorev.id}`}
+            type="text"
+            value={evidence}
+            onChange={(e) => setEvidence(e.target.value)}
+            placeholder="https://tryhackme.com/room/… or GitHub gist"
+          />
+        </div>
+      </div>
+      <div className="return-work__actions">
+        <button type="submit" className="cta cta--sm">
+          Save to record
+        </button>
+        <button type="button" className="cta cta--ghost cta--sm" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function GorevCard({
   gorev,
   onComplete,
@@ -147,7 +241,7 @@ function GorevCard({
           <div className="gorev-card__actions">
             {onComplete && (
               <button type="button" className="cta cta--sm" onClick={onComplete}>
-                Mark done
+                Record work
               </button>
             )}
             {onDefer && (
@@ -209,8 +303,9 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
 
 export function BugunPage() {
   const d = useDerived();
-  const { state, completeScheduleTask, deferScheduleTask, clearScheduleCarry } = useDurum();
+  const { state, completeScheduleTaskWithLog, deferScheduleTask, clearScheduleCarry } = useDurum();
   const [toast, setToast] = useState<string | null>(null);
+  const [returningId, setReturningId] = useState<string | null>(null);
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
   const { getStatus, setStatus } = useCurriculumStatuses(queueKeys);
   const schedule = useRollingSchedule(getStatus);
@@ -260,9 +355,20 @@ export function BugunPage() {
         <p className="hero__brand">{APP_NAME}</p>
         <p className="hero__tagline">{APP_TAGLINE}</p>
         <h1 className="hero__headline">Today</h1>
-        <p className="hero__sub hero__sub--short" title="Readiness score (R) — proximity to Germany junior target">
-          {round1(d.live.R)} readiness · {d.band}
+        <p className="hero__sub hero__sub--short">
+          Open Today → work the topic in ChatGPT → come back and record what you did.
         </p>
+        <ol className="work-loop">
+          <li>
+            <strong>Here:</strong> read the next topic
+          </li>
+          <li>
+            <strong>ChatGPT:</strong> learn, retrieve, lab
+          </li>
+          <li>
+            <strong>Here:</strong> Save to record
+          </li>
+        </ol>
 
         <section className="yolculuk-strip" aria-label="Curriculum journey">
           <div className="yolculuk-strip__progress">
@@ -288,7 +394,7 @@ export function BugunPage() {
         <section className="bugun-gorevler" aria-label="Today's tasks">
           <div className="bugun-gorevler__head">
             <div className="bugun-gorevler__headline-row">
-              <h2 className="bugun-gorevler__title">What should I do today?</h2>
+              <h2 className="bugun-gorevler__title">Next topics</h2>
               <span className={`bugun-day-badge bugun-day-badge--${schedule.todayType}`}>
                 {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Integrated lab"})
               </span>
@@ -315,18 +421,26 @@ export function BugunPage() {
               <div key={g.id} className="bugun-gorevler__item">
                 <GorevCard
                   gorev={g}
-                  onComplete={() => {
-                    completeScheduleTask(toTaskRef(g));
-                    if (g.topicId && (g.kind === "konu" || g.kind === "temel")) {
-                      setStatus(g.topicId, "pekiştirildi");
-                    }
-                    flash("Marked done — map and reviews updated");
-                  }}
+                  onComplete={() => setReturningId(g.id)}
                   onDefer={() => {
                     deferScheduleTask(toCarryItem(g));
                     flash("Deferred to tomorrow");
                   }}
                 />
+                {returningId === g.id && (
+                  <ReturnWorkPanel
+                    gorev={g}
+                    onSave={(form) => {
+                      completeScheduleTaskWithLog(toTaskRef(g), form);
+                      if (g.topicId && (g.kind === "konu" || g.kind === "temel")) {
+                        setStatus(g.topicId, "pekiştirildi");
+                      }
+                      setReturningId(null);
+                      flash("Saved to your record");
+                    }}
+                    onCancel={() => setReturningId(null)}
+                  />
+                )}
               </div>
             ))}
           </div>

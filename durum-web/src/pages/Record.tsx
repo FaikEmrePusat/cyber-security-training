@@ -34,6 +34,10 @@ export function RecordPage() {
   });
   const publicArtifacts = state.artifacts.filter((a) => a.evidence === "public" && a.ref.trim());
   const nextTask = schedule.bugunGorevler[0];
+  const workLog = [...state.history]
+    .reverse()
+    .filter((r) => r.type === "session" && !r.seed)
+    .slice(0, 12);
 
   return (
     <div className="page record-page">
@@ -44,9 +48,8 @@ export function RecordPage() {
         <h1 className="hero__headline">{LEARNER_NAME}</h1>
         <p className="hero__sub hero__sub--short">{LEARNER_ROLE}</p>
         <p className="record-intro">
-          This page is a public snapshot of path progress, claimed skills, and evidence. It is not a
-          daily study journal. Work happens off-site (labs, notes, mentor). Marking a topic done on
-          Today updates this record.
+          Public snapshot of path, skills, and what was recorded after mentor sessions. Daily
+          teaching happens in ChatGPT; this site stores the trail.
         </p>
       </header>
 
@@ -75,6 +78,30 @@ export function RecordPage() {
             Curriculum map
           </Link>
         </div>
+      </Section>
+
+      <Section title="Recorded work" lead="What came back from ChatGPT — topic, minutes, note.">
+        {workLog.length === 0 ? (
+          <p className="note">Nothing recorded yet. Finish a topic in ChatGPT, then Record work on Today.</p>
+        ) : (
+          <ul className="record-work">
+            {workLog.map((r, i) => (
+              <li key={`${r.t}-${i}`}>
+                <time dateTime={r.t}>{r.t.slice(0, 16).replace("T", " ")}</time>
+                {r.konu && <strong> {r.konu}</strong>}
+                {typeof r.dur_min === "number" && <span> · {r.dur_min} min</span>}
+                {r.not && <p>{r.not}</p>}
+                {r.kanit && (
+                  <p>
+                    <a href={r.kanit} target="_blank" rel="noopener noreferrer">
+                      {r.kanit}
+                    </a>
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </Section>
 
       <Section title="Skills" lead="Claimed level vs what evidence allows (S_eff). Public links belong in Skills.">
@@ -165,7 +192,7 @@ export function RecordPage() {
 
       <Section
         title="Reinforced topics"
-        lead="Marked done on Today or set to Reinforced on the map. This is the knowledge trail, not a session diary."
+        lead="Topics marked Reinforced after you recorded work, or set on the map."
       >
         {reinforced.length === 0 ? (
           <p className="note">None yet. Mark foundation and weak-area topics done as you finish them.</p>
