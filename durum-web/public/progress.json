@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "app": "SOC Ledger",
+  "publishedAt": "",
+  "learner": {
+    "name": "Faik Emre Pusat",
+    "role": "Aspiring Junior SOC Analyst / Blue Team"
+  },
+  "state": {
+    "skills": [],
+    "artifacts": [],
+    "lang": {
+      "deKonusma": 0,
+      "deGenel": 0,
+      "enKonusma": 0,
+      "enGenel": 0,
+      "deEv": "yok",
+      "enEv": "yok",
+      "deRef": "",
+      "enRef": ""
+    },
+    "career": [],
+    "tempo": {
+      "hoursCyber": 28,
+      "hoursLang": 10,
+      "hoursLangAlt": 0,
+      "quality": 0.85
+    },
+    "retrieval": [],
+    "history": [],
+    "chancenkarte": {
+      "yas": 0,
+      "birikim": "",
+      "aylikTasarruf": "",
+      "gate0": "bilinmiyor",
+      "anerkennungDurum": "arastiriliyor",
+      "engpassberuf": false,
+      "meslekiEgitimYil": 0,
+      "lebensunterhalt": false
+    }
+  },
+  "curriculum": {},
+  "summary": {
+    "R": 0,
+    "rTarget": 67.4,
+    "oakReinforced": 0,
+    "oakTotal": 141,
+    "nextGateId": null,
+    "publicArtifacts": 0
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PublishPanel } from "../components/PublishPanel";
 import { Section } from "../components/Section";
 import { useDurum } from "../store";
 
@@ -53,7 +54,7 @@ export function DataPage() {
       <Section
         as="h1"
         title="Data"
-        lead="Backup and restore for this browser. Session diaries are not part of the tracker."
+        lead="This browser keeps your private working copy. Publish shares a read-only snapshot on GitHub for followers."
       >
         <div className="actions" style={{ marginBottom: "1rem" }}>
           <button type="button" className="cta" onClick={handleDownloadFullBackup}>
@@ -75,6 +76,13 @@ export function DataPage() {
         <button type="button" className="cta cta--ghost" onClick={handleRestoreBackup}>
           Load backup
         </button>
+      </Section>
+
+      <Section
+        title="Publish to GitHub"
+        lead="Followers open Record and load your published snapshot. Without your token they cannot overwrite it."
+      >
+        <PublishPanel />
       </Section>
 
       <Section title="Reset">
