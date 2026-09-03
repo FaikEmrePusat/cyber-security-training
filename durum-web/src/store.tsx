@@ -32,10 +32,8 @@ import {
   type Tempo,
 } from "./model";
 import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
+import { applySessionEvidence } from "./data/evidencePromote";
 import { generateSessionNot } from "./components/sessionLogFormUtils";
-import { auth, db, googleProvider } from "./firebase";
-import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
-import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 
 const MAX_HISTORY = 50;
 /** Coalesce consecutive keystrokes into one undo step (ms). */
@@ -68,6 +66,13 @@ type StoreApi = {
   appendSessionFromForm: (form: SessionFormData) => void;
   completeScheduleTaskWithLog: (task: ScheduleTaskRef, form: SessionFormData) => void;
   completeScheduleTasksWithLogs: (items: Array<{ task: ScheduleTaskRef; form: SessionFormData }>) => void;
+  promoteLogEvidence: (input: {
+    title: string;
+    url: string;
+    kind?: string;
+    alan?: string;
+    tags?: string[];
+  }) => void;
   /** State + log in one undo step (e.g. marking a review). */
   commitWithLog: (updater: (s: AppState) => AppState, rec: LogRecord) => void;
   resetSeed: () => void;
@@ -75,10 +80,6 @@ type StoreApi = {
   clearPending: () => void;
   exportFullBackup: () => string;
   importFullBackup: (jsonText: string) => boolean;
-  currentUser: User | null;
-  cloudSyncStatus: "idle" | "saving" | "synced" | "error";
-  loginWithGoogle: () => Promise<void>;
-  logout: () => Promise<void>;
 };
 
 const StoreContext = createContext<StoreApi | null>(null);
@@ -133,6 +134,25 @@ function formToLogRecord(form: SessionFormData): LogRecord {
     tags: form.tags?.length ? form.tags : undefined,
     not,
   };
+}
+
+function applyEvidenceFromSession(
+  s: AppState,
+  task: ScheduleTaskRef,
+  form: SessionFormData,
+): AppState {
+  const url = form.kanit?.trim();
+  if (!url) return s;
+  const promote = form.promoteEvidence !== false;
+  const { state } = applySessionEvidence(s, {
+    title: form.aktiviteCustom?.trim() || task.baslik || "Session evidence",
+    url,
+    kind: task.kind,
+    alan: form.alan || task.alan,
+    tags: form.tags,
+    promote,
+  });
+  return state;
 }
 
 function applyScheduleTaskCompletion(
@@ -212,8 +232,6 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(loadState);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [cloudSyncStatus, setCloudSyncStatus] = useState<"idle" | "saving" | "synced" | "error">("idle");
 
   const pastRef = useRef<AppState[]>([]);
   const futureRef = useRef<AppState[]>([]);
@@ -222,113 +240,12 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   /** Current state ref so stack is not corrupted during Strict Mode double-invoke. */
   const stateRef = useRef(state);
   stateRef.current = state;
-  const isRemoteUpdateRef = useRef(false);
 
-  // 1. Auth Listener
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setCurrentUser(u);
-    });
-    return () => unsub();
-  }, []);
-
-  // 2. Realtime Cloud Sync (Firestore -> Local)
-  useEffect(() => {
-    if (!currentUser) return;
-    const userDoc = doc(db, "users", currentUser.uid);
-    const unsub = onSnapshot(userDoc, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data && data.state && !isRemoteUpdateRef.current) {
-          isRemoteUpdateRef.current = true;
-          applyingHistoryRef.current = true;
-          setState(data.state as AppState);
-          stateRef.current = data.state as AppState;
-          if (data.curriculum) {
-            try {
-              localStorage.setItem("durum-curriculum-v1", JSON.stringify(data.curriculum));
-              window.dispatchEvent(new Event("durum-curriculum-sync"));
-            } catch {
-              /* skip */
-            }
-          }
-          setCloudSyncStatus("synced");
-          setTimeout(() => {
-            applyingHistoryRef.current = false;
-            isRemoteUpdateRef.current = false;
-          }, 100);
-        }
-      }
-    });
-    return () => unsub();
-  }, [currentUser]);
-
-  // 3. Local Save + Push to Firestore
+  // Persist locally only — personal tracker, no account / cloud sync.
   useEffect(() => {
     if (applyingHistoryRef.current) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-
-    if (currentUser && !isRemoteUpdateRef.current) {
-      setCloudSyncStatus("saving");
-      let curriculumMap: Record<string, string> = {};
-      try {
-        const raw = localStorage.getItem("durum-curriculum-v1");
-        if (raw) curriculumMap = JSON.parse(raw);
-      } catch {
-        /* skip */
-      }
-      const userDoc = doc(db, "users", currentUser.uid);
-      setDoc(userDoc, {
-        updatedAt: new Date().toISOString(),
-        state,
-        curriculum: curriculumMap,
-      }, { merge: true })
-        .then(() => setCloudSyncStatus("synced"))
-        .catch(() => setCloudSyncStatus("error"));
-    }
-  }, [state, currentUser]);
-
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      const res = await signInWithPopup(auth, googleProvider);
-      if (res.user) {
-        // On first login, pull cloud data if present; otherwise push local to cloud
-        const userDoc = doc(db, "users", res.user.uid);
-        const snap = await getDoc(userDoc);
-        if (snap.exists() && snap.data()?.state) {
-          const data = snap.data();
-          setState(data.state as AppState);
-          stateRef.current = data.state as AppState;
-          if (data.curriculum) {
-            localStorage.setItem("durum-curriculum-v1", JSON.stringify(data.curriculum));
-            window.dispatchEvent(new Event("durum-curriculum-sync"));
-          }
-        } else {
-          let curriculumMap: Record<string, string> = {};
-          try {
-            const raw = localStorage.getItem("durum-curriculum-v1");
-            if (raw) curriculumMap = JSON.parse(raw);
-          } catch {
-            /* skip */
-          }
-          await setDoc(userDoc, {
-            updatedAt: new Date().toISOString(),
-            state: stateRef.current,
-            curriculum: curriculumMap,
-          });
-        }
-        setCloudSyncStatus("synced");
-      }
-    } catch (e) {
-      console.error(e);
-      setCloudSyncStatus("error");
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    await signOut(auth);
-    setCloudSyncStatus("idle");
-  }, []);
+  }, [state]);
 
   const syncFlags = useCallback(() => {
     setCanUndo(pastRef.current.length > 0);
@@ -529,7 +446,8 @@ export function DurumProvider({ children }: { children: ReactNode }) {
         const rec = formToLogRecord(form);
         commit(
           (s) => {
-            const next = applyScheduleTaskCompletion(s, task, todayIso, nowMs, nowIso);
+            let next = applyScheduleTaskCompletion(s, task, todayIso, nowMs, nowIso);
+            next = applyEvidenceFromSession(next, task, form);
             return {
               ...next,
               history: next.history.concat([rec]),
@@ -550,6 +468,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
             const recs: LogRecord[] = [];
             for (const item of items) {
               next = applyScheduleTaskCompletion(next, item.task, todayIso, nowMs, nowIso);
+              next = applyEvidenceFromSession(next, item.task, item.form);
               recs.push(formToLogRecord(item.form));
             }
             return {
@@ -558,6 +477,12 @@ export function DurumProvider({ children }: { children: ReactNode }) {
               pending: next.pending.concat(recs.map((r) => JSON.stringify(r))),
             };
           },
+          { forceHistory: true },
+        );
+      },
+      promoteLogEvidence: (input) => {
+        commit(
+          (s) => applySessionEvidence(s, { ...input, promote: true }).state,
           { forceHistory: true },
         );
       },
@@ -642,12 +567,8 @@ export function DurumProvider({ children }: { children: ReactNode }) {
           return false;
         }
       },
-      currentUser,
-      cloudSyncStatus,
-      loginWithGoogle,
-      logout,
     }),
-    [state, canUndo, canRedo, undo, redo, patch, commit, currentUser, cloudSyncStatus, loginWithGoogle, logout],
+    [state, canUndo, canRedo, undo, redo, patch, commit],
   );
 
   return <StoreContext.Provider value={api}>{children}</StoreContext.Provider>;

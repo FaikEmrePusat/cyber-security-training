@@ -47,7 +47,7 @@ export function DayLogJsonPanel({
     <section className="day-log" aria-label="Day log JSON">
       <h3 className="day-log__title">Day log (JSON)</h3>
       <p className="day-log__lead">
-        Copy the prompt into ChatGPT after you finish. Paste the JSON it returns. Tags you can use:{" "}
+        Copy the prompt into your mentor chat after you finish. Paste the JSON it returns. Tags you can use:{" "}
         {LOG_TAGS.map((t) => t.id).join(", ")}.
       </p>
       <div className="day-log__chips" aria-label="Allowed tags">
@@ -59,14 +59,14 @@ export function DayLogJsonPanel({
       </div>
       <div className="day-log__actions">
         <button type="button" className="cta" onClick={() => copy("prompt", prompt)}>
-          {copied === "prompt" ? "Copied prompt" : "Copy ChatGPT prompt"}
+          {copied === "prompt" ? "Copied prompt" : "Copy mentor prompt"}
         </button>
         <button type="button" className="cta cta--ghost" onClick={() => copy("json", JSON.stringify(template, null, 2))}>
           {copied === "json" ? "Copied JSON" : "Copy empty JSON"}
         </button>
       </div>
       <label className="return-work__label" htmlFor="day-log-paste">
-        Paste ChatGPT JSON
+        Paste mentor JSON
       </label>
       <textarea
         id="day-log-paste"

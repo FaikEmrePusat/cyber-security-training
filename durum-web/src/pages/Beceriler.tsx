@@ -43,7 +43,7 @@ export function BecerilerPage() {
                 <th>Area</th>
                 <th>Claim</th>
                 <th>Evidence</th>
-                <th>S_etkin</th>
+                <th>Effective</th>
                 <th>Ref</th>
               </tr>
             </thead>
@@ -239,7 +239,7 @@ export function BecerilerPage() {
                     >
                       {TIERS.map((t) => (
                         <option key={t} value={t}>
-                          {t}
+                          {MODEL.kanitAd[t]}
                         </option>
                       ))}
                     </select>

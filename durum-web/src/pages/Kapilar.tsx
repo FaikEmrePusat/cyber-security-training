@@ -56,7 +56,7 @@ export function KapilarPage() {
       {!gateCOpen && (
         <Section
           title="Recommended portfolio projects"
-          lead="Gate C needs ≥2 public owned artifacts, including one valuable SOC or AD lab (v≥2.5). Each project teaches technique and detection together — pick one and follow the study plan on integrated lab days."
+          lead="Gate C needs ≥2 public owned artifacts with a live URL, including one valuable SOC or AD lab (v≥2.5). Record work with a public link (promote on) or use Record → Add to portfolio. Each project teaches technique and detection together."
         >
           <ul className="portfolio-projects">
             {PORTFOLIO_PROJECTS.map((p) => (

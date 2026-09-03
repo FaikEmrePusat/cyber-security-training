@@ -10,8 +10,12 @@ import { round1 } from "../model";
 import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
 import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRollingSchedule";
+import { MentorBriefingPanel } from "../components/MentorBriefingPanel";
 import { DayLogJsonPanel } from "../components/DayLogJsonPanel";
-import { LOG_TAGS, suggestedTags } from "../data/dayLog";
+import { buildMentorTaskBriefing } from "../data/mentorBriefing";
+import { LOG_TAGS, LOG_SOURCES, suggestedTags } from "../data/dayLog";
+import { isPublicHttpUrl } from "../data/evidencePromote";
+import { downloadLabWriteup } from "../data/labWriteupTemplate";
 import { useDurum } from "../store";
 import type { SessionFormData } from "../model";
 
@@ -134,10 +138,14 @@ function ReturnWorkPanel({
   const [evidence, setEvidence] = useState("");
   const [minutes, setMinutes] = useState(Math.max(15, Math.round(gorev.saat * 60)));
   const [tags, setTags] = useState<string[]>(() => suggestedTags(gorev));
+  const [source, setSource] = useState("mentor");
+  const [promote, setPromote] = useState(true);
 
   const toggleTag = (id: string) => {
     setTags((cur) => (cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id]));
   };
+
+  const evidenceLooksPublic = isPublicHttpUrl(evidence);
 
   return (
     <form
@@ -149,17 +157,18 @@ function ReturnWorkPanel({
         onSave({
           ...mapped,
           aktiviteCustom: gorev.baslik,
-          kaynak: "chatgpt",
+          kaynak: source,
           dakika: minutes,
           alan: gorev.alan && gorev.alan.length < 12 ? gorev.alan : "net",
           kanit: evidence.trim() || undefined,
           kalite: 0.85,
           not: [note.trim(), tags.length ? `Tags: ${tags.join(", ")}` : ""].filter(Boolean).join("\n"),
           tags,
+          promoteEvidence: promote,
         });
       }}
     >
-      <p className="return-work__title">Back from ChatGPT — what did you do?</p>
+      <p className="return-work__title">Back from your mentor — what did you do?</p>
       <p className="return-work__topic">{gorev.baslik}</p>
       <p className="return-work__label">Tags</p>
       <div className="day-log__chips" role="group" aria-label="Tags">
@@ -184,10 +193,26 @@ function ReturnWorkPanel({
         rows={4}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Paste summary from ChatGPT, or use Day log JSON above for the whole day."
+        placeholder="Paste a short summary, or use Day log JSON above for the whole day."
         required
       />
       <div className="return-work__row">
+        <div>
+          <label className="return-work__label" htmlFor={`rw-src-${gorev.id}`}>
+            Source
+          </label>
+          <select
+            id={`rw-src-${gorev.id}`}
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+          >
+            {LOG_SOURCES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="return-work__label" htmlFor={`rw-min-${gorev.id}`}>
             Minutes
@@ -210,10 +235,16 @@ function ReturnWorkPanel({
             type="text"
             value={evidence}
             onChange={(e) => setEvidence(e.target.value)}
-            placeholder="https://tryhackme.com/room/… or GitHub gist"
+            placeholder="https://github.com/… or gist / Medium"
           />
         </div>
       </div>
+      {evidenceLooksPublic && (
+        <label className="return-work__promote">
+          <input type="checkbox" checked={promote} onChange={(e) => setPromote(e.target.checked)} />
+          Add as public portfolio evidence (Gate C / readiness cap)
+        </label>
+      )}
       <div className="return-work__actions">
         <button type="submit" className="cta cta--sm">
           Save to record
@@ -230,10 +261,14 @@ function GorevCard({
   gorev,
   onComplete,
   onDefer,
+  onCopyMentor,
+  onWriteup,
 }: {
   gorev: BugunGorev;
   onComplete?: () => void;
   onDefer?: () => void;
+  onCopyMentor?: () => void;
+  onWriteup?: () => void;
 }) {
   const barColor = gorev.alan ? ALAN_COLOR[gorev.alan] ?? "var(--accent)" : "var(--accent)";
   return (
@@ -259,8 +294,18 @@ function GorevCard({
           {gorev.kind === "dil" && <span className="gorev-card__badge gorev-card__badge--dil">GERMAN</span>}
           {gorev.carried && <span className="gorev-card__badge">From yesterday</span>}
         </div>
-        {(onComplete || onDefer) && (
+        {(onComplete || onDefer || onCopyMentor || onWriteup) && (
           <div className="gorev-card__actions">
+            {onCopyMentor && (
+              <button type="button" className="cta cta--ghost cta--sm" onClick={onCopyMentor}>
+                Copy for mentor
+              </button>
+            )}
+            {onWriteup && (
+              <button type="button" className="cta cta--ghost cta--sm" onClick={onWriteup}>
+                Write-up scaffold
+              </button>
+            )}
             {onComplete && (
               <button type="button" className="cta cta--sm" onClick={onComplete}>
                 Record work
@@ -329,6 +374,7 @@ export function BugunPage() {
     useDurum();
   const [toast, setToast] = useState<string | null>(null);
   const [returningId, setReturningId] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
   const { getStatus, setStatus } = useCurriculumStatuses(queueKeys);
   const schedule = useRollingSchedule(getStatus);
@@ -372,21 +418,32 @@ export function BugunPage() {
   });
 
   return (
-    <div className="page">
+    <div className={`page${focusMode ? " page--focus" : ""}`}>
       <header className="hero">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">{APP_NAME}</p>
         <p className="hero__tagline">{APP_TAGLINE}</p>
-        <h1 className="hero__headline">Today</h1>
+        <div className="hero__focus-row">
+          <h1 className="hero__headline">Today</h1>
+          <button
+            type="button"
+            className={`cta cta--ghost cta--sm${focusMode ? " is-on" : ""}`}
+            onClick={() => setFocusMode((v) => !v)}
+            aria-pressed={focusMode}
+            title="Hide metrics and timeline — only today’s tasks"
+          >
+            {focusMode ? "Exit focus" : "Focus mode"}
+          </button>
+        </div>
         <p className="hero__sub hero__sub--short">
-          Open Today → work the topic in ChatGPT → come back and record what you did.
+          Open Today → work the topic with your mentor → come back and record what you did.
         </p>
         <ol className="work-loop">
           <li>
-            <strong>Here:</strong> read the next topic
+            <strong>Here:</strong> Copy day for mentor
           </li>
           <li>
-            <strong>ChatGPT:</strong> learn, retrieve, lab
+            <strong>Mentor:</strong> learn, retrieve, lab
           </li>
           <li>
             <strong>Here:</strong> Save to record
@@ -439,6 +496,18 @@ export function BugunPage() {
               </div>
             )}
           </div>
+          <MentorBriefingPanel
+            tasks={schedule.bugunGorevler}
+            context={{
+              dateIso: schedule.days[0]?.dateIso,
+              dayType: schedule.todayType,
+              dayTypeLabel: schedule.todayTypeLabel,
+              journey: schedule.journey,
+              nextGateLabel: d.nextGate?.id ?? null,
+              readiness: d.live.R,
+              readinessTarget: d.rTarget,
+            }}
+          />
           <DayLogJsonPanel
             tasks={schedule.bugunGorevler}
             onImport={(items, unmatched) => {
@@ -451,7 +520,7 @@ export function BugunPage() {
               flash(
                 unmatched > 0
                   ? `Imported ${items.length} · ${unmatched} entries did not match today’s titles`
-                  : `Imported ${items.length} log ${items.length === 1 ? "entry" : "entries"}`,
+                  : `Imported ${items.length} · public evidence URLs promote to portfolio`,
               );
             }}
           />
@@ -460,6 +529,28 @@ export function BugunPage() {
               <div key={g.id} className="bugun-gorevler__item">
                 <GorevCard
                   gorev={g}
+                  onCopyMentor={async () => {
+                    try {
+                      await navigator.clipboard.writeText(
+                        buildMentorTaskBriefing(g, {
+                          dateIso: schedule.days[0]?.dateIso,
+                          dayType: schedule.todayType,
+                          dayTypeLabel: schedule.todayTypeLabel,
+                        }),
+                      );
+                      flash("Task copied for mentor");
+                    } catch {
+                      flash("Could not copy — use Copy day for mentor above");
+                    }
+                  }}
+                  onWriteup={
+                    g.kind === "lab" || g.kind === "temel" || g.kind === "konu"
+                      ? () => {
+                          downloadLabWriteup(g.baslik, schedule.days[0]?.dateIso);
+                          flash("Write-up scaffold downloaded");
+                        }
+                      : undefined
+                  }
                   onComplete={() => setReturningId(g.id)}
                   onDefer={() => {
                     deferScheduleTask(toCarryItem(g));
@@ -475,7 +566,13 @@ export function BugunPage() {
                         setStatus(g.topicId, "pekiştirildi");
                       }
                       setReturningId(null);
-                      flash("Saved to your record");
+                      const promoted =
+                        form.promoteEvidence !== false && isPublicHttpUrl(form.kanit ?? "");
+                      flash(
+                        promoted
+                          ? "Saved · public evidence added to portfolio"
+                          : "Saved to your record",
+                      );
                     }}
                     onCancel={() => setReturningId(null)}
                   />

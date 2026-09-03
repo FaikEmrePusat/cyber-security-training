@@ -170,6 +170,8 @@ export type SessionFormData = {
   /** Study plan step (1-based) when logging from Today's task. */
   studyStep?: number;
   tags?: string[];
+  /** When false, evidence URL is logged only (default: promote public http(s) URLs to portfolio). */
+  promoteEvidence?: boolean;
 };
 
 /** Incomplete task from today — carries to the next day. */

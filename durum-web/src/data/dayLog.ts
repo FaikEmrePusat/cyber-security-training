@@ -18,7 +18,7 @@ export const LOG_TAGS = [
 ] as const;
 
 export const LOG_SOURCES = [
-  { id: "chatgpt", label: "ChatGPT mentor" },
+  { id: "mentor", label: "Mentor session" },
   { id: "thm", label: "TryHackMe" },
   { id: "htb", label: "Hack The Box" },
   { id: "pwn", label: "pwn.college" },
@@ -59,6 +59,12 @@ export type DayLogJson = {
 const TAG_IDS: Set<string> = new Set(LOG_TAGS.map((t) => t.id));
 const SOURCE_IDS: Set<string> = new Set(LOG_SOURCES.map((s) => s.id));
 const MODE_IDS: Set<string> = new Set(LOG_MODES.map((m) => m.id));
+
+function normalizeSource(raw: string): string {
+  const s = raw.trim().toLowerCase();
+  if (s === "chatgpt") return "mentor";
+  return SOURCE_IDS.has(s) ? s : "mentor";
+}
 
 function kindToAktivite(kind?: string): string {
   if (kind === "tekrar") return "konu-tekrar";
@@ -105,7 +111,7 @@ export function buildDayLogTemplate(tasks: BugunGorev[]): DayLogJson {
       area: g.alan ?? "",
       tags: suggestedTags(g),
       mode: g.kind === "dil" ? "dil" : g.kind === "tekrar" ? "tekrar" : "lab",
-      source: "chatgpt",
+      source: "mentor",
       minutes: Math.max(15, Math.round(g.saat * 60)),
       quality: 7,
       stepsDone: g.studyGuide?.steps.map((s) => s.order) ?? [],
@@ -132,7 +138,7 @@ function asEntry(raw: unknown): DayLogEntry | null {
   const topic = String(o.topic ?? o.baslik ?? "").trim();
   const summary = String(o.summary ?? o.not ?? "").trim();
   if (!topic || !summary) return null;
-  const source = String(o.source ?? o.kaynak ?? "chatgpt");
+  const source = normalizeSource(String(o.source ?? o.kaynak ?? "mentor"));
   const mode = String(o.mode ?? o.mod ?? "lab");
   return {
     topic,
@@ -140,7 +146,7 @@ function asEntry(raw: unknown): DayLogEntry | null {
     area: o.area != null ? String(o.area) : o.alan != null ? String(o.alan) : undefined,
     tags: normalizeTags(o.tags),
     mode: MODE_IDS.has(mode) ? mode : "lab",
-    source: SOURCE_IDS.has(source) ? source : "chatgpt",
+    source,
     minutes: Number(o.minutes ?? o.dakika ?? 30) || 30,
     quality: Number(o.quality ?? o.kalite ?? 7) || 7,
     stepsDone: Array.isArray(o.stepsDone) ? o.stepsDone.map(Number).filter((n) => n > 0) : undefined,
@@ -157,7 +163,7 @@ export function parseDayLogJson(text: string): { ok: true; log: DayLogJson } | {
   try {
     parsed = JSON.parse(trimmed);
   } catch {
-    return { ok: false, error: "Not valid JSON. Copy the JSON block from ChatGPT." };
+    return { ok: false, error: "Not valid JSON. Copy the JSON block from your mentor chat." };
   }
   let entriesRaw: unknown[] = [];
   let date: string | undefined;
@@ -198,7 +204,7 @@ export function entryToForm(entry: DayLogEntry, task?: BugunGorev): SessionFormD
   return {
     aktivite: kindToAktivite(entry.kind ?? task?.kind),
     aktiviteCustom: entry.topic,
-    kaynak: entry.source ?? "chatgpt",
+    kaynak: entry.source ?? "mentor",
     dakika: Math.max(5, Math.min(300, Math.round(entry.minutes ?? 30))),
     mod: entry.mode ?? "lab",
     alan: entry.area || task?.alan || "net",
@@ -206,5 +212,6 @@ export function entryToForm(entry: DayLogEntry, task?: BugunGorev): SessionFormD
     kalite: qualityToKalite(entry.quality),
     not: lines.join("\n"),
     tags: entry.tags,
+    promoteEvidence: true,
   };
 }

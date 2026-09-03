@@ -15,6 +15,7 @@ export const AKTIVITE_OPTIONS = [
 
 export const KAYNAK_OPTIONS = [
   { value: "oak", label: "Oak Academy" },
+  { value: "mentor", label: "Mentor session" },
   { value: "lab-vm", label: "Lab (VM)" },
   { value: "kendi-not", label: "My notes" },
   { value: "wireshark", label: "Wireshark practice" },
@@ -73,6 +74,7 @@ export function aktiviteLabel(value: string, custom?: string): string {
 }
 
 export function kaynakLabel(value: string): string {
+  if (value === "chatgpt") return "Mentor session";
   const opt = KAYNAK_OPTIONS.find((o) => o.value === value);
   return opt?.label ?? value;
 }

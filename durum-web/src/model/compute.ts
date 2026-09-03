@@ -265,7 +265,7 @@ export function evaluateGates(
   ]);
 
   const kanitliPublic = artifacts.filter(
-    (a) => a.evidence === "public" && a.sahiplik >= g.C.minSahiplik,
+    (a) => a.evidence === "public" && a.sahiplik >= g.C.minSahiplik && a.ref.trim().length > 0,
   );
   const degerliLab = kanitliPublic.filter((a) => a.tur === "soc-lab" || a.tur === "ad-lab");
   const cOk =
@@ -279,7 +279,7 @@ export function evaluateGates(
   const C = mkGate(
     "C",
     "Gate C — Evidence",
-    `≥${g.C.publicProje} artifact public+owned, ≥1 value≥${g.C.minDeger}`,
+    `≥${g.C.publicProje} public+owned with URL, ≥1 value≥${g.C.minDeger}`,
     "Strong project line on CV",
     [
       {

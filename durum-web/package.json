@@ -10,10 +10,12 @@
     "preview": "vite preview",
     "profile:stats": "tsx scripts/generate-profile-stats.ts",
     "test:plans": "vite-node scripts/validate-study-plans.ts",
-    "test:seed": "tsx scripts/check-seed.ts"
+    "test:system": "vite-node scripts/validate-system.ts",
+    "export:plan": "vite-node scripts/export-master-plan.ts",
+    "test:seed": "tsx scripts/check-seed.ts",
+    "test:all": "npm run lint && npm run test:seed && npm run test:plans && npm run test:system && npm run export:plan && npm run build"
   },
   "dependencies": {
-    "firebase": "^12.18.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2"
