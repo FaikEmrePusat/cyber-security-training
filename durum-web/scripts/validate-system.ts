@@ -302,6 +302,8 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   const single = buildMentorTaskBriefing(task, { dateIso: "2026-09-04" });
   assert("Day briefing includes topic", day.includes("TCP 3-way handshake"));
   assert("Day briefing mentor rules", /source of truth for TODAY/i.test(day));
+  assert("Day briefing has purpose block", /A — PURPOSE/i.test(day));
+  assert("Day briefing has working style", /WORKING STYLE|Probe first/i.test(day));
   assert("Single briefing includes topic", single.includes("TCP 3-way handshake"));
   assert("No vendor AI names in briefings", !/chatgpt|gemini|claude|openai/i.test(day + single));
 
