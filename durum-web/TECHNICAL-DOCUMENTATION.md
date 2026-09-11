@@ -925,10 +925,10 @@ Today limit: MODEL.tekrar.kuyrukTavani = 3
 }
 ```
 
-**Loading:** `loadState()` — missing fields merged with seed:
+**Loading:** `normalizeLoadedState()` in `src/model/migrateState.ts` — missing fields merged with seed; missing skill IDs restored from seed; carry sanitized; non-array fields coerced:
 
 ```typescript
-{ ...createSeedState(), ...parsed, scheduleCarry: parsed.scheduleCarry ?? [], scheduleCompletedToday: parsed.scheduleCompletedToday ?? {} }
+normalizeLoadedState(JSON.parse(raw))
 ```
 
 ### 10.2 durum-curriculum-v1

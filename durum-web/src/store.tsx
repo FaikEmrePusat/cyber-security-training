@@ -12,10 +12,11 @@ import {
   STORAGE_KEY,
   createSeedState,
   MODEL,
-  daysSince,
   isRetrievalDue,
   nextStability,
   clamp,
+  normalizeLoadedState,
+  sanitizeCarry,
   type AppState,
   type Artifact,
   type CareerItem,
@@ -38,8 +39,6 @@ import { generateSessionNot } from "./components/sessionLogFormUtils";
 const MAX_HISTORY = 50;
 /** Coalesce consecutive keystrokes into one undo step (ms). */
 const COALESCE_MS = 800;
-const MAX_CARRY = MODEL.carry?.maxCarry ?? 2;
-const MAX_CARRY_AGE_DAYS = MODEL.carry?.maxAgeDays ?? 7;
 
 type StoreApi = {
   state: AppState;
@@ -86,13 +85,6 @@ const StoreContext = createContext<StoreApi | null>(null);
 
 function newRetrievalId(): string {
   return `r-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
-function sanitizeCarry(carryList: ScheduleCarryItem[], nowMs: number): ScheduleCarryItem[] {
-  // Tasks older than 7 days return to curriculum pool to avoid debt snowball
-  const fresh = carryList.filter((c) => daysSince(c.sinceIso, nowMs) <= MAX_CARRY_AGE_DAYS);
-  // At most MAX_CARRY (2) tasks are carried
-  return fresh.slice(-MAX_CARRY);
 }
 
 function dismissTaskToday(s: AppState, taskId: string, todayIso: string): AppState {
@@ -219,10 +211,7 @@ function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return createSeedState();
-    const parsed = JSON.parse(raw) as AppState;
-    if (!parsed?.skills?.length) return createSeedState();
-    const sanitizedCarry = sanitizeCarry(parsed.scheduleCarry ?? [], Date.now());
-    return { ...createSeedState(), ...parsed, scheduleCarry: sanitizedCarry, scheduleCompletedToday: parsed.scheduleCompletedToday ?? {} };
+    return normalizeLoadedState(JSON.parse(raw));
   } catch {
     return createSeedState();
   }
@@ -560,7 +549,7 @@ export function DurumProvider({ children }: { children: ReactNode }) {
               /* skip */
             }
           }
-          commit(() => ({ ...createSeedState(), ...nextState }), { forceHistory: true });
+          commit(() => normalizeLoadedState(nextState), { forceHistory: true });
           coalesceUntilRef.current = 0;
           return true;
         } catch {

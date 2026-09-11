@@ -282,6 +282,47 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
+    test: /windows event|event log|event viewer|evtx|\bevent id\b|security log|sysmon event/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          thm("windowseventlogs", "TryHackMe — Windows Event Logs"),
+          doc("https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624", "Microsoft — Event 4624 (logon)"),
+          doc("https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/basic-audit-policy-settings", "Microsoft — Basic audit policy"),
+          tool("https://github.com/SwiftOnSecurity/sysmon-config", "Sysmon config (Event ID 1+)"),
+          oakResource(konu),
+        ],
+        [
+          "Open Event Viewer; locate Security / System / Application channels",
+          "Explain 4624 vs 4625 vs 4688 in one sentence each",
+          "Map one Event ID to a SOC alert you would write",
+        ],
+        [
+          {
+            action: "Tour Event Viewer channels; note where Security vs Sysmon land",
+            durationMin: 15,
+            logHint: "3 channel names + why they matter",
+          },
+          {
+            action: "Generate or find 4624/4625 (and 4688 if available); screenshot key fields",
+            durationMin: 25,
+            logHint: "Event IDs + Logon Type or New Process name",
+          },
+          {
+            action: "Complete THM Windows Event Logs (or first half)",
+            durationMin: 30,
+            logHint: "Room progress %",
+          },
+          {
+            action: "Draft detection idea: Event ID → condition → action",
+            durationMin: 10,
+            logHint: "1 detection bullet + MITRE technique if known",
+          },
+        ],
+      ),
+  },
+  {
     test: /powershell|registry|task scheduler|windows service|iis|defender firewall|net user|smb share|ntfs/i,
     build: ({ konu }) =>
       mkGuide(

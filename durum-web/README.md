@@ -57,7 +57,7 @@ Each scheduled task on **Today** includes an expandable **Study plan** with:
 - **What you can do** — concrete actions for the session
 - **Step-by-step** — ordered steps with duration hints and log prompts
 
-Custom plans: add keyword rules in `src/data/studyPlans.ts` (`TOPIC_GUIDES` array). Generic fallbacks exist per task kind (`tekrar`, `konu`, `temel`, `lab`, `dil`).
+Custom plans: add keyword rules in `src/data/studyPlanGuides.ts` (`TOPIC_GUIDES` array). Generic fallbacks exist per task kind (`tekrar`, `konu`, `temel`, `lab`, `dil`).
 
 Session log form pre-fills step 1 and lets you pick which plan step you completed.
 

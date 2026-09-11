@@ -27,11 +27,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies and build
+      - name: Install, validate, and build
         working-directory: ./durum-web
         run: |
           npm ci
-          npm run build
+          npm run test:all
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

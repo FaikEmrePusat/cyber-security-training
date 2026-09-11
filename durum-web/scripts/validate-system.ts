@@ -8,12 +8,14 @@ import {
   SEED_RETRIEVAL,
   SEED_SKILLS,
   MODEL,
+  STORAGE_KEY,
   computeAll,
   createSeedState,
   evidenceCap,
   evaluateGates,
   isRetrievalDue,
   nextStability,
+  normalizeLoadedState,
   rGiris,
   rHedef,
 } from "../src/model";
@@ -61,6 +63,7 @@ function assert(name: string, cond: boolean, detail = "") {
 console.log("\n=== 1. Brand / UI product names ===");
 assert("APP_NAME is SOC Ledger", APP_NAME === "SOC Ledger");
 assert("Learner name set", LEARNER_NAME.length > 0);
+assert("STORAGE_KEY is durum-v22", STORAGE_KEY === "durum-v22");
 assert("No ChatGPT in mentor briefing text", !/chatgpt|gemini|claude/i.test(buildMentorDayBriefing([])));
 assert("kaynakLabel maps legacy chatgpt", kaynakLabel("chatgpt") === "Mentor session");
 assert("kaynakLabel mentor", kaynakLabel("mentor") === "Mentor session");
@@ -307,6 +310,9 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing defaults to Teacher/mentor", /Default role:\s*Teacher\s*\/\s*mentor/i.test(day));
   assert("Day briefing forbids examiner-first", /Do not open as an examiner|not Examiner-first|Never open as Examiner/i.test(day));
   assert("Day briefing steers weak probe to Study steps", /Weak.*Study steps|teach.*Study steps|guide me through this task's Study steps/i.test(day));
+  assert("Day briefing embeds Study steps section", /Study steps:/i.test(day));
+  assert("Day briefing embeds What you can do", /What you can do:/i.test(day));
+  assert("Day briefing reminds Record / Day log", /Record work|Day log/i.test(day));
   assert("Single briefing includes topic", single.includes("TCP 3-way handshake"));
   assert("Single briefing starts as Teacher", /Start now as Teacher/i.test(single));
   assert("No vendor AI names in briefings", !/chatgpt|gemini|claude|openai/i.test(day + single));
@@ -337,6 +343,13 @@ console.log("\n=== 9. Study guide smoke ===");
     baslik: "Integrated Lab — Attack Timeline + Detection Write-up",
   });
   assert("Lab guide has steps", lab.steps.length >= 2);
+  const winEvt = buildStudyGuide({
+    kind: "konu",
+    baslik: "Windows event log basics",
+    alan: "win",
+  });
+  assert("Windows Event Log guide has Event IDs", /4624|4625|4688|Event ID/i.test(winEvt.actions.join(" ") + winEvt.steps.map((s) => s.action).join(" ")));
+  assert("Windows Event Log has THM room", winEvt.resources.some((r) => /windowseventlogs/i.test(r.url)));
 }
 
 console.log("\n=== 10. Model constants sanity ===");
@@ -344,6 +357,42 @@ assert("MODEL surum set", typeof MODEL.surum === "string");
 assert("Gate C needs 2 public", MODEL.kapi.C.publicProje === 2);
 assert("soc-lab value ≥ 2.5", MODEL.artefaktDeger["soc-lab"] >= 2.5);
 assert("Carry max 2", MODEL.carry.maxCarry === 2);
+assert("Carry max age 7", MODEL.carry.maxAgeDays === 7);
+
+console.log("\n=== 11. localStorage normalize / seed merge ===");
+{
+  const seed = createSeedState();
+  const partial = {
+    skills: seed.skills.filter((s) => s.id !== "cloud").map((s) => ({ ...s, claimed: 9 })),
+    artifacts: "bad" as unknown as typeof seed.artifacts,
+    scheduleCarry: [
+      {
+        id: "old",
+        kind: "konu" as const,
+        baslik: "Stale",
+        saat: 0.5,
+        sinceIso: "2020-01-01T00:00:00.000Z",
+      },
+      {
+        id: "fresh",
+        kind: "temel" as const,
+        baslik: "Fresh",
+        saat: 0.5,
+        sinceIso: new Date().toISOString(),
+      },
+    ],
+    scheduleCompletedToday: { "2026-09-04": ["t1"], bad: 1 },
+  };
+  const n = normalizeLoadedState(partial);
+  assert("Normalize restores missing skill id", n.skills.some((s) => s.id === "cloud"));
+  assert("Normalize keeps edited claimed", n.skills.find((s) => s.id === "net")?.claimed === 9);
+  assert("Normalize coerces bad artifacts to seed", Array.isArray(n.artifacts) && n.artifacts.length >= 1);
+  assert("Normalize drops stale carry", !n.scheduleCarry.some((c) => c.id === "old"));
+  assert("Normalize keeps fresh carry", n.scheduleCarry.some((c) => c.id === "fresh"));
+  assert("Normalize completed-today shape", Array.isArray(n.scheduleCompletedToday["2026-09-04"]));
+  assert("Normalize rejects non-array completed ids", n.scheduleCompletedToday.bad === undefined);
+  assert("Normalize empty skills → seed", normalizeLoadedState({ skills: [] }).skills.length === seed.skills.length);
+}
 
 console.log(`\n=== RESULT: ${passed} passed, ${failures} failed ===\n`);
 if (failures > 0) process.exit(1);
