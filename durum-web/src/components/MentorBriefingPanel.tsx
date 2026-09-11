@@ -31,7 +31,7 @@ export function MentorBriefingPanel({
           <h3 className="mentor-brief__title">Send today to your mentor</h3>
           <p className="mentor-brief__lead">
             Paste into your study chat. The text includes today’s plan plus how the mentor should run the session
-            (probe → teach → practice → test) — no product names required.
+            (light level-check → teach & Study steps → practice → optional check) — guided study, not examiner-first.
           </p>
         </div>
         <button type="button" className="cta" onClick={copy} disabled={tasks.length === 0}>

@@ -303,8 +303,12 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing includes topic", day.includes("TCP 3-way handshake"));
   assert("Day briefing mentor rules", /source of truth for TODAY/i.test(day));
   assert("Day briefing has purpose block", /A — PURPOSE/i.test(day));
-  assert("Day briefing has working style", /WORKING STYLE|Probe first/i.test(day));
+  assert("Day briefing has working style", /WORKING STYLE|Light level-check/i.test(day));
+  assert("Day briefing defaults to Teacher/mentor", /Default role:\s*Teacher\s*\/\s*mentor/i.test(day));
+  assert("Day briefing forbids examiner-first", /Do not open as an examiner|not Examiner-first|Never open as Examiner/i.test(day));
+  assert("Day briefing steers weak probe to Study steps", /Weak.*Study steps|teach.*Study steps|guide me through this task's Study steps/i.test(day));
   assert("Single briefing includes topic", single.includes("TCP 3-way handshake"));
+  assert("Single briefing starts as Teacher", /Start now as Teacher/i.test(single));
   assert("No vendor AI names in briefings", !/chatgpt|gemini|claude|openai/i.test(day + single));
 
   const md = buildLabWriteupMarkdown("Sysmon + Wazuh lab", "2026-09-04");
