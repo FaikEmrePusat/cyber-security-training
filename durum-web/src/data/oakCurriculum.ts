@@ -253,6 +253,12 @@ export const OAK_BY_ID: Record<string, CurriculumTopic> = Object.fromEntries(
   OAK_CURRICULUM.map((t) => [t.id, t]),
 );
 
+/**
+ * Catalog course-position hint for journey / mentor (does not reset Map statuses).
+ * Intro To Security atoms live in covered secfund; Nmap + Nessus are covered post-EDR.
+ */
+export const OAK_COURSE_FOCUS = "Vulnerability Scanning & Management (Nessus)";
+
 export function topicsByAlan(alan?: string, opts?: { includeUpcoming?: boolean }): CurriculumTopic[] {
   const includeUpcoming = opts?.includeUpcoming ?? true;
   let list = includeUpcoming ? OAK_CURRICULUM : OAK_COVERED;

@@ -65,7 +65,8 @@ export const SEED_CAREER: CareerItem[] = [
   { id: "mulakat", label: "Interview practice", max: 2, claimed: 0, evidence: "yok", ref: "", saatPuan: 8 },
 ];
 
-export const SEED_TEMPO: Tempo = { hoursCyber: 28, hoursLang: 7, hoursLangAlt: 14, quality: 0.85 };
+/** Language hours align with German B2 plan Normal band (~10 h/week). */
+export const SEED_TEMPO: Tempo = { hoursCyber: 28, hoursLang: 10, hoursLangAlt: 14, quality: 0.85 };
 
 const mkRetrieval = (
   id: string,

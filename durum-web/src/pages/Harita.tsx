@@ -501,7 +501,7 @@ export function HaritaPage() {
         lead="Not in curriculum yet — queue locked (override required)"
       >
         <div className="upcoming-shelf">
-          <p className="upcoming-shelf__title">Locked future · after SIEM / EDR</p>
+          <p className="upcoming-shelf__title">Locked future · after Nessus / SIEM</p>
           <label className="note" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <input
               type="checkbox"

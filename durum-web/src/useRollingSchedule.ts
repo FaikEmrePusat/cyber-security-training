@@ -3,6 +3,7 @@ import {
   ALAN_LABEL,
   FOUNDATION_ALANS,
   OAK_COVERED,
+  OAK_COURSE_FOCUS,
   OAK_UPCOMING,
   topicKey,
   type CurriculumStatus,
@@ -610,7 +611,7 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
                   : t.kind === "lab"
                     ? "Full lab / SOC practice — produces portfolio evidence for Gate B & C."
                     : t.kind === "dil"
-                      ? "Daily language capacity — regular practice for the German goal."
+                      ? "Daily language capacity — German B2 plan (~100–120 min/day: input, Anki, output, grammar)."
                       : undefined,
         }));
       }
@@ -683,9 +684,13 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       edrIdx >= 0 &&
       (getStatus(OAK_COVERED[edrIdx].id) === "pekiştirildi" ||
         queueKeys.has(topicKey(OAK_COVERED[edrIdx].konu)));
+    const focusTopic = OAK_COVERED.find((t) => t.konu === OAK_COURSE_FOCUS) ?? null;
+    const focusStatus = focusTopic ? getStatus(focusTopic.id) : null;
 
     let konumMetni = "";
-    if (edrDone && sonraIlk) {
+    if (focusTopic && focusStatus !== "pekiştirildi") {
+      konumMetni = `Currently: ${focusTopic.konu}`;
+    } else if (edrDone && sonraIlk) {
       konumMetni = `After EDR · next: ${sonraIlk.konu}`;
     } else if (nextStudy) {
       konumMetni = `${alanLabel} weak · ${nextStudy.konu}`;

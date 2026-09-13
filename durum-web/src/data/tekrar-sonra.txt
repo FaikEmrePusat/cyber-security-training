@@ -1,7 +1,6 @@
-# Oak Academy — not yet covered (course position: post-EDR). Do not dump into FSRS.
+# Oak Academy — not yet covered (course position: post-Nessus). Do not dump into FSRS.
 # Format: alan|zorluk|konu
-off|orta|Network Scanning (Nmap)
-off|orta|Vulnerability Scanning & Management (Nessus)
+# Covered through Nessus (notes exist): Nmap + Vulnerability Scanning & Management (Nessus) → tekrar-ekle.txt
 off|orta|Project 2: Vulnerability Management
 off|orta|Exploitation
 off|orta|Project 3: Exploitation

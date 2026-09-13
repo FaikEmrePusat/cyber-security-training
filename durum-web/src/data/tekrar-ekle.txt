@@ -72,6 +72,7 @@ win|orta|NTDS.dit / SAM / NTLM awareness
 win|orta|GPO basics (Default Domain Policy)
 win|orta|GPO password and account lockout policy
 win|kolay|gpupdate /force
+secfund|orta|Intro To Security
 secfund|kolay|CIA triad
 secfund|orta|Defense in Depth (prevent/detect/respond/block)
 secfund|orta|Threat / Vulnerability / Risk / Exploit
@@ -128,6 +129,8 @@ def|kolay|VirusTotal / hash lookup
 def|orta|3-2-1 backup rule
 def|orta|Hardening basics (unnecessary services / RDP-SMB restriction)
 def|orta|False positive vs true positive (EDR/SOC)
+off|orta|Network Scanning (Nmap)
+off|orta|Vulnerability Scanning & Management (Nessus)
 off|orta|DoS / DDoS awareness
 off|orta|Spoofing / sniffing awareness
 off|orta|SQL Injection / XSS awareness

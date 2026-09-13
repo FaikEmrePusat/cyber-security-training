@@ -1,4 +1,5 @@
 import { ALAN_LABEL } from "./oakCurriculum";
+import { GERMAN_B2_PLAN, GERMAN_LEARNING_SCIENCE } from "./germanPlan";
 import { PORTFOLIO_PROJECTS, projectForGate } from "./portfolioProjects";
 import type {
   StudyGuide,
@@ -387,6 +388,32 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
+    test: /intro to security/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          PRE_SEC,
+          MITRE,
+          thm("introductoryresearching", "TryHackMe — Introductory Researching"),
+          thm("mitre", "TryHackMe — MITRE"),
+          oakResource(konu),
+        ],
+        [
+          "Explain CIA triad with one SOC ticket example",
+          "Map malware types and hacker hats to defender priorities",
+          "Walk Cyber Kill Chain + APT persistence in defender language",
+          "Sketch IAM/AAA: identify → authenticate → authorize → account",
+        ],
+        [
+          { action: "Oak Intro To Security: CIA + terminology pass", durationMin: 20, logHint: "3 definitions" },
+          { action: "Malware types + hacker types: attacker vs defender notes", durationMin: 20, logHint: "5 malware types" },
+          { action: "Kill Chain / APT: map one stage to a detection idea", durationMin: 20, logHint: "Stage + detection" },
+          { action: "IAM/AAA: MFA factors + least privilege one-pager", durationMin: 15, logHint: "AAA steps" },
+        ],
+      ),
+  },
+  {
     test: /mitre|kill chain|apt|zero trust|iam|iaaa|mfa|sso|defense in depth|cia triad|threat.*vulner|risk|exploit|zero-day|cve|blue.*red.*purple/i,
     build: ({ konu }) =>
       mkGuide(
@@ -470,12 +497,25 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("vulnversity", "TryHackMe — Vulnversity"), doc("https://docs.tenable.com/nessus/Content/GettingStarted.htm", "Nessus — getting started"), JR_PENTEST, oakResource(konu)],
-        ["Compare vulnerability scan vs penetration test", "Prioritize findings by CVSS and exploitability", "Draft remediation ticket for one finding"],
         [
-          { action: "Review vulnerability management lifecycle", durationMin: 15, logHint: "4 lifecycle stages" },
-          { action: "Run or review a scan output (THM room or sample report)", durationMin: 30, logHint: "Top 3 CVEs" },
-          { action: "Write defender detection idea for mass scanning", durationMin: 15, logHint: "1 detection bullet" },
+          thm("vulnversity", "TryHackMe — Vulnversity"),
+          doc("https://docs.tenable.com/nessus/Content/GettingStarted.htm", "Nessus — getting started"),
+          doc("https://www.first.org/cvss/", "FIRST — CVSS overview"),
+          JR_PENTEST,
+          oakResource(konu),
+        ],
+        [
+          "Separate vulnerability scanning from exploitation / pentest",
+          "Prioritize findings by CVSS, exploitability, and asset criticality",
+          "Draft a remediation ticket a SOC/IT team could act on",
+          "Note how mass scanning appears in network/EDR telemetry (defender lens)",
+        ],
+        [
+          { action: "Oak notes: Vulnerability Management lifecycle (discover → prioritize → remediate → verify)", durationMin: 20, logHint: "4 lifecycle stages" },
+          { action: "Oak notes: Vulnerability Scanning — scan types, auth vs unauth, false positives", durationMin: 20, logHint: "2 scan types" },
+          { action: "Review Nessus-style or THM Vulnversity output; pick top 3 findings", durationMin: 25, logHint: "Top 3 CVEs / plugins" },
+          { action: "Write defender detection idea for aggressive vulnerability scanning", durationMin: 15, logHint: "1 detection bullet" },
+          { action: "Optional: Nmap–Nessus cheat-sheet refresh for safe lab-only commands", durationMin: 10, logHint: "2 commands" },
         ],
       ),
   },
@@ -653,27 +693,54 @@ export const ROI_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
 ];
 
 export function germanStudyGuide(konu: string): StudyGuide {
+  const blocks = GERMAN_B2_PLAN.dailyBlocks;
+  const input = blocks.find((b) => b.id === "input")!;
+  const anki = blocks.find((b) => b.id === "anki")!;
+  const output = blocks.find((b) => b.id === "output")!;
+  const grammar = blocks.find((b) => b.id === "grammar")!;
   return {
     topic: konu,
     resources: [
-      doc("https://learngerman.dw.com/", "DW Learn German — B1 track"),
-      doc("https://www.goethe.de/en/index.html", "Goethe-Institut — courses & exams"),
-      doc("https://ankiweb.net/shared/decks/german", "Anki — German decks"),
-      doc("https://www.deutsch-lernen.com/", "Deutsch-lernen — grammar & vocabulary"),
-      doc("https://www.it-sicherheitsbeauftragter.de/glossar/", "IT security glossary (DE)"),
+      doc("https://learngerman.dw.com/en/nicos-weg/c-1", "DW — Nicos Weg (A1–B1 track)"),
+      doc("https://learngerman.dw.com/", "DW Learn German"),
+      doc("https://www.goethe.de/en/spr/kup/prf/prf/gb2.html", "Goethe-Institut — B2 exam"),
+      doc("https://ankiweb.net/shared/decks/german", "Anki — German decks (SRS)"),
+      doc("https://www.easygerman.org/", "Easy German"),
+      tool("https://apps.ankiweb.net/", "Anki / FSRS desktop"),
     ],
     actions: [
-      "15 min speaking or shadowing (DW or podcast)",
-      "Learn 10 SOC-relevant German terms (Alarm, Vorfall, Protokoll, Warnung…)",
-      "Summarize one technical topic in 3 German sentences",
-      "Practice B1 listening: note 5 new words with context",
+      `Run the ${GERMAN_B2_PLAN.durationMonths}-month B2 daily routine (~${GERMAN_B2_PLAN.dailyMinutes.min}–${GERMAN_B2_PLAN.dailyMinutes.max} min) — language only`,
+      GERMAN_LEARNING_SCIENCE.pillars[0],
+      "Clear Anki dues with active recall + feedback (no cramming backlog)",
+      `Speaking target: ${GERMAN_B2_PLAN.speakingPerWeek.months1to4}×/week early; ${GERMAN_B2_PLAN.speakingPerWeek.months5to9}×/week from month 5`,
+      GERMAN_B2_PLAN.criticalRules[0],
     ],
     steps: steps(
-      { action: "Warm-up: review yesterday's vocabulary aloud", durationMin: 5, logHint: "Words reviewed" },
-      { action: "DW or Goethe listening/reading block (B1 if available)", durationMin: 20, logHint: "Source title" },
-      { action: "Learn 5 IT-Security German terms; use in sentences", durationMin: 10, logHint: "5 terms + examples" },
-      { action: "Speaking: summarize today's cyber topic in German", durationMin: 10, logHint: "Self-rating" },
-      { action: "Log language session with duration", durationMin: 2, logHint: "Minutes + quality" },
+      {
+        action: `${input.label} (comprehensible input — Nicos Weg / DW / Easy German)`,
+        durationMin: input.minutesMin,
+        logHint: "Source + CEFR band",
+      },
+      {
+        action: `${anki.label} — retrieval practice, keep dues current`,
+        durationMin: anki.minutesMin,
+        logHint: "Cards due / new",
+      },
+      {
+        action: `${output.label} — tutor, partner, or timed self-speak/write with correction`,
+        durationMin: output.minutesMin,
+        logHint: "Minutes spoken/written + self-rating",
+      },
+      {
+        action: `${grammar.label} — form inside meaning; fix articles + verb position`,
+        durationMin: grammar.minutesMin,
+        logHint: "1 pattern practiced",
+      },
+      {
+        action: "Log language session (minutes + quality); no SOC theory in this block",
+        durationMin: 2,
+        logHint: "Minutes + quality",
+      },
     ),
   };
 }

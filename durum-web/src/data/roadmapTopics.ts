@@ -22,6 +22,7 @@ export const ROADMAP_SUGGESTIONS: SuggestedTopic[] = [
   { id: "rm-vlan", topic: "VLAN / DMZ / segmentation", alan: "netsec", difficulty: "orta" },
   { id: "rm-pcap", topic: "Packet capture (Wireshark / tcpdump)", alan: "net", difficulty: "orta" },
   { id: "rm-nmap", topic: "nmap basics (recon awareness)", alan: "off", difficulty: "orta" },
+  { id: "rm-nessus", topic: "Vulnerability scanning (Nessus) + CVSS triage", alan: "off", difficulty: "orta" },
 
   // Linux
   { id: "rm-linux-perm", topic: "Linux permissions / users", alan: "linux", difficulty: "orta" },

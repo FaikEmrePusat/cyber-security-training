@@ -97,6 +97,8 @@ const scheduleTasks = [
   { kind: "konu" as const, baslik: avTopic, alan: "def" },
   { kind: "dil" as const, baslik: "German study", alan: "lang" },
   { kind: "lab" as const, baslik: "Integrated Lab — Attack Timeline + Detection Write-up", alan: "def" },
+  { kind: "konu" as const, baslik: "Intro To Security", alan: "secfund" },
+  { kind: "konu" as const, baslik: "Vulnerability Scanning & Management (Nessus)", alan: "off" },
 ];
 
 console.log("\nSchedule smoke tests:");
@@ -105,6 +107,37 @@ for (const task of scheduleTasks) {
   const ok = guide.steps.length >= 3 && guide.resources.length >= 1;
   console.log(`  ${ok ? "OK" : "FAIL"} [${task.kind}] ${task.baslik} — ${guide.steps.length} steps, ${guide.resources.length} resources`);
   if (!ok) failures++;
+}
+
+{
+  const de = buildStudyGuide({ kind: "dil", baslik: "German study", alan: "lang" });
+  if (!de.actions.some((a) => /B2|9-month|9.month/i.test(a)) && !de.steps.some((s) => /Anki|listening|speaking/i.test(s.action))) {
+    fail("German study guide missing B2 routine / Anki / input-output steps");
+  }
+  if (de.actions.some((a) => /SOC-relevant German|cyber topic in German/i.test(a))) {
+    fail("German study guide should stay language-only (no SOC-theory mix)");
+  }
+}
+
+{
+  const nessus = buildStudyGuide({
+    kind: "konu",
+    baslik: "Vulnerability Scanning & Management (Nessus)",
+    alan: "off",
+  });
+  if (!nessus.actions.some((a) => /CVSS|remediation|scanning/i.test(a))) {
+    fail("Nessus guide missing vulnerability-management actions");
+  }
+  if (!nessus.steps.some((s) => /lifecycle|Nessus|Vulnversity|Oak/i.test(s.action))) {
+    fail("Nessus guide missing Oak/Nessus study steps");
+  }
+}
+
+{
+  const intro = buildStudyGuide({ kind: "konu", baslik: "Intro To Security", alan: "secfund" });
+  if (!intro.actions.some((a) => /CIA|Kill Chain|IAM|AAA/i.test(a))) {
+    fail("Intro To Security guide missing CIA / Kill Chain / IAM actions");
+  }
 }
 
 console.log(`\nTopics checked: ${ALL_TOPICS.length} × ${KINDS.length} kinds = ${ALL_TOPICS.length * KINDS.length} guides`);

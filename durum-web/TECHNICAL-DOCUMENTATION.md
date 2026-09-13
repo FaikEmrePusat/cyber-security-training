@@ -688,8 +688,9 @@ v = (20.23 − 3.7) / 9.25 ≈ 1.84 ΔR/week
 
 | File | Topic count | Meaning |
 |------|------------:|---------|
-| `src/data/tekrar-ekle.txt` | **141** | Active Oak path (up to EDR stage) |
-| `src/data/tekrar-sonra.txt` | **8** | Post-EDR — SIEM/Splunk, SOC IR, Wazuh/Splunk Mini SOC Project (`upcoming: true`, locked/unlockable) |
+| `src/data/tekrar-ekle.txt` | **144** | Active Oak path (through Nmap + Nessus; includes Intro To Security module) |
+| `src/data/tekrar-sonra.txt` | **8** | Post-Nessus — vuln project, exploitation, SIEM/IR labs, GRC (`upcoming: true`, locked/unlockable) |
+| `src/data/germanPlan.ts` | — | 9-month German B2 daily/monthly plan + learning-science rules (language channel) |
 
 Source: `Oak-Study-Notes/TEKRAR-EKLE.txt`, `TEKRAR-SONRA.txt`
 

@@ -19,7 +19,8 @@ import {
   rGiris,
   rHedef,
 } from "../src/model";
-import { OAK_COVERED, OAK_UPCOMING, topicKey } from "../src/data/oakCurriculum";
+import { OAK_COVERED, OAK_COURSE_FOCUS, OAK_UPCOMING, topicKey } from "../src/data/oakCurriculum";
+import { GERMAN_B2_PLAN, germanDailyMinutesTotal } from "../src/data/germanPlan";
 import {
   applySessionEvidence,
   artifactAlreadyHasUrl,
@@ -92,13 +93,43 @@ console.log("\n=== 2. Seed + readiness model ===");
 }
 
 console.log("\n=== 3. Curriculum ===");
-assert("Oak covered = 141", OAK_COVERED.length === 141, `got ${OAK_COVERED.length}`);
-assert("Oak upcoming > 0", OAK_UPCOMING.length > 0, `got ${OAK_UPCOMING.length}`);
+assert("Oak covered = 144", OAK_COVERED.length === 144, `got ${OAK_COVERED.length}`);
+assert("Oak upcoming = 8", OAK_UPCOMING.length === 8, `got ${OAK_UPCOMING.length}`);
 assert("topicKey trims", topicKey("  DNS  ") === "dns");
 {
   const ids = new Set(OAK_COVERED.map((t) => t.id));
   assert("Covered topic IDs unique", ids.size === OAK_COVERED.length);
+  assert(
+    "Nessus is covered (not upcoming)",
+    OAK_COVERED.some((t) => /nessus/i.test(t.konu)) && !OAK_UPCOMING.some((t) => /nessus/i.test(t.konu)),
+  );
+  assert(
+    "Nmap is covered (not upcoming)",
+    OAK_COVERED.some((t) => /network scanning \(nmap\)/i.test(t.konu)) &&
+      !OAK_UPCOMING.some((t) => /network scanning \(nmap\)/i.test(t.konu)),
+  );
+  assert(
+    "Intro To Security module topic covered",
+    OAK_COVERED.some((t) => t.konu === "Intro To Security"),
+  );
+  assert("Course focus is Nessus", OAK_COURSE_FOCUS.includes("Nessus"));
+  assert(
+    "Course focus topic exists in covered",
+    OAK_COVERED.some((t) => t.konu === OAK_COURSE_FOCUS),
+  );
 }
+
+console.log("\n=== 3b. German B2 plan ===");
+assert("German plan is 9 months", GERMAN_B2_PLAN.durationMonths === 9);
+assert("German plan has 9 month rows", GERMAN_B2_PLAN.months.length === 9);
+assert("German daily blocks = 4", GERMAN_B2_PLAN.dailyBlocks.length === 4);
+assert("German daily minutes ≥ 100", germanDailyMinutesTotal("min") >= 100);
+assert(
+  "German hour band overlaps MODEL.glh.B2",
+  GERMAN_B2_PLAN.totalHoursEstimate.min <= MODEL.glh.B2 &&
+    MODEL.glh.B2 <= GERMAN_B2_PLAN.totalHoursEstimate.max,
+);
+assert("Seed language hours ≥ Normal band", createSeedState().tempo.hoursLang >= GERMAN_B2_PLAN.weeklyHours.min);
 
 console.log("\n=== 4. Day rhythm ===");
 assert("Day 0 = Topic (A)", getDayType(0).dayType === "A");

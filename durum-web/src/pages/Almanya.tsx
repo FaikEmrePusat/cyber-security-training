@@ -1,5 +1,6 @@
 import { MODEL, round1, type ChancenkarteState, type Gate0State } from "../model";
 import { Section } from "../components/Section";
+import { GERMAN_B2_PLAN, GERMAN_LEARNING_SCIENCE, germanDailyMinutesTotal } from "../data/germanPlan";
 import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
 
@@ -260,6 +261,47 @@ export function AlmanyaPage() {
             />
           </div>
         </div>
+      </Section>
+
+      <Section
+        title="German B2 plan (9 months)"
+        lead={`${GERMAN_B2_PLAN.goal} · ~${GERMAN_B2_PLAN.dailyMinutes.min}–${GERMAN_B2_PLAN.dailyMinutes.max} min/day · ${GERMAN_B2_PLAN.daysPerWeek} days/week · ~${GERMAN_B2_PLAN.totalHoursEstimate.min}–${GERMAN_B2_PLAN.totalHoursEstimate.max} h · language practice only.`}
+      >
+        <p className="note" style={{ marginTop: 0 }}>
+          Daily blocks (~{germanDailyMinutesTotal("min")}–{germanDailyMinutesTotal("max")} min):{" "}
+          {GERMAN_B2_PLAN.dailyBlocks.map((b) => `${b.label} ${b.minutesMin}${b.minutesMax !== b.minutesMin ? `–${b.minutesMax}` : ""}`).join(" · ")}.
+          Tempo tip: Normal ≈ {GERMAN_B2_PLAN.weeklyHours.min} h/week language; Aggressive ≈ {GERMAN_B2_PLAN.weeklyHours.max}.
+        </p>
+        <ul style={{ paddingLeft: "1.1rem", color: "var(--ink-soft)", fontSize: "0.92rem" }}>
+          {GERMAN_LEARNING_SCIENCE.speedRecipe.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <div className="table-wrap" style={{ marginTop: "0.75rem" }}>
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Mo</th>
+                <th>Level</th>
+                <th>Words</th>
+                <th>Exit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {GERMAN_B2_PLAN.months.map((m) => (
+                <tr key={m.month}>
+                  <td>{m.month}</td>
+                  <td>{m.level}</td>
+                  <td>{m.wordFamily}</td>
+                  <td>{m.exitCriteria}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="note">
+          Critical: {GERMAN_B2_PLAN.criticalRules.join(" · ")}
+        </p>
       </Section>
     </div>
   );
