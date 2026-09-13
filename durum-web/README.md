@@ -1,72 +1,63 @@
-# SOC Ledger — Progress State Web
+# SOC Ledger — app (`durum-web`)
 
-Model **2.1** progress panel: state, gates, Chancenkarte, FSRS review, log.
+Browser app for **SOC Ledger** (Model 2.1): daily plan, competency state, gates, Germany path fields, FSRS review, and session log.
 
-Browser version of Canvas (`ilerleme-durum-dashboard.canvas.tsx`) formulas. State is stored under `localStorage` key `durum-v22` (legacy key — unchanged for compatibility).
-
+Product overview and live link: [repository README](../README.md)  
 Technical reference: [TECHNICAL-DOCUMENTATION.md](./TECHNICAL-DOCUMENTATION.md)
+
+Internal package and `localStorage` keys still use the legacy `durum-*` names for compatibility.
 
 ## Running
 
 ```bash
-cd "D:\Projects\Cyber Security Training\durum-web"
+cd durum-web
 npm install
 npm run dev
 ```
 
-Open the address Vite prints in the browser (usually http://localhost:5173).
-
-Production build:
+Open the address Vite prints (usually `http://localhost:5173`).
 
 ```bash
 npm run build
 npm run preview
+npm run test:all
 ```
 
-## What's included?
+## Pages
 
 | Page | Content |
 |------|---------|
-| **Today** | SINGLE TASK + GM / R / TSB |
-| **Status** | T/P/L/C, R gauge, evidence gap, radar |
+| **Today** | Primary task + GM / R / TSB, study plan, mentor briefing |
+| **Status** | T / P / L / C, R gauge, evidence gap, radar |
 | **Skills** | Editable score + evidence latch, artifacts, language, career |
 | **Gates** | Gate 0, A–F · π · bottleneck |
-| **Germany** | Chancenkarte points, Anerkennung, Route A/B ETA, runway |
-| **Velocity** | CTL/ATL/TSB, v, κ, projection, ROI |
-| **Map** | Oak curriculum tree / graph / list · add to FSRS selectively · Upcoming (post-EDR) locked |
-| **Review** | FSRS queue + outcome (queue only — full curriculum on Map) |
-| **Log** | Session, snapshot, JSONL export/import |
+| **Germany** | Chancenkarte points, Anerkennung, route ETA, runway |
+| **Velocity** | CTL / ATL / TSB, projection, ROI |
+| **Map** | Oak curriculum tree / graph / list · selective FSRS add |
+| **Review** | FSRS due queue + outcomes |
+| **Log** | Session, snapshot, JSONL export / import |
+| **Record** | Public competency snapshot |
 | **Formulas** | Expandable math reference |
 
 ## Undo / Redo
 
-**Undo** and **Redo** buttons are in the top menu.
+Available from the top menu.
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Z` (Mac: `Cmd+Z`) | Undo last change |
+| `Ctrl+Z` (Mac: `Cmd+Z`) | Undo |
 | `Ctrl+Y` or `Ctrl+Shift+Z` | Redo |
 
-Skills, evidence, log, Germany fields, review, Map→queue add, reset — all undoable. While typing (savings, session notes, etc.) keystrokes within ~0.8 s count as one step; accidentally deleting one character won't lose the whole sentence.
+Skills, evidence, log, Germany fields, review, Map → queue add, and reset are undoable. Rapid typing (~0.8 s) collapses into one undo step.
 
-## Study plans (Today page)
+## Study plans (Today)
 
-Each scheduled task on **Today** includes an expandable **Study plan** with:
-
-- **Resources** — THM rooms, docs, lab links (keyword-matched per topic or kind template)
-- **What you can do** — concrete actions for the session
-- **Step-by-step** — ordered steps with duration hints and log prompts
-
-Custom plans: add keyword rules in `src/data/studyPlanGuides.ts` (`TOPIC_GUIDES` array). Generic fallbacks exist per task kind (`tekrar`, `konu`, `temel`, `lab`, `dil`).
-
-Session log form pre-fills step 1 and lets you pick which plan step you completed.
+Each scheduled task can expand a **Study plan**: resources, actions, and step-by-step prompts. Keyword rules live in `src/data/studyPlanGuides.ts` (`TOPIC_GUIDES`). Fallbacks exist per task kind (`tekrar`, `konu`, `temel`, `lab`, `dil`).
 
 ## Curriculum (Map)
 
-Topics extracted from Oak notes (`src/data/tekrar-ekle.txt`, source: `Oak-Study-Notes/TEKRAR-EKLE.txt`) **do not auto-enter the FSRS queue**. Browse via tree, domain map, and list on `/harita`; status is under `localStorage` key `durum-curriculum-v1`. Post-EDR topics from `TEKRAR-SONRA.txt` → Upcoming / Later (locked).
+Oak topics from `src/data/tekrar-ekle.txt` do **not** auto-enter the FSRS queue. Browse on Map; curriculum status uses `localStorage` key `durum-curriculum-v1`. Post-EDR topics from `TEKRAR-SONRA.txt` stay in Upcoming / Later (locked) until unlocked by the model.
 
-## Seed
+## Further reading
 
-Startup: **2026-08-27** diagnostic. Geometric R (ρ=0, portfolio excluded from T) yields R ≈ **23** (older linear seed log had 26.62 — aligned with `Durum-Dashboard.md`).
-
-Markdown documents and canvas were not removed; this app complements them.
+For formulas, seed profile, storage migration, and architecture diagrams, see [TECHNICAL-DOCUMENTATION.md](./TECHNICAL-DOCUMENTATION.md).
