@@ -190,7 +190,7 @@ export function AlmanyaPage() {
 
       <Section title="Dual route ETA" lead="ETA = max_k ETA_k (T, L, P, C). Hidden in return mode.">
         {d.geriDonusModu ? (
-          <p className="note">Return mode active — ETA hidden. Do reviews / sessions first.</p>
+          <p className="note">Return mode: optional warm-up reviews — Today's tasks stay available. ETA hidden until you log a session.</p>
         ) : (
           <div className="dim-row">
             <div className="dim">

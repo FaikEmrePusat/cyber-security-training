@@ -19,7 +19,8 @@ import {
   rGiris,
   rHedef,
 } from "../src/model";
-import { OAK_COVERED, OAK_COURSE_FOCUS, OAK_UPCOMING, topicKey } from "../src/data/oakCurriculum";
+import { OAK_COVERED, OAK_COURSE_FOCUS, OAK_UPCOMING, FOUNDATION_SPINE_REBUILD, topicKey } from "../src/data/oakCurriculum";
+import { sortByOakSpineOrder } from "../src/data/oakSpineOrder";
 import { GERMAN_B2_PLAN, germanDailyMinutesTotal } from "../src/data/germanPlan";
 import {
   applySessionEvidence,
@@ -93,7 +94,7 @@ console.log("\n=== 2. Seed + readiness model ===");
 }
 
 console.log("\n=== 3. Curriculum ===");
-assert("Oak covered = 144", OAK_COVERED.length === 144, `got ${OAK_COVERED.length}`);
+assert("Oak covered = 152", OAK_COVERED.length === 152, `got ${OAK_COVERED.length}`);
 assert("Oak upcoming = 8", OAK_UPCOMING.length === 8, `got ${OAK_UPCOMING.length}`);
 assert("topicKey trims", topicKey("  DNS  ") === "dns");
 {
@@ -116,6 +117,15 @@ assert("topicKey trims", topicKey("  DNS  ") === "dns");
   assert(
     "Course focus topic exists in covered",
     OAK_COVERED.some((t) => t.konu === OAK_COURSE_FOCUS),
+  );
+  assert("Foundation spine rebuild mode on", FOUNDATION_SPINE_REBUILD === true);
+  assert(
+    "Spine module order starts with IT Fundamentals",
+    sortByOakSpineOrder(OAK_COVERED)[0]?.konu.toLowerCase().includes("introduction to cybersecurity") === true ||
+      sortByOakSpineOrder(OAK_COVERED)[0]?.alan === "cloud" ||
+      /hardware|introduction to cybersecurity|operating system role/i.test(
+        sortByOakSpineOrder(OAK_COVERED)[0]?.konu ?? "",
+      ),
   );
 }
 
@@ -341,6 +351,8 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing defaults to Teacher/mentor", /Default role:\s*Teacher\s*\/\s*mentor/i.test(day));
   assert("Day briefing forbids examiner-first", /Do not open as an examiner|not Examiner-first|Never open as Examiner/i.test(day));
   assert("Day briefing steers weak probe to Study steps", /Weak.*Study steps|teach.*Study steps|guide me through this task's Study steps/i.test(day));
+  assert("Day briefing requires explain-back", /explain-back/i.test(day));
+  assert("Day briefing mentions spine rebuild", /SPINE|Oak Academy module order|IT Fundamentals/i.test(day));
   assert("Day briefing embeds Study steps section", /Study steps:/i.test(day));
   assert("Day briefing embeds What you can do", /What you can do:/i.test(day));
   assert("Day briefing reminds Record / Day log", /Record work|Day log/i.test(day));

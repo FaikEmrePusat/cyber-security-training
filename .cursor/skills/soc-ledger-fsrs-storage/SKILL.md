@@ -32,6 +32,13 @@ Internal package/storage names may stay `durum-*`; UI brand is **SOC Ledger**.
 - Outcomes update via `nextStability` / `isRetrievalDue` in `src/model/compute.ts`.
 - Seed retrieval must stay non-empty (`SEED_RETRIEVAL`).
 
+## Foundation spine rebuild (`FOUNDATION_SPINE_REBUILD`)
+
+- When true (default): Topic Day packs **Oak module spine** first (`oakSpineOrder.ts`: IT Fundamentals → Network → Server → Intro Sec → Crypto → Firewall → EDR → scan), then at most **1** FSRS review, then light **class lane** (`OAK_COURSE_FOCUS`, e.g. Nessus).
+- Spine skips `pekiştirildi` and queued titles. To re-do a topic, set it back to Learning on Map.
+- Do **not** assume raw `tekrar-ekle.txt` line order is the spine (that file stays domain-grouped for stable IDs).
+- Logic: `useRollingSchedule.ts` (`spineCandidates`, `packDay`).
+
 ## Gates (high risk)
 
 - Gate C: ≥2 **public** valuable labs **with HTTP(S) URL** (`MODEL.kapi.C`).

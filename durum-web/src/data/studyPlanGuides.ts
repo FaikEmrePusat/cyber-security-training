@@ -23,6 +23,48 @@ function oakResource(konu: string): StudyResource {
   return { label: "Oak Academy — search curriculum", url: `${OAK_SEARCH}${encodeURIComponent(konu)}`, type: "oak" };
 }
 
+/** Prefer naming the real Oak Study Notes PDF (local folder path in the label). */
+function oakNotes(pdfFile: string, folder = "IT Fundamentals"): StudyResource {
+  const stem = pdfFile.replace(/\.pdf$/i, "");
+  return {
+    label: `Oak Study Notes — ${folder}/${pdfFile}`,
+    url: `${OAK_SEARCH}${encodeURIComponent(stem)}`,
+    type: "oak",
+  };
+}
+
+/** ~40–45 min understanding tour: PDF concept → explain-back → quick check → log. */
+function foundationTourSteps(
+  pdfFocus: string,
+  explainBack: string,
+  socLens?: string,
+): Omit<StudyPlanStep, "order">[] {
+  return [
+    {
+      action: `Concept — skim Oak PDF (${pdfFocus}); list 5 terms you must recall`,
+      durationMin: 15,
+      logHint: "5 terms from the PDF",
+    },
+    {
+      action: socLens
+        ? `Explain-back: ${explainBack}. Dual lens — ${socLens}`
+        : `Explain-back without notes: ${explainBack}`,
+      durationMin: 15,
+      logHint: "3-sentence explain-back",
+    },
+    {
+      action: "Quick check — sketch or table from memory; reopen PDF only to close gaps",
+      durationMin: 10,
+      logHint: "1 gap closed",
+    },
+    {
+      action: "Log session — evidence from PDF terms + explain-back notes",
+      durationMin: 5,
+      logHint: "Note title or screenshot path",
+    },
+  ];
+}
+
 function thm(slug: string, label: string): StudyResource {
   return { label, url: `https://tryhackme.com/room/${slug}`, type: "thm" };
 }
@@ -123,6 +165,292 @@ function standardStudySteps(konu: string, labMin = 25): Omit<StudyPlanStep, "ord
 
 /** Specific topic patterns — ordered most-specific first. */
 export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
+  // --- IT Fundamentals spine (Oak module 1 PDFs) — before broad linux/risk/cloud patterns ---
+  {
+    test: /introduction to cybersecurity|field overview/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("0.2 - Introduction to Cybersecurity.pdf"),
+          oakNotes("Siber Güvenlik Kariyer Eğitim Programı.pdf"),
+          doc("https://csrc.nist.gov/glossary", "NIST — cybersecurity glossary"),
+          doc("https://www.nist.gov/cyberframework", "NIST Cybersecurity Framework (overview)"),
+        ],
+        [
+          "Define cyberspace, cybersecurity scope, and why the field exists (from Oak 0.2)",
+          "List 3 career/role families and which one you are aiming at",
+          "Write one SOC-relevant example of confidentiality, integrity, or availability (preview only)",
+        ],
+        foundationTourSteps(
+          "0.2 terminology / scope / principles",
+          "what cybersecurity protects and what it does not",
+          "how a junior SOC analyst uses these terms in a ticket",
+        ),
+      ),
+  },
+  {
+    test: /computer hardware components|cpu\s*\/\s*ram\s*\/\s*motherboard|motherboard\s*\/\s*bus/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.1 - Computer Components.pdf"),
+          oakNotes("Bilgisayar Biliminin Temelleri - I.pdf"),
+          doc("https://csrc.nist.gov/glossary/term/central_processing_unit", "NIST glossary — CPU"),
+        ],
+        [
+          "Map input → process → output using Oak 1.1 + Temelleri I",
+          "Name CPU, RAM, motherboard, bus roles in one sentence each",
+          "Note one hardware-adjacent security idea (e.g. keylogger on input path)",
+        ],
+        foundationTourSteps(
+          "1.1 computer components + Temelleri I",
+          "how the major hardware pieces cooperate",
+          "where malware or physical access could interfere with the I/O loop",
+        ),
+      ),
+  },
+  {
+    test: /storage devices|hdd\s*\/\s*ssd|nvme|media types/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.2 - Storage Devices.pdf"),
+          oakNotes("Bilgisayar Biliminin Temelleri - I.pdf"),
+          doc("https://csrc.nist.gov/glossary/term/storage", "NIST glossary — storage"),
+        ],
+        [
+          "Compare primary vs secondary memory and HDD vs SSD vs NVMe",
+          "Explain RAM vs disk in one analogy from the PDF",
+          "Note forensic/SOC angle: volatile vs persistent evidence",
+        ],
+        foundationTourSteps(
+          "1.2 storage devices / memory types",
+          "when data lives in RAM vs on disk and why it matters",
+          "volatile vs persistent evidence after an alert",
+        ),
+      ),
+  },
+  {
+    test: /processing devices|cpu role/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.3 - Processing Devices.pdf"),
+          oakNotes("Bilgisayar Biliminin Temelleri - I.pdf"),
+          doc("https://csrc.nist.gov/glossary/term/central_processing_unit", "NIST glossary — CPU"),
+        ],
+        [
+          "Distinguish CPU vs GPU vs motherboard roles from Oak 1.3",
+          "Explain why CPU is the 'brain' in one plain sentence",
+          "Note one abuse/load idea (crypto-mining / DoS overload) for SOC awareness",
+        ],
+        foundationTourSteps(
+          "1.3 processing devices (CPU / GPU)",
+          "what each processing device does",
+          "how abnormal CPU/GPU load can show up as a SOC signal",
+        ),
+      ),
+  },
+  {
+    test: /iot and mobile|mobile device basics/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.4 - IoT and Mobile.pdf"),
+          doc("https://www.cisa.gov/topics/risk-management/iot-security", "CISA — IoT security topics"),
+          doc("https://csrc.nist.gov/publications/detail/sp/800-213/final", "NIST SP 800-213 — IoT device cybersecurity"),
+        ],
+        [
+          "Define IoT and list 4 use-case domains from Oak 1.4",
+          "Name privacy/security risks unique to always-connected devices",
+          "Write one SOC/enterprise concern (shadow IoT, default creds, patch lag)",
+        ],
+        foundationTourSteps(
+          "1.4 IoT and mobile risks",
+          "why IoT expands the attack surface",
+          "what a SOC would ask when an unknown IoT device appears on the network",
+        ),
+      ),
+  },
+  {
+    test: /network components \(nic|nic\s*\/\s*cabling|cabling\s*\/\s*media\)/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.5 - Network Component.pdf"),
+          doc("https://www.cloudflare.com/learning/network-layer/what-is-a-nic/", "Cloudflare — What is a NIC?"),
+        ],
+        [
+          "Identify NIC, cabling/media, and basic device roles from Oak 1.5",
+          "Explain how NIC choice affects speed/connectivity",
+          "Relate physical media to later packet capture / link troubleshooting",
+        ],
+        foundationTourSteps(
+          "1.5 NIC / cabling / network components",
+          "how a host joins a network at the hardware layer",
+          "why link/NIC issues matter before blaming 'malware' in an alert",
+        ),
+      ),
+  },
+  {
+    test: /operating system role|kernel\s*\/\s*user space|os types/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.6 - Operating Systems.pdf"),
+          oakNotes("Bilgisayar Biliminin Temelleri - II.pdf"),
+          doc("https://csrc.nist.gov/glossary/term/operating_system", "NIST glossary — operating system"),
+        ],
+        [
+          "Explain OS as the bridge between hardware and applications (Temelleri II)",
+          "Define kernel vs user space in one sentence each",
+          "Note EOL / unpatched OS risk for SOC asset context",
+        ],
+        foundationTourSteps(
+          "1.6 OS role + Temelleri II",
+          "what the OS does and why hardware is useless without it",
+          "how EOL OS shows up as vulnerability/risk context in tickets",
+        ),
+      ),
+  },
+  {
+    test: /application vs service vs process|service vs process vs interface/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.7 - Application, Service, Process, Interface, CLI & GUI.pdf"),
+          doc("https://csrc.nist.gov/glossary/term/process", "NIST glossary — process"),
+        ],
+        [
+          "Define application, service, process, and interface from Oak 1.7 (no Linux lab yet)",
+          "Explain client–server request/response with one example",
+          "SOC lens: why 'process' in an EDR alert is not the same as 'service' or 'app'",
+        ],
+        foundationTourSteps(
+          "1.7 application / service / process / interface",
+          "how the four concepts differ",
+          "how you would describe a suspicious process to a teammate",
+        ),
+      ),
+  },
+  {
+    test: /cli vs gui|root\s*\(#\)\s*vs user|root.*vs.*user\s*\(\$\)/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.7 - Application, Service, Process, Interface, CLI & GUI.pdf"),
+          oakNotes("1.6 - Operating Systems.pdf"),
+          thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals Part 1 (optional shell practice)"),
+        ],
+        [
+          "Compare CLI vs GUI from Oak 1.7 first (concepts before commands)",
+          "Explain root (#) vs user ($) privilege meaning",
+          "Optional: open a shell only to observe prompt difference — not a full Linux command drill",
+        ],
+        foundationTourSteps(
+          "1.7 CLI vs GUI and privilege prompts",
+          "when CLI is required and what # vs $ signals",
+          "why privilege level matters in SOC investigations",
+        ),
+      ),
+  },
+  {
+    test: /virtualization.*hypervisor|hypervisor type\s*1|type\s*1 vs type\s*2/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.9 - Virtualization.pdf"),
+          doc("https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/", "Microsoft — Hyper-V overview"),
+          oakResource(konu),
+        ],
+        [
+          "Define virtualization and Type 1 vs Type 2 hypervisor from Oak 1.9",
+          "Sketch host vs guest and snapshot idea",
+          "Note one security angle (isolation, snapshot rollback, shared host risk)",
+        ],
+        foundationTourSteps(
+          "1.9 virtualization / hypervisor types",
+          "Type 1 vs Type 2 in your own words",
+          "how VMs help SOC labs and what isolation does not guarantee",
+        ),
+      ),
+  },
+  {
+    test: /vm vs container|container \(docker\)/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.9 - Virtualization.pdf"),
+          thm("introductorydocker", "TryHackMe — Intro to Docker"),
+          doc("https://docs.docker.com/get-started/docker-overview/", "Docker — overview"),
+        ],
+        [
+          "Compare VM vs container isolation from Oak 1.9",
+          "State when a SOC lab uses a VM vs a container",
+          "Optional: one authorized docker info/ps command after the concept pass",
+        ],
+        foundationTourSteps(
+          "1.9 VM vs container",
+          "what each isolates and what they share",
+          "how container escapes / shared kernel change the risk story",
+        ),
+      ),
+  },
+  {
+    test: /cloud computing basics/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.10 - Cloud Computing.pdf"),
+          doc("https://csrc.nist.gov/publications/detail/sp/800-145/final", "NIST SP 800-145 — cloud computing definition"),
+          oakResource(konu),
+        ],
+        [
+          "Define cloud computing and list IaaS / PaaS / SaaS from Oak 1.10",
+          "Compare one deployment model (public / private / hybrid)",
+          "Note which log sources a SOC might see from cloud apps later",
+        ],
+        foundationTourSteps(
+          "1.10 cloud service and deployment models",
+          "IaaS vs PaaS vs SaaS with one example each",
+          "shared-responsibility idea for a junior analyst",
+        ),
+      ),
+  },
+  {
+    test: /cloud storage risks|privacy\s*\/\s*ownership/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.10 - Cloud Computing.pdf"),
+          oakNotes("1.2 - Storage Devices.pdf"),
+          doc("https://www.nist.gov/privacy-framework", "NIST Privacy Framework (overview)"),
+        ],
+        [
+          "Explain cloud storage privacy and ownership risks from Oak notes",
+          "Contrast local disk control vs provider-held data",
+          "Write one question you would ask before syncing sensitive lab notes to cloud storage",
+        ],
+        foundationTourSteps(
+          "1.10 / 1.2 cloud storage risk themes",
+          "who controls and who can access cloud-stored data",
+          "how data residency / ownership shows up in incident impact",
+        ),
+      ),
+  },
   {
     test: /wireshark|pcap|packet analysis|tcpdump/i,
     build: ({ konu }) =>
@@ -334,7 +662,8 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /linux.*command|bash|chmod|chown|systemctl|\/etc\/passwd|apt|dpkg|filesystem hierarchy|process|df|du|tar|gzip|remote.*ssh/i,
+    // Word-bound short tokens — bare "du"/"process"/"tar" falsely steal IT Fund titles (e.g. Introdu**du**ction).
+    test: /linux.*command|\bbash\b|\bchmod\b|\bchown\b|\bsystemctl\b|\/etc\/passwd|\bapt\b|\bdpkg\b|filesystem hierarchy|\bprocess(?:es)?\b|\bdf\b|\bdu\b|\btar\b|\bgzip\b|remote.*ssh/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
@@ -414,7 +743,8 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /mitre|kill chain|apt|zero trust|iam|iaaa|mfa|sso|defense in depth|cia triad|threat.*vulner|risk|exploit|zero-day|cve|blue.*red.*purple/i,
+    // Avoid bare "risk(s)" — steals IoT/cloud-storage IT Fund titles into MITRE guide.
+    test: /mitre|kill chain|\bapt\b|zero trust|\biam\b|iaaa|\bmfa\b|\bsso\b|defense in depth|cia triad|threat.*vulner|risk management|risk assess|\bexploit\b|zero-day|\bcve\b|blue.*red.*purple/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
@@ -473,9 +803,20 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /cloud|docker|hypervisor|virtualization|vm vs container/i,
+    // Residual cloud/virt topics not covered by IT Fund spine guides above.
+    test: /\bdocker\b|kubernetes|iaas|paas|saas|shared responsibility/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introductorydocker", "TryHackMe — Intro to Docker"), doc("https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/", "Microsoft — Hyper-V"), oakResource(konu)], ["Compare Type 1 vs Type 2 hypervisor", "Run one docker command in lab", "Note cloud log sources for SOC"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("1.10 - Cloud Computing.pdf"),
+          oakNotes("1.9 - Virtualization.pdf"),
+          thm("introductorydocker", "TryHackMe — Intro to Docker"),
+          oakResource(konu),
+        ],
+        ["Prefer Oak PDF concepts before lab commands", "Compare VM vs container or cloud service model as applicable", "Note cloud log sources for SOC"],
+        foundationTourSteps("Oak cloud/virt PDF for this title", "the core model in your own words", "one SOC-relevant visibility gap"),
+      ),
   },
   {
     test: /nmap|network scan/i,
@@ -577,7 +918,8 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /grc|governance|risk|compliance/i,
+    // Avoid bare "risk(s)" matching IoT/cloud-storage titles.
+    test: /\bgrc\b|governance|compliance|risk management|risk assess/i,
     build: ({ konu }) =>
       mkGuide(konu, [doc("https://www.nist.gov/cyberframework", "NIST Cybersecurity Framework"), oakResource(konu)], ["Define GRC in SOC context", "List 3 compliance drivers (GDPR, ISO 27001)", "Relate to ticket documentation"], standardStudySteps(konu, 15)),
   },

@@ -178,9 +178,9 @@ export function useDerived() {
     const tekGorev = (() => {
       if (geriDonusModu) {
         return {
-          baslik: `Quick return: ${kuyruk.length || 1} reviews or 15 min light practice`,
-          neden: "You have been away a few days or fatigue is high — start light first.",
-          sure: "~15 min",
+          baslik: `Optional warm-up: ${kuyruk.length || 1} reviews · Today's tasks still available`,
+          neden: "You have been away a few days or fatigue is high — warm up with reviews, or skip straight to Today's spine / class tasks.",
+          sure: "~15 min optional",
           jargon: `${Math.round(daysSinceSession)} days without session · TSB = CTL − ATL · ETA hidden`,
           roiId: null as string | null,
         };

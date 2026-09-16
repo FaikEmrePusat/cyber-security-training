@@ -140,6 +140,71 @@ for (const task of scheduleTasks) {
   }
 }
 
+{
+  const fieldIntro = buildStudyGuide({
+    kind: "temel",
+    baslik: "Introduction to cybersecurity (field overview)",
+    alan: "secfund",
+  });
+  if (fieldIntro.resources.some((r) => /Linux Fundamentals|man pages/i.test(r.label))) {
+    fail("IT Fund intro cyber must not resolve to Linux Fundamentals / man pages");
+  }
+  if (!fieldIntro.resources.some((r) => /0\.2 - Introduction to Cybersecurity/i.test(r.label))) {
+    fail("IT Fund intro cyber should prefer Oak 0.2 PDF resource");
+  }
+  if (fieldIntro.actions.some((a) => /live Linux VM|permissions on misconfigured/i.test(a))) {
+    fail("IT Fund intro cyber must not use Linux VM command actions");
+  }
+
+  const processing = buildStudyGuide({
+    kind: "temel",
+    baslik: "Processing devices and CPU role",
+    alan: "secfund",
+  });
+  if (processing.resources.some((r) => /Linux Fundamentals|man pages/i.test(r.label))) {
+    fail("Processing devices must not fall through to Linux command guide");
+  }
+  if (!processing.resources.some((r) => /1\.3 - Processing Devices/i.test(r.label))) {
+    fail("Processing devices should prefer Oak 1.3 PDF");
+  }
+
+  const appProcess = buildStudyGuide({
+    kind: "temel",
+    baslik: "Application vs service vs process vs interface",
+    alan: "secfund",
+  });
+  if (!appProcess.resources.some((r) => /1\.7 - Application, Service, Process/i.test(r.label))) {
+    fail("Application/service/process topic should prefer Oak 1.7 PDF");
+  }
+  if (appProcess.actions.some((a) => /Complete commands in live Linux VM/i.test(a))) {
+    fail("Application/service/process must not use Linux VM drill actions");
+  }
+
+  const iot = buildStudyGuide({
+    kind: "temel",
+    baslik: "IoT and mobile device basics / risks",
+    alan: "secfund",
+  });
+  if (iot.actions.some((a) => /GRC in SOC|compliance drivers/i.test(a))) {
+    fail("IoT risks title must not match GRC guide via bare 'risk'");
+  }
+  if (!iot.resources.some((r) => /1\.4 - IoT and Mobile/i.test(r.label))) {
+    fail("IoT topic should prefer Oak 1.4 PDF");
+  }
+
+  const cloudRisk = buildStudyGuide({
+    kind: "temel",
+    baslik: "Cloud storage risks (privacy / ownership)",
+    alan: "cloud",
+  });
+  if (cloudRisk.actions.some((a) => /GRC in SOC|compliance drivers/i.test(a))) {
+    fail("Cloud storage risks must not match GRC guide");
+  }
+  if (!cloudRisk.resources.some((r) => /1\.10 - Cloud Computing|1\.2 - Storage Devices/i.test(r.label))) {
+    fail("Cloud storage risks should prefer Oak cloud/storage PDFs");
+  }
+}
+
 console.log(`\nTopics checked: ${ALL_TOPICS.length} × ${KINDS.length} kinds = ${ALL_TOPICS.length * KINDS.length} guides`);
 console.log(`Failures: ${failures} · Warnings: ${warnings}`);
 

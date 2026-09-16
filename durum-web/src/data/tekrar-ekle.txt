@@ -142,3 +142,12 @@ cloud|orta|Virtualization: Hypervisor Type 1 vs Type 2
 cloud|orta|VM vs container (Docker)
 cloud|kolay|Cloud storage risks (privacy / ownership)
 port|kolay|Critical ports (22, 53, 80, 443, 3389, 445, 25…)
+# IT Fundamentals (Oak module 1) — appended for stable earlier topic IDs; spine order via oakSpineOrder.ts
+secfund|kolay|Introduction to cybersecurity (field overview)
+secfund|kolay|Computer hardware components (CPU / RAM / motherboard / bus)
+secfund|kolay|Storage devices (HDD / SSD / NVMe) and media types
+secfund|kolay|Processing devices and CPU role
+secfund|orta|IoT and mobile device basics / risks
+net|kolay|Network components (NIC / cabling / media)
+secfund|kolay|Operating system role (kernel / user space / OS types)
+secfund|orta|Application vs service vs process vs interface

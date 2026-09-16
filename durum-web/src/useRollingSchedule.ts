@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import {
   ALAN_LABEL,
-  FOUNDATION_ALANS,
+  FOUNDATION_SPINE_REBUILD,
   OAK_COVERED,
   OAK_COURSE_FOCUS,
   OAK_UPCOMING,
@@ -9,6 +9,7 @@ import {
   type CurriculumStatus,
   type CurriculumTopic,
 } from "./data/oakCurriculum";
+import { sortByOakSpineOrder, spineModuleLabel } from "./data/oakSpineOrder";
 import { buildStudyGuide, type StudyGuide, type StudyGuideGateContext, type StudyGuideInput } from "./data/studyPlans";
 import {
   MODEL,
@@ -77,12 +78,19 @@ export type JourneySnapshot = {
 };
 
 const TEKRAR_SAAT = 8 / 60;
+/** Deep foundation spine block (~40–45 min understanding tour). */
+const TEMEL_SAAT = 0.75;
+/** Legacy / non-rebuild topic slot. */
 const KONU_SAAT = 0.5;
+/** Light class / current-course lane (homework, Nessus, quiz). */
+const CLASS_SAAT = 0.25;
 const LAB_SAAT_MIN = 0.5;
 const DIL_SAAT = 0.5;
 const PROJE_GUN = 14;
 const MAX_CARRY = MODEL.carry?.maxCarry ?? 2;
 const MAX_CARRY_AGE_DAYS = MODEL.carry?.maxAgeDays ?? 7;
+/** During spine rebuild, keep FSRS from crowding out the main tour. */
+const SPINE_TEKRAR_LIMIT = 1;
 
 export function getDayType(offset: number): { dayType: DayType; dayTypeLabel: string } {
   // 2 Topic days (A), 1 Lab day (B) rhythm: A, A, B, A, A, B ...
@@ -105,8 +113,8 @@ const GUN_AD: Record<number, string> = {
 
 const KIND_LABEL: Record<ScheduleTaskKind, string> = {
   tekrar: "Topic review",
-  konu: "Next topic in weak area",
-  temel: "Foundation topic study",
+  konu: FOUNDATION_SPINE_REBUILD ? "Class / current course (light)" : "Next topic in weak area",
+  temel: FOUNDATION_SPINE_REBUILD ? "Foundation spine (Oak course order)" : "Foundation topic study",
   lab: "Lab / practice",
   dil: "Language study",
   dinlenme: "Rest",
@@ -141,16 +149,58 @@ function bottleneckAlan(skills: Skill[]): string {
   return worst.id;
 }
 
-/** Foundation channel: lowest claimed/weight area first; round-robin across days. */
-function foundationAlanOrder(skills: Skill[]): string[] {
-  return [...FOUNDATION_ALANS].sort((a, b) => {
-    const sa = skills.find((s) => s.id === a);
-    const sb = skills.find((s) => s.id === b);
-    const ra = (sa?.claimed ?? 0) / Math.max(1, sa?.weight ?? 1);
-    const rb = (sb?.claimed ?? 0) / Math.max(1, sb?.weight ?? 1);
-    if (ra !== rb) return ra - rb;
-    return FOUNDATION_ALANS.indexOf(a) - FOUNDATION_ALANS.indexOf(b);
-  });
+/** Weak-area candidates (legacy) or fallback when class focus is already reinforced. */
+function studyCandidates(
+  alan: string,
+  getStatus: (id: string) => CurriculumStatus,
+  queueKeys: Set<string>,
+): CurriculumTopic[] {
+  const inAlan = OAK_COVERED.filter(
+    (t) =>
+      t.alan === alan &&
+      getStatus(t.id) !== "pekiştirildi" &&
+      getStatus(t.id) !== "ogrenilmedi" &&
+      !queueKeys.has(topicKey(t.konu)),
+  );
+  if (inAlan.length) return inAlan;
+  return OAK_COVERED.filter(
+    (t) =>
+      getStatus(t.id) === "ogreniyorum" &&
+      getStatus(t.id) !== "pekiştirildi" &&
+      !queueKeys.has(topicKey(t.konu)),
+  );
+}
+
+/**
+ * Oak course module spine (IT Fundamentals first — not raw file/OSI order).
+ * Skips reinforced (mark Learning again to re-do) and FSRS-queued titles.
+ */
+function spineCandidates(
+  getStatus: (id: string) => CurriculumStatus,
+  queueKeys: Set<string>,
+): CurriculumTopic[] {
+  const open = OAK_COVERED.filter(
+    (t) => getStatus(t.id) !== "pekiştirildi" && !queueKeys.has(topicKey(t.konu)),
+  );
+  return sortByOakSpineOrder(open);
+}
+
+/** Prefer current class topic (e.g. Nessus); else first incomplete weak-area candidate. */
+function classLaneCandidates(
+  alan: string,
+  getStatus: (id: string) => CurriculumStatus,
+  queueKeys: Set<string>,
+): CurriculumTopic[] {
+  const focus = OAK_COVERED.find((t) => t.konu === OAK_COURSE_FOCUS);
+  const rest = studyCandidates(alan, getStatus, queueKeys);
+  if (
+    focus &&
+    getStatus(focus.id) !== "pekiştirildi" &&
+    !queueKeys.has(topicKey(focus.konu))
+  ) {
+    return [focus, ...rest.filter((t) => t.id !== focus.id)];
+  }
+  return rest;
 }
 
 function daysUntilDue(item: RetrievalItem, fromMs: number): number {
@@ -173,27 +223,6 @@ function pickLabRoi(roiList: RoiAction[]): RoiAction | null {
   );
 }
 
-function studyCandidates(
-  alan: string,
-  getStatus: (id: string) => CurriculumStatus,
-  queueKeys: Set<string>,
-): CurriculumTopic[] {
-  const inAlan = OAK_COVERED.filter(
-    (t) =>
-      t.alan === alan &&
-      getStatus(t.id) !== "pekiştirildi" &&
-      getStatus(t.id) !== "ogrenilmedi" &&
-      !queueKeys.has(topicKey(t.konu)),
-  );
-  if (inAlan.length) return inAlan;
-  return OAK_COVERED.filter(
-    (t) =>
-      getStatus(t.id) === "ogreniyorum" &&
-      getStatus(t.id) !== "pekiştirildi" &&
-      !queueKeys.has(topicKey(t.konu)),
-  );
-}
-
 function carryToTask(c: ScheduleCarryItem): ScheduleTask {
   return {
     id: c.id,
@@ -213,7 +242,7 @@ function zayifAlanTask(t: CurriculumTopic): ScheduleTask {
     kind: "konu",
     baslik: t.konu,
     detay: ALAN_LABEL[t.alan] ?? t.alan,
-    saat: KONU_SAAT,
+    saat: FOUNDATION_SPINE_REBUILD ? CLASS_SAAT : KONU_SAAT,
     alan: t.alan,
     topicId: t.id,
   };
@@ -225,7 +254,7 @@ function temelTask(t: CurriculumTopic): ScheduleTask {
     kind: "temel",
     baslik: t.konu,
     detay: ALAN_LABEL[t.alan] ?? t.alan,
-    saat: KONU_SAAT,
+    saat: FOUNDATION_SPINE_REBUILD ? TEMEL_SAAT : KONU_SAAT,
     alan: t.alan,
     topicId: t.id,
   };
@@ -290,39 +319,25 @@ type SimState = {
   carry: ScheduleTask[];
   bottleneckStudyIdx: number;
   bottleneckStudyList: CurriculumTopic[];
-  temelIdxByAlan: Record<string, number>;
-  temelAlanRotate: number;
-  temelAlanOrder: string[];
+  spineIdx: number;
+  spineList: CurriculumTopic[];
   retrieval: Array<{ item: RetrievalItem; dueOffset: number }>;
   labRoi: RoiAction | null;
   labUsed: boolean;
   langUsed: number;
 };
 
-function pickTemelTopic(
-  sim: SimState,
-  temelLists: Record<string, CurriculumTopic[]>,
-): CurriculumTopic | null {
-  const order = sim.temelAlanOrder;
-  if (!order.length) return null;
-  for (let i = 0; i < order.length; i++) {
-    const alan = order[(sim.temelAlanRotate + i) % order.length];
-    const list = temelLists[alan] ?? [];
-    const idx = sim.temelIdxByAlan[alan] ?? 0;
-    if (idx < list.length) return list[idx];
-  }
-  return null;
+function pickTemelTopic(sim: SimState): CurriculumTopic | null {
+  return sim.spineList[sim.spineIdx] ?? null;
 }
 
-function advanceTemel(sim: SimState, alan: string): void {
-  sim.temelIdxByAlan[alan] = (sim.temelIdxByAlan[alan] ?? 0) + 1;
-  sim.temelAlanRotate = (sim.temelAlanRotate + 1) % Math.max(1, sim.temelAlanOrder.length);
+function advanceTemel(sim: SimState): void {
+  sim.spineIdx += 1;
 }
 
 function packDay(
   offset: number,
   sim: SimState,
-  temelLists: Record<string, CurriculumTopic[]>,
   kapasite: number,
   langKapasite: number,
   tekrarLimit: number,
@@ -348,49 +363,69 @@ function packDay(
     return false;
   };
 
-  // 1. Place carried tasks from yesterday / prior days (max MAX_CARRY) into capacity
+  // 1. Place carried tasks from yesterday / prior days
   for (const c of sim.carry) {
     if (!tryAdd({ ...c, carried: true }, true)) break;
   }
   sim.carry = sim.carry.filter((c) => !tasks.some((t) => t.id === c.id));
 
-  // 2. FSRS spaced repetition channel
-  const dueToday = sim.retrieval
-    .filter((r) => r.dueOffset <= offset)
-    .sort((a, b) => a.dueOffset - b.dueOffset);
-  let tekrarAdded = 0;
-  for (const d of dueToday) {
-    if (tekrarAdded >= tekrarLimit) {
-      if (nextCarry.length < MAX_CARRY) {
-        nextCarry.push(tekrarTask(d.item));
+  const addRetrieval = () => {
+    const dueToday = sim.retrieval
+      .filter((r) => r.dueOffset <= offset)
+      .sort((a, b) => a.dueOffset - b.dueOffset);
+    let tekrarAdded = 0;
+    for (const d of dueToday) {
+      if (tekrarAdded >= tekrarLimit) {
+        if (nextCarry.length < MAX_CARRY) {
+          nextCarry.push(tekrarTask(d.item));
+        }
+        tasima += 1;
+        continue;
       }
-      tasima += 1;
-      continue;
-    }
-    if (tryAdd(tekrarTask(d.item))) {
-      tekrarAdded += 1;
-      sim.retrieval = sim.retrieval.filter((x) => x.item.id !== d.item.id);
-    } else {
-      if (nextCarry.length < MAX_CARRY) {
-        nextCarry.push(tekrarTask(d.item));
+      if (tryAdd(tekrarTask(d.item))) {
+        tekrarAdded += 1;
+        sim.retrieval = sim.retrieval.filter((x) => x.item.id !== d.item.id);
+      } else {
+        if (nextCarry.length < MAX_CARRY) {
+          nextCarry.push(tekrarTask(d.item));
+        }
+        tasima += 1;
       }
-      tasima += 1;
     }
-  }
+  };
 
-  // 3. Day modular rhythm:
-  if (dayType === "A") {
-    // --- DAY A (TOPIC / DEEP WORK): Foundation topic + weak-area topic ---
-    const temelTopic = pickTemelTopic(sim, temelLists);
+  // Day A rebuild: spine first, then light reviews; otherwise reviews first (legacy).
+  if (dayType === "A" && FOUNDATION_SPINE_REBUILD) {
+    const temelTopic = pickTemelTopic(sim);
     if (temelTopic) {
       const task = temelTask(temelTopic);
-      if (tryAdd(task)) advanceTemel(sim, temelTopic.alan);
+      if (tryAdd(task)) advanceTemel(sim);
       else if (offset >= 0) {
         if (nextCarry.length < MAX_CARRY) nextCarry.push(task);
         tasima += 1;
       }
     }
-
+    addRetrieval();
+    if (sim.bottleneckStudyIdx < sim.bottleneckStudyList.length) {
+      const topic = sim.bottleneckStudyList[sim.bottleneckStudyIdx];
+      const task = zayifAlanTask(topic);
+      if (tryAdd(task)) sim.bottleneckStudyIdx += 1;
+      else if (offset >= 0) {
+        if (nextCarry.length < MAX_CARRY) nextCarry.push(task);
+        tasima += 1;
+      }
+    }
+  } else if (dayType === "A") {
+    addRetrieval();
+    const temelTopic = pickTemelTopic(sim);
+    if (temelTopic) {
+      const task = temelTask(temelTopic);
+      if (tryAdd(task)) advanceTemel(sim);
+      else if (offset >= 0) {
+        if (nextCarry.length < MAX_CARRY) nextCarry.push(task);
+        tasima += 1;
+      }
+    }
     if (sim.bottleneckStudyIdx < sim.bottleneckStudyList.length) {
       const topic = sim.bottleneckStudyList[sim.bottleneckStudyIdx];
       const task = zayifAlanTask(topic);
@@ -401,7 +436,8 @@ function packDay(
       }
     }
   } else {
-    // --- DAY B (LAB / APPLICATION): Full SOC / AD lab practice (~60–90 min) ---
+    addRetrieval();
+    // --- DAY B (LAB / APPLICATION) ---
     const labTaskItem = sim.labRoi
       ? labTask(sim.labRoi)
       : {
@@ -419,7 +455,7 @@ function packDay(
     }
   }
 
-  // 4. Language channel — separate capacity (hoursLang / 7); prioritized on topic days
+  // Language channel — separate capacity
   const langRemaining = langKapasite - sim.langUsed;
   if (langRemaining >= DIL_SAAT && (dayType === "A" || langRemaining >= DIL_SAAT * 2)) {
     const dilItem = dilTask(offset, "de");
@@ -429,7 +465,6 @@ function packDay(
     }
   }
 
-  // Cap carry list (max 2 tasks)
   sim.carry = nextCarry.slice(-MAX_CARRY);
   return { tasks, tasima, sim };
 }
@@ -446,7 +481,10 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     const alanLabel = ALAN_LABEL[alan] ?? alan;
 
     const dailyCyber = Math.max(0.5, state.tempo.hoursCyber / 7);
-    const dailyCapBase = Math.min(2, Math.max(0.75, dailyCyber));
+    const dailyCapBase = Math.min(
+      2,
+      Math.max(FOUNDATION_SPINE_REBUILD ? 1.25 : 0.75, dailyCyber),
+    );
     const dailyLang = Math.max(0, state.tempo.hoursLang / 7);
 
     const overdue = state.retrieval.filter((r) => isRetrievalDue(r, d.nowMs));
@@ -454,19 +492,12 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       .filter((r) => !isRetrievalDue(r, d.nowMs))
       .map((r) => ({ item: r, dueOffset: daysUntilDue(r, d.nowMs) }));
 
-    const studyList = studyCandidates(alan, getStatus, queueKeys);
+    const studyList = classLaneCandidates(alan, getStatus, queueKeys);
     const nextStudy = studyList[0] ?? null;
-    const temelLists: Record<string, CurriculumTopic[]> = {};
-    for (const a of FOUNDATION_ALANS) {
-      temelLists[a] = studyCandidates(a, getStatus, queueKeys);
-    }
-    const temelAlanOrder = foundationAlanOrder(state.skills);
-    const temelIdxByAlan: Record<string, number> = {};
-    for (const a of FOUNDATION_ALANS) temelIdxByAlan[a] = 0;
-    const nextTemel = pickTemelTopic(
-      { temelAlanOrder, temelAlanRotate: 0, temelIdxByAlan, carry: [], bottleneckStudyIdx: 0, bottleneckStudyList: [], retrieval: [], labRoi: null, labUsed: false, langUsed: 0 },
-      temelLists,
-    );
+    const spineList = FOUNDATION_SPINE_REBUILD
+      ? spineCandidates(getStatus, queueKeys)
+      : studyCandidates(alan, getStatus, queueKeys);
+    const nextTemel = spineList[0] ?? null;
     const labRoi = pickLabRoi(d.roiList);
 
     const persistedCarry = (state.scheduleCarry ?? [])
@@ -478,9 +509,8 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       carry: persistedCarry,
       bottleneckStudyIdx: 0,
       bottleneckStudyList: studyList,
-      temelIdxByAlan,
-      temelAlanRotate: 0,
-      temelAlanOrder,
+      spineIdx: 0,
+      spineList,
       retrieval: [
         ...overdue.map((item) => ({ item, dueOffset: 0 })),
         ...futureRetrieval,
@@ -497,16 +527,22 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       const date = new Date(d.nowMs + offset * 86400000);
       const { dayType, dayTypeLabel } = getDayType(offset);
       let kapasite = dailyCapBase;
-      if (offset === 0) {
-        if (d.geriDonusModu) kapasite = 0.25;
-        else if (d.pmc.tsb < -20) kapasite = 0.25;
+      if (offset === 0 && d.pmc.tsb < -20) {
+        // High fatigue: keep capacity light (return-mode warm-up is optional and separate).
+        kapasite = 0.25;
       }
 
-      const tekrarLim = offset === 0 ? (dayType === "A" ? MODEL.tekrar.kuyrukTavani : 2) : 2;
+      const tekrarLim =
+        offset === 0 && dayType === "A" && FOUNDATION_SPINE_REBUILD
+          ? SPINE_TEKRAR_LIMIT
+          : offset === 0
+            ? dayType === "A"
+              ? MODEL.tekrar.kuyrukTavani
+              : 2
+            : 2;
       const { tasks, tasima, sim: nextSim } = packDay(
         offset,
         sim,
-        temelLists,
         kapasite,
         dailyLang,
         tekrarLim,
@@ -563,114 +599,138 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
 
     const guideFor = (task: ScheduleTask) => buildTaskGuide(task, gateContext);
 
+    const mapScheduleTask = (t: ScheduleTask): BugunGorev => ({
+      ...t,
+      kindLabel: KIND_LABEL[t.kind],
+      sure: formatSure(t.saat),
+      dayType: todayDayType,
+      dayTypeLabel: todayDayTypeLabel,
+      studyGuide: guideFor(t),
+      neden: t.carried
+        ? "Carried-over task from yesterday — recommended to finish first."
+        : t.kind === "tekrar"
+          ? "FSRS due date reached; forgetting reduces readiness."
+          : t.kind === "temel"
+                ? FOUNDATION_SPINE_REBUILD
+                  ? "Foundation spine — Oak module order (IT Fundamentals → Network → Server → …); one understanding tour (~40–45 min)."
+                  : `${ALAN_LABEL[t.alan ?? ""] ?? t.alan ?? "Foundation"} baseline — follow Oak order.`
+            : t.kind === "konu"
+              ? FOUNDATION_SPINE_REBUILD
+                ? `Light class lane — current course / homework (${OAK_COURSE_FOCUS} when open).`
+                : `Next curriculum topic in weak ${alanLabel} area.`
+              : t.kind === "lab"
+                ? "Full lab / SOC practice — produces portfolio evidence for Gate B & C."
+                : t.kind === "dil"
+                  ? "Daily language capacity — German B2 plan (~100–120 min/day: input, Anki, output, grammar)."
+                  : undefined,
+    });
+
+    const returnWarmupCard = (): BugunGorev => ({
+      id: "donus-tekrar",
+      kind: "tekrar",
+      kindLabel: KIND_LABEL.tekrar,
+      baslik:
+        overdue.length > 0
+          ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
+          : "15 min light practice",
+      detay: "Return mode · optional",
+      saat: 0.25,
+      sure: "~15 min",
+      dayType: todayDayType,
+      dayTypeLabel: todayDayTypeLabel,
+      studyGuide: buildStudyGuide({
+        kind: "tekrar",
+        baslik:
+          overdue.length > 0
+            ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
+            : "15 min light practice",
+        gateContext,
+      }),
+      neden:
+        "Optional warm-up after time away — do these reviews first, or skip and start Today's spine / class tasks.",
+    });
+
     const bugunGorevler: BugunGorev[] = (() => {
-      if (d.geriDonusModu) {
-        return [
-          {
-            id: "donus-tekrar",
-            kind: "tekrar",
-            kindLabel: KIND_LABEL.tekrar,
-            baslik:
-              overdue.length > 0
-                ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
-                : "15 min light practice",
-            detay: "Return mode",
-            saat: 0.25,
-            sure: "~15 min",
-            dayType: todayDayType,
-            dayTypeLabel: todayDayTypeLabel,
-            studyGuide: buildStudyGuide({
-              kind: "tekrar",
-              baslik:
-                overdue.length > 0
-                  ? `${Math.min(overdue.length, MODEL.tekrar.kuyrukTavani)} topic reviews`
-                  : "15 min light practice",
-              gateContext,
-            }),
-            neden: "You have been away a few days — start light first.",
-          },
-        ];
-      }
+      let list: BugunGorev[] = [];
 
       if (bugunFromSchedule.length > 0) {
-        return bugunFromSchedule.map((t) => ({
-          ...t,
-          kindLabel: KIND_LABEL[t.kind],
-          sure: formatSure(t.saat),
-          dayType: todayDayType,
-          dayTypeLabel: todayDayTypeLabel,
-          studyGuide: guideFor(t),
-          neden: t.carried
-            ? "Carried-over task from yesterday — recommended to finish first."
-            : t.kind === "tekrar"
-              ? "FSRS due date reached; forgetting reduces readiness."
-              : t.kind === "temel"
-                ? `${ALAN_LABEL[t.alan ?? ""] ?? t.alan ?? "Foundation"} baseline — follow Oak order.`
-                : t.kind === "konu"
-                  ? `Next curriculum topic in weak ${alanLabel} area.`
-                  : t.kind === "lab"
-                    ? "Full lab / SOC practice — produces portfolio evidence for Gate B & C."
-                    : t.kind === "dil"
-                      ? "Daily language capacity — German B2 plan (~100–120 min/day: input, Anki, output, grammar)."
-                      : undefined,
-        }));
+        list = bugunFromSchedule.map(mapScheduleTask);
+      } else {
+        const fallback: BugunGorev[] = [];
+        if (overdue.length) {
+          const lim =
+            todayDayType === "A" && FOUNDATION_SPINE_REBUILD
+              ? SPINE_TEKRAR_LIMIT
+              : todayDayType === "A"
+                ? MODEL.tekrar.kuyrukTavani
+                : 2;
+          fallback.push({
+            ...tekrarTask(overdue[0], Math.min(overdue.length, lim)),
+            kindLabel: KIND_LABEL.tekrar,
+            sure: formatSure(TEKRAR_SAAT * Math.min(overdue.length, lim)),
+            dayType: todayDayType,
+            dayTypeLabel: todayDayTypeLabel,
+            studyGuide: guideFor(tekrarTask(overdue[0], Math.min(overdue.length, lim))),
+            neden: "Overdue reviews take priority.",
+          });
+        }
+        if (todayDayType === "A") {
+          if (nextTemel) {
+            fallback.push({
+              ...temelTask(nextTemel),
+              kindLabel: KIND_LABEL.temel,
+              sure: formatSure(FOUNDATION_SPINE_REBUILD ? TEMEL_SAAT : KONU_SAAT),
+              dayType: todayDayType,
+              dayTypeLabel: todayDayTypeLabel,
+              studyGuide: guideFor(temelTask(nextTemel)),
+              neden: FOUNDATION_SPINE_REBUILD
+                ? `Foundation spine — ${spineModuleLabel(nextTemel)} · Oak module order.`
+                : `${ALAN_LABEL[nextTemel.alan] ?? nextTemel.alan} foundation — daily baseline.`,
+            });
+          }
+          if (nextStudy) {
+            fallback.push({
+              ...zayifAlanTask(nextStudy),
+              kindLabel: KIND_LABEL.konu,
+              sure: formatSure(FOUNDATION_SPINE_REBUILD ? CLASS_SAAT : KONU_SAAT),
+              dayType: todayDayType,
+              dayTypeLabel: todayDayTypeLabel,
+              studyGuide: guideFor(zayifAlanTask(nextStudy)),
+              neden: FOUNDATION_SPINE_REBUILD
+                ? `Light class lane — ${nextStudy.konu}.`
+                : `New topic in weak ${alanLabel} area.`,
+            });
+          }
+        } else {
+          const labItem = labRoi
+            ? labTask(labRoi)
+            : {
+                id: "lab-soc-wazuh-fallback",
+                kind: "lab" as const,
+                baslik: "Sysmon + Wazuh / Splunk Lab Setup and Analysis",
+                detay: "Valuable SOC lab for Gate B & Gate C (v=3.0)",
+                saat: 1.25,
+              };
+          fallback.push({
+            ...labItem,
+            kindLabel: KIND_LABEL.lab,
+            sure: formatSure(labItem.saat),
+            dayType: todayDayType,
+            dayTypeLabel: todayDayTypeLabel,
+            studyGuide: guideFor(labItem),
+            neden: "Full SOC lab practice — produces portfolio evidence for Gate B & C.",
+          });
+        }
+        list = fallback;
       }
 
-      const fallback: BugunGorev[] = [];
-      if (overdue.length) {
-        const lim = todayDayType === "A" ? MODEL.tekrar.kuyrukTavani : 2;
-        fallback.push({
-          ...tekrarTask(overdue[0], Math.min(overdue.length, lim)),
-          kindLabel: KIND_LABEL.tekrar,
-          sure: formatSure(TEKRAR_SAAT * Math.min(overdue.length, lim)),
-          dayType: todayDayType,
-          dayTypeLabel: todayDayTypeLabel,
-          studyGuide: guideFor(tekrarTask(overdue[0], Math.min(overdue.length, lim))),
-          neden: "Overdue reviews take priority.",
-        });
+      // Return mode: keep optional warm-up on top; do not hide Today's tasks.
+      if (d.geriDonusModu) {
+        const withoutDupWarmup = list.filter((t) => t.id !== "donus-tekrar");
+        list = [returnWarmupCard(), ...withoutDupWarmup];
       }
-      if (todayDayType === "A") {
-        if (nextTemel) {
-          fallback.push({
-            ...temelTask(nextTemel),
-            kindLabel: KIND_LABEL.temel,
-            sure: formatSure(KONU_SAAT),
-            dayType: todayDayType,
-            dayTypeLabel: todayDayTypeLabel,
-            studyGuide: guideFor(temelTask(nextTemel)),
-            neden: `${ALAN_LABEL[nextTemel.alan] ?? nextTemel.alan} foundation — daily baseline.`,
-          });
-        }
-        if (nextStudy) {
-          fallback.push({
-            ...zayifAlanTask(nextStudy),
-            kindLabel: KIND_LABEL.konu,
-            sure: formatSure(KONU_SAAT),
-            dayType: todayDayType,
-            dayTypeLabel: todayDayTypeLabel,
-            studyGuide: guideFor(zayifAlanTask(nextStudy)),
-            neden: `New topic in weak ${alanLabel} area.`,
-          });
-        }
-      } else {
-        const labItem = labRoi ? labTask(labRoi) : {
-          id: "lab-soc-wazuh-fallback",
-          kind: "lab" as const,
-          baslik: "Sysmon + Wazuh / Splunk Lab Setup and Analysis",
-          detay: "Valuable SOC lab for Gate B & Gate C (v=3.0)",
-          saat: 1.25,
-        };
-        fallback.push({
-          ...labItem,
-          kindLabel: KIND_LABEL.lab,
-          sure: formatSure(labItem.saat),
-          dayType: todayDayType,
-          dayTypeLabel: todayDayTypeLabel,
-          studyGuide: guideFor(labItem),
-          neden: "Full SOC lab practice — produces portfolio evidence for Gate B & C.",
-        });
-      }
-      return fallback;
+
+      return list;
     })();
 
     const visibleBugunGorevler = bugunGorevler.filter((t) => !completedToday.has(t.id));
@@ -688,7 +748,12 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
     const focusStatus = focusTopic ? getStatus(focusTopic.id) : null;
 
     let konumMetni = "";
-    if (focusTopic && focusStatus !== "pekiştirildi") {
+    if (FOUNDATION_SPINE_REBUILD && nextTemel) {
+      konumMetni = `Spine · ${spineModuleLabel(nextTemel)} · ${nextTemel.konu}`;
+      if (focusTopic && focusStatus !== "pekiştirildi") {
+        konumMetni += ` · class: ${focusTopic.konu}`;
+      }
+    } else if (focusTopic && focusStatus !== "pekiştirildi") {
       konumMetni = `Currently: ${focusTopic.konu}`;
     } else if (edrDone && sonraIlk) {
       konumMetni = `After EDR · next: ${sonraIlk.konu}`;
@@ -708,8 +773,8 @@ export function useRollingSchedule(getStatus: (id: string) => CurriculumStatus) 
       odakAlan: alan,
       odakAlanLabel: alanLabel,
       konumMetni,
-      siradakiKonu: nextStudy?.konu ?? null,
-      siradakiKonuId: nextStudy?.id ?? null,
+      siradakiKonu: nextTemel?.konu ?? nextStudy?.konu ?? null,
+      siradakiKonuId: nextTemel?.id ?? nextStudy?.id ?? null,
       sonraKilit: sonraIlk?.konu ?? null,
       kapıAd: d.nextGate?.name ?? null,
       kapıPi: d.nextGate?.pi ?? 0,

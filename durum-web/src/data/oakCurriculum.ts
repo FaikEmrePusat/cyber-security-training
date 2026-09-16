@@ -254,10 +254,18 @@ export const OAK_BY_ID: Record<string, CurriculumTopic> = Object.fromEntries(
 );
 
 /**
- * Catalog course-position hint for journey / mentor (does not reset Map statuses).
+ * Light "class lane" topic (homework / current Oak lecture) — not the daily deep-work spine.
  * Intro To Security atoms live in covered secfund; Nmap + Nessus are covered post-EDR.
  */
 export const OAK_COURSE_FOCUS = "Vulnerability Scanning & Management (Nessus)";
+
+/**
+ * When true, Topic Day deep work walks the Oak **module** spine
+ * (IT Fundamentals → Network → Server → Intro To Security → …),
+ * not raw `tekrar-ekle.txt` domain order. See `oakSpineOrder.ts`.
+ * Class/current course stays a separate light lane via `OAK_COURSE_FOCUS`.
+ */
+export const FOUNDATION_SPINE_REBUILD = true;
 
 export function topicsByAlan(alan?: string, opts?: { includeUpcoming?: boolean }): CurriculumTopic[] {
   const includeUpcoming = opts?.includeUpcoming ?? true;
