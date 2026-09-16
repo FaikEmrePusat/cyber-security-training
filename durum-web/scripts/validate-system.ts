@@ -20,7 +20,7 @@ import {
   rHedef,
 } from "../src/model";
 import { OAK_COVERED, OAK_COURSE_FOCUS, OAK_UPCOMING, FOUNDATION_SPINE_REBUILD, topicKey } from "../src/data/oakCurriculum";
-import { sortByOakSpineOrder } from "../src/data/oakSpineOrder";
+import { sortByOakSpineOrder, spineModuleIndex } from "../src/data/oakSpineOrder";
 import { GERMAN_B2_PLAN, germanDailyMinutesTotal } from "../src/data/germanPlan";
 import {
   applySessionEvidence,
@@ -127,6 +127,11 @@ assert("topicKey trims", topicKey("  DNS  ") === "dns");
         sortByOakSpineOrder(OAK_COVERED)[0]?.konu ?? "",
       ),
   );
+  {
+    const ordered = sortByOakSpineOrder(OAK_COVERED);
+    const firstNetModule = ordered.find((t) => spineModuleIndex(t) === 1);
+    assert("Spine Network module starts with OSI (not A–Z)", /osi model/i.test(firstNetModule?.konu ?? ""));
+  }
 }
 
 console.log("\n=== 3b. German B2 plan ===");
@@ -353,6 +358,8 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing steers weak probe to Study steps", /Weak.*Study steps|teach.*Study steps|guide me through this task's Study steps/i.test(day));
   assert("Day briefing requires explain-back", /explain-back/i.test(day));
   assert("Day briefing mentions spine rebuild", /SPINE|Oak Academy module order|IT Fundamentals/i.test(day));
+  assert("Day briefing dual lens attack+defense", /attack\/ops|attacker|technique works/i.test(day) && /detect|defender/i.test(day));
+  assert("Day briefing one-tour over clearing cards", /one solid spine tour|clearing every Today card|Task 1/i.test(day));
   assert("Day briefing embeds Study steps section", /Study steps:/i.test(day));
   assert("Day briefing embeds What you can do", /What you can do:/i.test(day));
   assert("Day briefing reminds Record / Day log", /Record work|Day log/i.test(day));

@@ -33,11 +33,14 @@ function oakNotes(pdfFile: string, folder = "IT Fundamentals"): StudyResource {
   };
 }
 
-/** ~40–45 min understanding tour: PDF concept → explain-back → quick check → log. */
+/**
+ * ~40–45 min understanding tour: PDF concept → explain-back (attack + defense) → quick check → log.
+ * Always keep a light dual lens — even on fundamentals (not a pentest drill).
+ */
 function foundationTourSteps(
   pdfFocus: string,
   explainBack: string,
-  socLens?: string,
+  dualLens: string,
 ): Omit<StudyPlanStep, "order">[] {
   return [
     {
@@ -46,11 +49,9 @@ function foundationTourSteps(
       logHint: "5 terms from the PDF",
     },
     {
-      action: socLens
-        ? `Explain-back: ${explainBack}. Dual lens — ${socLens}`
-        : `Explain-back without notes: ${explainBack}`,
+      action: `Explain-back while doing: ${explainBack}. Dual lens — ${dualLens}`,
       durationMin: 15,
-      logHint: "3-sentence explain-back",
+      logHint: "Attacker angle + defender angle (2–3 sentences)",
     },
     {
       action: "Quick check — sketch or table from memory; reopen PDF only to close gaps",
@@ -58,7 +59,7 @@ function foundationTourSteps(
       logHint: "1 gap closed",
     },
     {
-      action: "Log session — evidence from PDF terms + explain-back notes",
+      action: "Log session — PDF terms + attacker/defender one-liners",
       durationMin: 5,
       logHint: "Note title or screenshot path",
     },
@@ -185,7 +186,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         foundationTourSteps(
           "0.2 terminology / scope / principles",
           "what cybersecurity protects and what it does not",
-          "how a junior SOC analyst uses these terms in a ticket",
+          "attacker: harm assets in cyberspace / defender: how a junior SOC uses these terms in a ticket",
         ),
       ),
   },
@@ -451,19 +452,27 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         ),
       ),
   },
+  // --- Network Fundamentals spine (Oak module 2 PDFs) — Oak first; THM optional ---
   {
     test: /wireshark|pcap|packet analysis|tcpdump/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("wireshark", "TryHackMe — Wireshark 101"), doc("https://www.wireshark.org/docs/dfref/", "Wireshark display filters"), lab("https://www.malware-traffic-analysis.net/", "Malware Traffic Analysis PCAPs"), oakResource(konu)],
-        ["Capture HTTP/DNS in lab VM", "Apply display filters for one protocol", "Export PCAP; note 3 IOCs"],
         [
-          { action: "Review Wireshark filter reference (15 min)", durationMin: 15, logHint: "3 filters to use" },
-          { action: "Complete THM Wireshark 101 (or first 5 tasks)", durationMin: 30, logHint: "Room progress %" },
-          { action: "Analyze one Malware Traffic Analysis PCAP", durationMin: 20, logHint: "1 suspicious host + why" },
-          { action: "Log: PCAP filename + 3 IOCs", durationMin: 5, logHint: "Evidence URL or filename" },
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+          doc("https://www.wireshark.org/docs/dfref/", "Wireshark display filters"),
+          thm("wireshark", "TryHackMe — Wireshark 101 (optional short practice)"),
         ],
+        [
+          "Open Oak Network101-LAB: Wireshark/tcpdump first — not a full wall-of-text room",
+          "Apply 2–3 filters for one protocol; explain attacker use vs defender visibility",
+          "Log one capture artifact + one suspicious pattern a SOC would flag",
+        ],
+        foundationTourSteps(
+          "2.9 Network101-LAB packet tools",
+          "what you filtered and why (technique + detection)",
+          "attacker: hide in noise / defender: which field would you alert on",
+        ),
       ),
   },
   {
@@ -471,9 +480,21 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://www.subnet-calculator.com/", "Subnet calculator"), oakResource(konu)],
-        ["Calculate 5 subnet scenarios by hand", "Identify network/broadcast/host for a /26", "Relate to SOC: internal vs external IP in alerts"],
-        standardStudySteps(konu, 20),
+        [
+          oakNotes("2.3.1 - Network Layer - Subnetting.pdf", "Network Fundamentals"),
+          oakNotes("2.3 - Network Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://www.subnet-calculator.com/", "Subnet calculator (check only)"),
+        ],
+        [
+          "Work /26 and /24 by hand from Oak 2.3.1 before using a calculator",
+          "Identify network / broadcast / usable hosts for one example",
+          "Dual lens: how an attacker scopes a subnet vs how alerts show internal vs external IP",
+        ],
+        foundationTourSteps(
+          "2.3.1 subnetting / CIDR",
+          "how you split network vs host bits on one example",
+          "attacker: lateral range / defender: internal vs external IP in a ticket",
+        ),
       ),
   },
   {
@@ -481,119 +502,339 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://www.cloudflare.com/learning/network-layer/what-is-the-osi-model/", "Cloudflare — OSI model"), oakResource(konu)],
-        ["Draw OSI 7 layers with one protocol each", "Trace encapsulation for HTTPS request", "Map layer to Wireshark pane"],
-        standardStudySteps(konu),
+        [
+          oakNotes("2.1 - OSI Reference Model.pdf", "Network Fundamentals"),
+          oakNotes("2.2 - Data Link Layer and Protocols-Broadcast-Collision.pdf", "Network Fundamentals"),
+          doc("https://www.cloudflare.com/learning/network-layer/what-is-the-osi-model/", "Cloudflare — OSI model (optional)"),
+        ],
+        [
+          "Draw OSI 7 layers with one protocol each from Oak 2.1",
+          "Trace encapsulation for an HTTPS request in one sketch",
+          "Dual lens: where an attacker tampers vs which layer a SOC inspects first",
+        ],
+        foundationTourSteps(
+          "2.1 OSI / TCP-IP reference models",
+          "each layer’s job in one sentence",
+          "attacker: which layer to abuse / defender: which pane or log first",
+        ),
       ),
   },
   {
     test: /arp/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/arp-caching", "Microsoft — ARP"), oakResource(konu)], ["Run arp -a; explain request/reply", "Capture ARP in Wireshark", "Note ARP spoofing relevance for SOC"], standardStudySteps(konu, 20)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.2 - Data Link Layer and Protocols-Broadcast-Collision.pdf", "Network Fundamentals"),
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+          doc("https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/arp-caching", "Microsoft — ARP"),
+        ],
+        [
+          "Explain ARP request/reply from Oak Layer-2 notes",
+          "Optional: arp -a once; say what the table means",
+          "Dual lens: ARP spoofing goal vs how a defender notices a wrong gateway MAC",
+        ],
+        foundationTourSteps(
+          "2.2 / lab ARP basics",
+          "how a host learns MAC for an IP",
+          "attacker: poison mapping / defender: unexpected MAC for gateway",
+        ),
+      ),
   },
   {
     test: /vlan|collision domain|broadcast domain|ethernet frame/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)], ["Explain VLAN tagging purpose", "Compare collision vs broadcast domain", "Sketch small office VLAN layout"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.2 - Data Link Layer and Protocols-Broadcast-Collision.pdf", "Network Fundamentals"),
+          oakNotes("2.6 - Networking Components-Switch.pdf", "Network Fundamentals"),
+        ],
+        [
+          "Compare collision vs broadcast domain from Oak 2.2",
+          "Explain VLAN purpose in one sentence",
+          "Dual lens: flat LAN for attacker reach vs VLAN segmentation for defenders",
+        ],
+        foundationTourSteps(
+          "2.2 Ethernet / domains + switch notes",
+          "why VLANs and domains matter for segmentation",
+          "attacker: same broadcast domain / defender: segment + monitor trunks",
+        ),
+      ),
   },
   {
-    test: /\bnat\b|private vs public|default gateway|loopback|link-local/i,
+    test: /\bnat\b|private vs public|default gateway|loopback|link-local|ipv4 vs ipv6/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://www.cloudflare.com/learning/network-layer/what-is-nat/", "Cloudflare — NAT"), oakResource(konu)], ["Identify private RFC1918 ranges", "Explain SNAT vs DNAT in one sentence each", "Trace packet path through gateway"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.3 - Network Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://www.cloudflare.com/learning/network-layer/what-is-nat/", "Cloudflare — NAT (optional)"),
+        ],
+        [
+          "From Oak 2.3: private RFC1918 ranges + why NAT exists",
+          "Explain default gateway / loopback / link-local in one line each",
+          "Dual lens: what NAT hides from an attacker vs what defenders still see in logs",
+        ],
+        foundationTourSteps(
+          "2.3 network layer addressing / NAT themes",
+          "how a packet leaves a LAN toward the internet",
+          "attacker: reachability limits / defender: internal vs external IP fields",
+        ),
+      ),
   },
   {
     test: /dhcp/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("dhcp", "TryHackMe — DHCP"), doc("https://datatracker.ietf.org/doc/html/rfc2131", "RFC 2131 — DHCP"), oakResource(konu)],
-        ["Explain DORA in your own words", "Capture DHCP handshake in Wireshark", "Troubleshoot simulated lease failure"],
         [
-          { action: "Study DORA process and lease timers", durationMin: 15, logHint: "DORA one-liner each letter" },
-          { action: "Capture DHCP handshake (filter bootp/dhcp)", durationMin: 20, logHint: "Screenshot of 4-message flow" },
-          { action: "THM DHCP room or Oak lab equivalent", durationMin: 25, logHint: "Lab completion note" },
-          { action: "Add 3 recall questions to review queue", durationMin: 10, logHint: "3 questions" },
+          oakNotes("2.3 - Network Layer and Protocols.pdf", "Network Fundamentals"),
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+          doc("https://datatracker.ietf.org/doc/html/rfc2131", "RFC 2131 — DHCP (reference)"),
         ],
+        [
+          "Explain DORA in your own words (Discover–Offer–Request–Ack)",
+          "Optional short capture: filter bootp/dhcp — do not clear a whole THM room",
+          "Dual lens: rogue DHCP offer (attacker) vs lease/gateway anomalies (defender)",
+        ],
+        foundationTourSteps(
+          "DHCP DORA from Oak notes / Network101-LAB",
+          "each DORA step in one sentence",
+          "attacker: rogue DHCP / defender: unexpected gateway or DNS",
+        ),
       ),
   },
   {
-    test: /dns/i,
+    test: /dns|nslookup|\bdig\b/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("dnsindetail", "TryHackMe — DNS in Detail"), doc("https://www.cloudflare.com/learning/dns/what-is-dns/", "Cloudflare — How DNS works"), oakResource(konu)],
-        ["Trace recursive lookup with dig/nslookup", "Identify A, CNAME, MX, TXT in a zone", "Spot DNS tunneling indicators in sample log"],
         [
-          { action: "Review DNS hierarchy and record types", durationMin: 15, logHint: "Draw query flow in 4 steps" },
-          { action: "Run dig +trace; screenshot key lines", durationMin: 15, logHint: "dig output snippet" },
-          { action: "Complete THM DNS room tasks", durationMin: 25, logHint: "Tasks completed" },
-          { action: "Write 3 flashcard Q&As for record types", durationMin: 10, logHint: "3 Q&A headlines" },
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+          doc("https://www.cloudflare.com/learning/dns/what-is-dns/", "Cloudflare — How DNS works (optional)"),
         ],
+        [
+          "Draw recursive DNS lookup flow from Oak 2.5 (no full THM room)",
+          "List A, AAAA, CNAME, MX, TXT with one use each",
+          "Dual lens: DNS for C2/tunneling ideas vs odd query patterns a SOC hunts",
+        ],
+        foundationTourSteps(
+          "2.5 DNS hierarchy and records",
+          "how a name becomes an IP",
+          "attacker: resolve or hide C2 / defender: unusual queries or NXDOMAIN bursts",
+        ),
       ),
   },
   {
     test: /icmp|ping|traceroute/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)], ["Run ping and traceroute to external host", "Identify TTL and ICMP type in capture", "Note when ICMP appears in SOC alerts"], standardStudySteps(konu, 15)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.3 - Network Layer and Protocols.pdf", "Network Fundamentals"),
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+        ],
+        [
+          "From Oak notes: what ICMP is for (not “just ping”)",
+          "Optional: one ping + traceroute; explain TTL meaning",
+          "Dual lens: ICMP for recon vs when defenders treat ICMP as scan noise",
+        ],
+        foundationTourSteps(
+          "ICMP / path tools in Oak Network notes",
+          "what ping and traceroute prove and what they do not",
+          "attacker: path discovery / defender: ICMP flood or sweep signals",
+        ),
+      ),
   },
   {
     test: /tcp.*handshake|syn.*ack|tcp vs udp|port range|well-known/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), doc("https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/", "Cloudflare — TCP/IP"), oakResource(konu)], ["Draw 3-way handshake", "List 5 well-known ports with services", "Compare TCP vs UDP use cases"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.4 - Transport Layer and Protocols.pdf", "Network Fundamentals"),
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+        ],
+        [
+          "Draw TCP 3-way handshake from Oak 2.4",
+          "Compare TCP vs UDP with two real services each",
+          "Dual lens: SYN scan idea vs SYN/half-open patterns defenders watch",
+        ],
+        foundationTourSteps(
+          "2.4 transport layer (TCP/UDP/ports)",
+          "handshake + reliability difference",
+          "attacker: probe open ports / defender: port + protocol in firewall or SIEM",
+        ),
+      ),
   },
   {
     test: /critical port|^port|port \d/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [doc("https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml", "IANA port registry"), thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)],
-        ["Memorize top 15 SOC-relevant ports", "Map port → service → typical log source", "Use netstat/ss to verify listening ports"],
         [
-          { action: "Build port cheat sheet (22, 53, 80, 443, 445, 3389…)", durationMin: 15, logHint: "15 ports listed" },
-          { action: "Run netstat -ano or ss -tuln; match to cheat sheet", durationMin: 15, logHint: "3 active services" },
-          { action: "Write 5 flashcards: port → service → risk", durationMin: 10, logHint: "Highest-risk port" },
+          oakNotes("2.4 - Transport Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml", "IANA port registry"),
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
         ],
+        [
+          "Build a 10–15 port cheat sheet (22, 53, 80, 443, 445, 3389…)",
+          "Map port → service → typical log source",
+          "Dual lens: why attackers hit 445/3389 vs which ports are high-signal for SOC",
+        ],
+        foundationTourSteps(
+          "2.4 ports + Network101-LAB connection view",
+          "your top ports and their services",
+          "attacker: service exposure / defender: unexpected listeners or internet noise",
+        ),
       ),
   },
   {
     test: /http|status code|request method/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("contentdiscovery", "TryHackMe — Content Discovery"), doc("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status", "MDN HTTP status codes"), oakResource(konu)], ["Inspect HTTP request/response in browser devtools", "List 5 common status codes", "Capture HTTP in Wireshark"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://developer.mozilla.org/en-US/docs/Web/HTTP/Status", "MDN HTTP status codes"),
+        ],
+        [
+          "From Oak 2.5: client–server HTTP and common methods",
+          "List 5 status codes you must recall (200/301/302/404/500)",
+          "Dual lens: odd methods (PUT/DELETE) as technique hints vs web-log signals for defenders",
+        ],
+        foundationTourSteps(
+          "2.5 HTTP methods and status codes",
+          "request vs response and what a status code means",
+          "attacker: abuse verbs/paths / defender: status and method anomalies in logs",
+        ),
+      ),
   },
   {
-    test: /https|ssl|tls|certificate|pki|ocsp|handshake/i,
+    test: /https|ssl|tls|certificate|pki|ocsp/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("sslstrip", "TryHackMe — SSL/Trip (TLS basics)"), doc("https://www.cloudflare.com/learning/ssl/what-is-ssl/", "Cloudflare — TLS"), oakResource(konu)],
-        ["Inspect certificate chain in browser", "Explain symmetric vs asymmetric in TLS", "Note cert expiry alerts in SOC"],
-        standardStudySteps(konu),
+        [
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://www.cloudflare.com/learning/ssl/what-is-ssl/", "Cloudflare — TLS (optional)"),
+        ],
+        [
+          "Explain HTTPS as HTTP over TLS from Oak application-layer notes",
+          "Inspect one certificate; name subject / issuer / expiry",
+          "Dual lens: what TLS hides from sniffers vs what defenders still see (SNI, cert, JA3 later)",
+        ],
+        foundationTourSteps(
+          "2.5 HTTPS / TLS basics",
+          "what TLS protects and what it does not",
+          "attacker: trust or downgrade themes / defender: cert expiry or TLS errors in tickets",
+        ),
       ),
   },
   {
     test: /smtp|imap|pop3|email protocol/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("snortchallenges2", "TryHackMe — Snort (email traffic context)"), oakResource(konu)], ["Map SMTP/IMAP/POP3 to ports", "Read email headers for phishing triage", "Identify SPF/DKIM fields"], standardStudySteps(konu)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://www.cisa.gov/news-events/news/avoiding-social-engineering-and-phishing-attacks", "CISA — phishing context"),
+        ],
+        [
+          "Map SMTP/IMAP/POP3 to ports from Oak notes",
+          "Explain which is send vs retrieve",
+          "Dual lens: phish delivery via SMTP vs header fields a defender checks",
+        ],
+        foundationTourSteps(
+          "2.5 email protocols",
+          "ports and roles of SMTP/IMAP/POP3",
+          "attacker: deliver lure / defender: header + SPF/DKIM clues",
+        ),
+      ),
   },
   {
     test: /ssh|telnet|rdp|ftp|sftp|smb/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals"), doc("https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/", "Microsoft — RDP"), oakResource(konu)],
-        ["Connect via SSH to lab VM", "Compare Telnet vs SSH security", "Note RDP (3389) and SMB (445) in SOC alerts"],
-        standardStudySteps(konu, 20),
+        [
+          oakNotes("2.4 - Transport Layer and Protocols.pdf", "Network Fundamentals"),
+          oakNotes("2.5 - Application Layer and Protocols.pdf", "Network Fundamentals"),
+          doc("https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/", "Microsoft — RDP (optional)"),
+        ],
+        [
+          "Compare SSH vs Telnet security from Oak port/protocol notes",
+          "Note RDP 3389 and SMB 445 as high-signal exposure",
+          "Dual lens: brute/spray ideas (authorized labs only later) vs Event/firewall signals — no Linux Fundamentals room now",
+        ],
+        foundationTourSteps(
+          "remote access / file protocols (Oak 2.4–2.5)",
+          "which protocols are encrypted and which are not",
+          "attacker: exposed remote service / defender: 3389/445 internet noise",
+        ),
       ),
   },
   {
-    test: /snmp|ntp|network topology|switch.*router|dmz|nac|proxy|load balancer/i,
-    build: ({ konu }) =>
-      mkGuide(konu, [thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)], ["Sketch star vs mesh topology", "Explain DMZ purpose", "List device roles: switch vs router vs AP"], standardStudySteps(konu)),
+    test: /snmp|ntp|network topology|switch.*router|dmz|nac|proxy|load balancer|access point|\bhub\b/i,
+    build: ({ konu }) => {
+      const title = konu.toLowerCase();
+      const pdf = /dmz/.test(title)
+        ? "2.11 - DMZ.pdf"
+        : /nac/.test(title)
+          ? "2.14 - NAC.pdf"
+          : /proxy/.test(title)
+            ? "2.13 - Proxy Servers.pdf"
+            : /load balancer/.test(title)
+              ? "2.12 - Load Balancer.pdf"
+              : /access point/.test(title)
+                ? "2.8 - Networking Components-Access Point.pdf"
+                : /router/.test(title)
+                  ? "2.7 - Networking Components-Router.pdf"
+                  : /switch|hub/.test(title)
+                    ? "2.6 - Networking Components-Switch.pdf"
+                    : "2.10 - Network Topology.pdf";
+      return mkGuide(
+        konu,
+        [
+          oakNotes(pdf, "Network Fundamentals"),
+          oakNotes("2.6 - Networking Components-Switch.pdf", "Network Fundamentals"),
+          oakNotes("2.7 - Networking Components-Router.pdf", "Network Fundamentals"),
+        ],
+        [
+          `Open the matching Oak PDF (${pdf}) for this title first`,
+          "Sketch device/zone roles (switch vs router vs AP / DMZ / LB / NAC / proxy as relevant)",
+          "Dual lens: how an attacker abuses misplacement vs where defenders place sensors/logs",
+        ],
+        foundationTourSteps(
+          `${pdf.replace(/\.pdf$/i, "")} device / architecture`,
+          "the device or zone purpose in your own words",
+          "attacker: bypass or pivot path / defender: sensor or log placement",
+        ),
+      );
+    },
   },
   {
     test: /netstat|connection analysis/i,
     build: ({ konu }) =>
-      mkGuide(konu, [thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals"), oakResource(konu)], ["Run netstat -ano and ss -tuln", "Identify ESTABLISHED vs LISTENING", "Correlate PID to process"], standardStudySteps(konu, 20)),
+      mkGuide(
+        konu,
+        [
+          oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+          doc("https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netstat", "Microsoft — netstat"),
+        ],
+        [
+          "From Oak Network101-LAB: LISTEN vs ESTABLISHED",
+          "Run netstat or ss once; name three states you see",
+          "Dual lens: unexpected listener as attacker foothold vs defender triage of foreign ESTABLISHED — no Linux Fundamentals room",
+        ],
+        foundationTourSteps(
+          "2.9 netstat / connection view",
+          "listening vs established and why it matters",
+          "attacker: backdoor listener / defender: unknown remote ESTABLISHED",
+        ),
+      ),
   },
   {
     test: /active directory|ldap|kerberos|ntlm|gpo|ntds|domain controller|\bou\b/i,
@@ -722,50 +963,149 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       mkGuide(
         konu,
         [
-          PRE_SEC,
+          oakNotes("4.01 - CIA Triad.pdf", "Intro To Security"),
+          oakNotes("4.02 - Cybersecurity Terminology.pdf", "Intro To Security"),
+          oakNotes("4.05 - Cyber Kill Chain.pdf", "Intro To Security"),
           MITRE,
-          thm("introductoryresearching", "TryHackMe — Introductory Researching"),
-          thm("mitre", "TryHackMe — MITRE"),
-          oakResource(konu),
         ],
         [
-          "Explain CIA triad with one SOC ticket example",
-          "Map malware types and hacker hats to defender priorities",
-          "Walk Cyber Kill Chain + APT persistence in defender language",
-          "Sketch IAM/AAA: identify → authenticate → authorize → account",
+          "Open Oak Intro To Security PDFs (4.01–4.02) — module map, not every later card today",
+          "Explain CIA with one attack example and one defender control each",
+          "Preview Kill Chain stages: attacker progression vs where detection can interrupt",
+        ],
+        foundationTourSteps(
+          "4.01 CIA + 4.02 terminology (module orientation)",
+          "what this module covers and how CIA frames every later topic",
+          "attacker: break C/I/A / defender: which control restores which letter",
+        ),
+      ),
+  },
+  {
+    test: /cia triad/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("4.01 - CIA Triad.pdf", "Intro To Security"),
+          doc("https://csrc.nist.gov/glossary/term/confidentiality", "NIST — confidentiality"),
         ],
         [
-          { action: "Oak Intro To Security: CIA + terminology pass", durationMin: 20, logHint: "3 definitions" },
-          { action: "Malware types + hacker types: attacker vs defender notes", durationMin: 20, logHint: "5 malware types" },
-          { action: "Kill Chain / APT: map one stage to a detection idea", durationMin: 20, logHint: "Stage + detection" },
-          { action: "IAM/AAA: MFA factors + least privilege one-pager", durationMin: 15, logHint: "AAA steps" },
+          "Define C, I, A from Oak 4.01 with one concrete example each",
+          "For each letter: one attacker action + one defender control",
+          "Write one SOC ticket sentence that names which CIA letter was hit",
         ],
+        foundationTourSteps(
+          "4.01 CIA Triad",
+          "CIA in your own words with ticket-ready examples",
+          "attacker goal per letter / defender control per letter",
+        ),
+      ),
+  },
+  {
+    test: /cyber kill chain/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("4.05 - Cyber Kill Chain.pdf", "Intro To Security"),
+          oakNotes("4.06 - Advanced Persistent Threat (APT).pdf", "Intro To Security"),
+          MITRE,
+        ],
+        [
+          "List the 7 Kill Chain stages from Oak 4.05",
+          "Pick one stage: attacker actions vs a detection or interrupt idea",
+          "Relate APT persistence (4.06) without dumping the whole MITRE matrix",
+        ],
+        foundationTourSteps(
+          "4.05 Cyber Kill Chain (+ APT preview)",
+          "stage order and one interrupt point",
+          "attacker: progress the chain / defender: break one stage early",
+        ),
+      ),
+  },
+  {
+    test: /\bapt\b|advanced persistent/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("4.06 - Advanced Persistent Threat (APT).pdf", "Intro To Security"),
+          oakNotes("4.05 - Cyber Kill Chain.pdf", "Intro To Security"),
+          MITRE,
+        ],
+        [
+          "Define APT traits from Oak 4.06 (goal, dwell, stealth)",
+          "Contrast smash-and-grab vs long dwell with one example",
+          "Dual lens: attacker persistence idea vs defender telemetry you would want",
+        ],
+        foundationTourSteps(
+          "4.06 APT",
+          "what makes a threat 'advanced' and 'persistent'",
+          "attacker: stay quiet and long / defender: dwell-time and staging signals",
+        ),
+      ),
+  },
+  {
+    test: /\biam\b|iaaa|identification.*authentication|mfa factors|\bsso\b/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("4.07 - IAM - AAA.pdf", "Intro To Security"),
+          doc("https://csrc.nist.gov/glossary/term/identity_and_access_management", "NIST — IAM"),
+        ],
+        [
+          "Walk identify → authenticate → authorize → account from Oak 4.07",
+          "Explain MFA factors (know / have / are) with one abuse path if a factor is stolen",
+          "Dual lens: credential theft vs MFA/least-privilege as defender controls",
+        ],
+        foundationTourSteps(
+          "4.07 IAM / AAA",
+          "AAA steps and least privilege in plain language",
+          "attacker: steal or reuse identity / defender: MFA + least privilege + logs",
+        ),
       ),
   },
   {
     // Avoid bare "risk(s)" — steals IoT/cloud-storage IT Fund titles into MITRE guide.
-    test: /mitre|kill chain|\bapt\b|zero trust|\biam\b|iaaa|\bmfa\b|\bsso\b|defense in depth|cia triad|threat.*vulner|risk management|risk assess|\bexploit\b|zero-day|\bcve\b|blue.*red.*purple/i,
+    test: /mitre|zero trust|defense in depth|threat.*vulner|risk management|risk assess|\bexploit\b|zero-day|\bcve\b|blue.*red.*purple/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [MITRE, thm("mitre", "TryHackMe — MITRE"), thm("introductoryresearching", "TryHackMe — Introductory Researching"), oakResource(konu)],
-        ["Map one attack technique to MITRE ID", "Explain CIA triad with SOC example", "Describe defense-in-depth layers"],
-        standardStudySteps(konu),
+        [MITRE, oakNotes("4.02 - Cybersecurity Terminology.pdf", "Intro To Security"), thm("introductoryresearching", "TryHackMe — Introductory Researching (optional)")],
+        [
+          "Map one technique to MITRE ID (authorized notes / ATT&CK site)",
+          "State attacker goal and defender visibility for that technique",
+          "Describe defense-in-depth layers without encyclopedia dump",
+        ],
+        foundationTourSteps(
+          "Oak terminology + MITRE awareness",
+          "one technique both as attack step and detection idea",
+          "attacker procedure / defender data source",
+        ),
       ),
   },
   {
-    test: /phishing|social engineering|malware|virus|worm|trojan|ransomware|spyware|rootkit|hacker type/i,
+    test: /phishing|social engineering|malware types|virus|worm|trojan|ransomware|spyware|rootkit|hacker type/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("phishing", "TryHackMe — Phishing"), thm("phishingemails", "TryHackMe — Phishing Emails in Action"), doc("https://www.cisa.gov/news-events/news/avoiding-social-engineering-and-phishing-attacks", "CISA — Phishing guidance"), oakResource(konu)],
-        ["Analyze sample phishing email header", "List 5 user-reporting indicators", "Map attack stage to Kill Chain / MITRE"],
         [
-          { action: "Review malware/phishing taxonomy in Oak notes", durationMin: 15, logHint: "3 malware types + example" },
-          { action: "Analyze one sample phish (EML or room artifact)", durationMin: 20, logHint: "Suspicious header field" },
-          { action: "THM Phishing room section", durationMin: 25, logHint: "Progress" },
-          { action: "Draft SOC playbook: detect → contain → report", durationMin: 10, logHint: "3 playbook bullets" },
+          oakNotes("4.03 - Types of Malware.pdf", "Intro To Security"),
+          oakNotes("4.04 - Types of Hackers.pdf", "Intro To Security"),
+          doc("https://www.cisa.gov/news-events/news/avoiding-social-engineering-and-phishing-attacks", "CISA — phishing guidance"),
+          thm("phishing", "TryHackMe — Phishing (optional short practice)"),
         ],
+        [
+          "Oak 4.03/4.04 first: malware types and hacker hats — not a full phishing room",
+          "For one malware type: attacker delivery idea + defender signal",
+          "If phishing: one header check — skip wall-of-text room autopilot",
+        ],
+        foundationTourSteps(
+          "4.03 malware + 4.04 hacker types",
+          "taxonomy with one concrete example",
+          "attacker: choose tool/hat for the goal / defender: user report + telemetry clue",
+        ),
       ),
   },
   {
@@ -930,30 +1270,54 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
   net: ({ konu }) =>
     mkGuide(
       konu,
-      [PRE_SEC, thm("introtonetworking", "TryHackMe — Intro to Networking"), oakResource(konu)],
-      [`Follow Oak networking order for ${konu}`, "Capture or diagram one protocol example", "Connect to Wireshark or netstat practice"],
-      standardStudySteps(konu),
+      [
+        oakNotes("2.1 - OSI Reference Model.pdf", "Network Fundamentals"),
+        oakNotes("2.9 - Network101-LAB.pdf", "Network Fundamentals"),
+        oakResource(konu),
+      ],
+      [
+        `Open the matching Oak Network Fundamentals PDF for ${konu}`,
+        "Diagram or one authorized lab check — skip long THM reading rooms",
+        "Dual lens: how the technique works + how a defender would see it",
+      ],
+      foundationTourSteps(
+        "Oak Network Fundamentals PDF for this title",
+        "core concept in your own words while doing",
+        "attacker use of the concept / defender visibility",
+      ),
     ),
   linux: ({ konu }) =>
     mkGuide(
       konu,
       [thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals"), doc("https://man7.org/linux/man-pages/", "Linux man pages"), oakResource(konu)],
-      ["Practice commands in live VM without copy-paste", "Check /var/log for relevant entries", "Relate to SOC log analysis"],
+      ["Practice commands in live VM without copy-paste", "Check /var/log for relevant entries", "Dual lens: attacker command vs defender log line"],
       standardStudySteps(konu, 25),
     ),
   win: ({ konu }) =>
     mkGuide(
       konu,
       [thm("windowseventlogs", "TryHackMe — Windows Event Logs"), thm("attacktivedirectory", "TryHackMe — Attacktive Directory"), oakResource(konu)],
-      ["Use PowerShell or GUI for admin task", "Identify relevant Event ID", "Map to enterprise SOC scenario"],
+      ["Use PowerShell or GUI for admin task", "Identify relevant Event ID", "Map attacker action to the Event ID defenders collect"],
       standardStudySteps(konu, 25),
     ),
   secfund: ({ konu }) =>
     mkGuide(
       konu,
-      [PRE_SEC, MITRE, thm("introductoryresearching", "TryHackMe — Introductory Researching"), oakResource(konu)],
-      ["Link concept to MITRE or Kill Chain stage", "Write one SOC-relevant example", "Add to FSRS after first pass"],
-      standardStudySteps(konu),
+      [
+        oakNotes("4.02 - Cybersecurity Terminology.pdf", "Intro To Security"),
+        MITRE,
+        oakResource(konu),
+      ],
+      [
+        "Prefer Oak Intro To Security PDF over long Pre-Security rooms",
+        "Link concept to one attack step and one detection idea",
+        "Add to FSRS after first solid explain-back",
+      ],
+      foundationTourSteps(
+        "Oak Intro To Security notes for this title",
+        "definition + one SOC example",
+        "attacker angle / defender angle",
+      ),
     ),
   crypto: ({ konu }) =>
     mkGuide(

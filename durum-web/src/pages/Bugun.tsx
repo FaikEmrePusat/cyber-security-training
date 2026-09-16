@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { ALAN_COLOR } from "../data/oakCurriculum";
+import { ALAN_COLOR, FOUNDATION_SPINE_REBUILD } from "../data/oakCurriculum";
 import { stepLabel, type StudyGuide } from "../data/studyPlans";
 import { APP_NAME, APP_TAGLINE, STUDY_APPROACH_NOTE } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
@@ -289,7 +289,11 @@ function GorevCard({
         <div className="gorev-card__meta">
           {gorev.sure && <span>{gorev.sure}</span>}
           {gorev.kind === "temel" && <span className="gorev-card__badge gorev-card__badge--temel">FOUNDATION</span>}
-          {gorev.kind === "konu" && <span className="gorev-card__badge gorev-card__badge--zayif">WEAK AREA</span>}
+          {gorev.kind === "konu" && (
+            <span className="gorev-card__badge gorev-card__badge--zayif">
+              {FOUNDATION_SPINE_REBUILD ? "CLASS (LIGHT)" : "WEAK AREA"}
+            </span>
+          )}
           {gorev.kind === "lab" && <span className="gorev-card__badge gorev-card__badge--lab">LAB PRACTICE</span>}
           {gorev.kind === "dil" && <span className="gorev-card__badge gorev-card__badge--dil">GERMAN</span>}
           {gorev.carried && <span className="gorev-card__badge">From yesterday</span>}
@@ -474,11 +478,15 @@ export function BugunPage() {
         <section className="bugun-gorevler" aria-label="Today's tasks">
           <div className="bugun-gorevler__head">
             <div className="bugun-gorevler__headline-row">
-              <h2 className="bugun-gorevler__title">Next topics</h2>
+              <h2 className="bugun-gorevler__title">Today&apos;s plan</h2>
               <span className={`bugun-day-badge bugun-day-badge--${schedule.todayType}`}>
-                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Topic & Review" : "Integrated lab"})
+                {schedule.todayTypeLabel} ({schedule.todayType === "A" ? "Spine + light class" : "Integrated lab"})
               </span>
             </div>
+            <p className="bugun-gorevler__pace note">
+              One ~40–45 min foundation tour is enough. Class/Nessus is light parallel; reviews are optional — do not
+              pressure-clear every card.
+            </p>
             {schedule.carryCount > 0 && (
               <div className="bugun-gorevler__carry-wrap">
                 <span className="bugun-gorevler__carry">{schedule.carryCount} carried tasks (cap: 2)</span>
@@ -600,7 +608,7 @@ export function BugunPage() {
         <section className="plan-timeline" aria-label="Upcoming days">
           <h2 className="plan-timeline__title">Days ahead</h2>
           <p className="plan-timeline__note">
-            Estimated plan — unfinished tasks roll to the next day; pace: ~
+            Estimated outlook — finish the spine tour first; leftover cards may roll forward. Pace: ~
             {round1(state.tempo.hoursCyber / 7)} h/day cyber · ~
             {round1(state.tempo.hoursLang / 7)} h/day language.
           </p>

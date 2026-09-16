@@ -4,6 +4,6 @@ export const APP_NAME = "SOC Ledger";
 export const APP_TAGLINE = "Today’s topic here · study with your mentor · record what you did";
 /** Shown in study plan panels on Today. */
 export const STUDY_APPROACH_NOTE =
-  "Study both sides of each topic: how the technique works and how you detect, contain, or prevent it.";
+  "Dual lens every topic: how the technique works (attacker/ops) and how you detect, contain, or prevent it — not defense-only lecture.";
 export const LEARNER_NAME = "Faik Emre Pusat";
-export const LEARNER_ROLE = "Aspiring Junior SOC Analyst / Blue Team";
+export const LEARNER_ROLE = "Aspiring Junior SOC Analyst (attack mechanics + Blue Team detection)";

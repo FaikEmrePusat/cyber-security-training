@@ -205,6 +205,45 @@ for (const task of scheduleTasks) {
   }
 }
 
+{
+  const osi = buildStudyGuide({ kind: "temel", baslik: "OSI model (7 layers)", alan: "net" });
+  if (!osi.resources.some((r) => /2\.1 - OSI Reference Model/i.test(r.label))) {
+    fail("OSI guide should prefer Oak 2.1 PDF");
+  }
+  if (osi.resources.some((r) => /Intro to Networking/i.test(r.label) && !/optional/i.test(r.label))) {
+    fail("OSI guide must not lead with THM Intro to Networking as primary");
+  }
+  if (!osi.steps.some((s) => /Dual lens|attacker/i.test(s.action))) {
+    fail("OSI guide steps should include dual-lens attack+defense");
+  }
+
+  const subnet = buildStudyGuide({ kind: "temel", baslik: "Subnetting / CIDR / subnet mask", alan: "net" });
+  if (!subnet.resources.some((r) => /2\.3\.1 - Network Layer - Subnetting/i.test(r.label))) {
+    fail("Subnetting should prefer Oak 2.3.1 PDF");
+  }
+
+  const ssh = buildStudyGuide({ kind: "temel", baslik: "SSH (22) vs Telnet (23)", alan: "net" });
+  if (ssh.resources.some((r) => /Linux Fundamentals/i.test(r.label))) {
+    fail("SSH/Telnet network topic must not resolve to Linux Fundamentals room");
+  }
+
+  const introMod = buildStudyGuide({ kind: "konu", baslik: "Intro To Security", alan: "secfund" });
+  if (!introMod.resources.some((r) => /4\.01 - CIA Triad/i.test(r.label))) {
+    fail("Intro To Security module should prefer Oak 4.01 PDF");
+  }
+  if (introMod.resources.some((r) => /Pre-Security/i.test(r.label))) {
+    fail("Intro To Security should not lead with Pre-Security path");
+  }
+  if (!introMod.steps.some((s) => /Dual lens|attacker/i.test(s.action))) {
+    fail("Intro To Security steps should include dual-lens attack+defense");
+  }
+
+  const cia = buildStudyGuide({ kind: "konu", baslik: "CIA triad", alan: "secfund" });
+  if (!cia.resources.some((r) => /4\.01 - CIA Triad/i.test(r.label))) {
+    fail("CIA triad should prefer Oak 4.01 PDF");
+  }
+}
+
 console.log(`\nTopics checked: ${ALL_TOPICS.length} × ${KINDS.length} kinds = ${ALL_TOPICS.length * KINDS.length} guides`);
 console.log(`Failures: ${failures} · Warnings: ${warnings}`);
 
