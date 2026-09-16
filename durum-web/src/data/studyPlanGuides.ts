@@ -777,14 +777,14 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /snmp|ntp|network topology|switch.*router|dmz|nac|proxy|load balancer|access point|\bhub\b/i,
+    test: /snmp|ntp|network topology|switch.*router|dmz|nac|proxy server|load balancer|access point|\bhub\b/i,
     build: ({ konu }) => {
       const title = konu.toLowerCase();
       const pdf = /dmz/.test(title)
         ? "2.11 - DMZ.pdf"
         : /nac/.test(title)
           ? "2.14 - NAC.pdf"
-          : /proxy/.test(title)
+          : /proxy server|\bproxy\b/.test(title) && !/firewall|waf|ngfw/i.test(title)
             ? "2.13 - Proxy Servers.pdf"
             : /load balancer/.test(title)
               ? "2.12 - Load Balancer.pdf"
@@ -836,19 +836,57 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         ),
       ),
   },
+  // --- Server Management: SSO/IAM before AD (Kerberos in SSO titles must not steal to Attacktive Directory) ---
   {
-    test: /active directory|ldap|kerberos|ntlm|gpo|ntds|domain controller|\bou\b/i,
+    test: /\bsso\b|saml|oauth/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("attacktivedirectory", "TryHackMe — Attacktive Directory"), doc("https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview", "Microsoft — AD overview"), oakResource(konu)],
-        ["Map Domain / DC / OU / user objects", "Run one AD query (ldapsearch or Get-ADUser)", "Relate Kerberos/NTLM to SOC alert type"],
         [
-          { action: "Read Oak AD section; list 4 object types", durationMin: 20, logHint: "4 AD object types" },
-          { action: "Enumerate users/groups in lab; note default groups", durationMin: 25, logHint: "1 interesting membership" },
-          { action: "Skim THM Attacktive Directory intro tasks", durationMin: 30, logHint: "Tasks done" },
-          { action: "Note relevant Windows Event IDs (4624, 4768)", durationMin: 10, logHint: "Event ID or log source" },
+          oakNotes("4.07 - IAM - AAA.pdf", "Intro To Security"),
+          oakNotes("Kimlik ve Erişim Yönetimi (IAM).pdf", "Intro To Security"),
+          doc("https://csrc.nist.gov/glossary/term/single_sign_on", "NIST — single sign-on"),
         ],
+        [
+          "Oak IAM first: how SSO reduces password sprawl without removing accountability",
+          "Name SAML vs OAuth at a concept level — no full IdP lab today",
+          "Dual lens: stolen SSO session vs MFA + session logs defenders need",
+        ],
+        foundationTourSteps(
+          "4.07 SSO within IAM",
+          "when SSO helps and what still must be logged",
+          "attacker: hijack federation/session / defender: MFA + auth logs",
+        ),
+      ),
+  },
+  {
+    test: /active directory|ldap|ntlm|gpo|ntds|domain controller|\bou\b|kerberos \(ad|ad context|ad user/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("Active Directory (AD).pdf", "Server Management"),
+          oakNotes("3.3.1 - AD-DomainServices.pdf", "Server Management"),
+          oakNotes("3.3.2 - AD-Basic Administration.pdf", "Server Management"),
+          oakNotes("3.3.3 - AD-User and Group Management.pdf", "Server Management"),
+          oakNotes("3.3.4 - AD-Working with group policy.pdf", "Server Management"),
+          oakNotes("Active Directory Grup Politikaları (GPO).pdf", "Server Management"),
+          doc(
+            "https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview",
+            "Microsoft — AD overview",
+          ),
+          thm("attacktivedirectory", "TryHackMe — Attacktive Directory (optional later)"),
+        ],
+        [
+          "Oak AD PDFs first: Domain / DC / OU / user-group objects — not a full Attacktive Directory room",
+          "Map one Kerberos/NTLM or GPO idea to Event IDs defenders collect (4624, 4768, 4740…)",
+          "Dual lens: attacker wants Domain Admin path vs defender looks for auth anomalies",
+        ],
+        foundationTourSteps(
+          "Oak AD / GPO PDF for this title",
+          "Domain vs DC vs OU (or the GPO/policy idea) while sketching",
+          "attacker: privilege or policy abuse / defender: Event ID or GPO audit signal",
+        ),
       ),
   },
   {
@@ -857,66 +895,158 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       mkGuide(
         konu,
         [
-          thm("windowseventlogs", "TryHackMe — Windows Event Logs"),
+          oakNotes("3.2.2 - Windows Administrative Tools.pdf", "Server Management"),
+          oakNotes("Windows Sistem Yönetimi ve Siber Güvenlik.pdf", "Server Management"),
           doc("https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4624", "Microsoft — Event 4624 (logon)"),
-          doc("https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/basic-audit-policy-settings", "Microsoft — Basic audit policy"),
           tool("https://github.com/SwiftOnSecurity/sysmon-config", "Sysmon config (Event ID 1+)"),
-          oakResource(konu),
+          thm("windowseventlogs", "TryHackMe — Windows Event Logs (optional)"),
         ],
         [
-          "Open Event Viewer; locate Security / System / Application channels",
-          "Explain 4624 vs 4625 vs 4688 in one sentence each",
-          "Map one Event ID to a SOC alert you would write",
+          "Oak admin-tools PDF: find Event Viewer channels (Security / System / Application)",
+          "Explain 4624 vs 4625 vs 4688 in one sentence each — skip wall-of-text room autopilot",
+          "Dual lens: which Event ID an attacker hopes you ignore vs what you alert on",
         ],
-        [
-          {
-            action: "Tour Event Viewer channels; note where Security vs Sysmon land",
-            durationMin: 15,
-            logHint: "3 channel names + why they matter",
-          },
-          {
-            action: "Generate or find 4624/4625 (and 4688 if available); screenshot key fields",
-            durationMin: 25,
-            logHint: "Event IDs + Logon Type or New Process name",
-          },
-          {
-            action: "Complete THM Windows Event Logs (or first half)",
-            durationMin: 30,
-            logHint: "Room progress %",
-          },
-          {
-            action: "Draft detection idea: Event ID → condition → action",
-            durationMin: 10,
-            logHint: "1 detection bullet + MITRE technique if known",
-          },
-        ],
+        foundationTourSteps(
+          "3.2.2 Event Viewer / audit awareness",
+          "three Event IDs and what each proves",
+          "attacker: noisy failed logons or process create / defender: triage fields on the event",
+        ),
       ),
+  },
+  {
+    test: /windows server|client.?server basics|server manager|roles\s*\/\s*features/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("3.00 - Operating Systems _ Servers.pdf", "Server Management"),
+          oakNotes("3.2.1 - Introduction to Windows Servers.pdf", "Server Management"),
+          oakNotes("Windows Temelleri ve Sunucu Yönetimi.pdf", "Server Management"),
+          oakNotes("3.2.7 - Windows Server Configuration.pdf", "Server Management"),
+        ],
+        [
+          "Oak Server PDFs: what a server provides vs a client",
+          "Name 3 roles/features and why an SOC cares if they are exposed",
+          "Dual lens: mis-exposed role as attack surface vs inventory/hardening for defenders",
+        ],
+        foundationTourSteps(
+          "3.00 / 3.2.1 Windows Server basics",
+          "server vs client and one critical role",
+          "attacker: abuse an exposed service / defender: know what should be listening",
+        ),
+      ),
+  },
+  {
+    test: /windows processes|task manager|\bpid\b|computer management|local users and groups|rdp configuration|windows dhcp|dns\s*\/\s*iis|iis security/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("3.2.2 - Windows Administrative Tools.pdf", "Server Management"),
+          oakNotes("3.2.3 - Managing Windows Services.pdf", "Server Management"),
+          oakNotes("3.2.4 - Remote Desktop Protocol.pdf", "Server Management"),
+          oakNotes("3.2.5 - Windows DHCP-DNS-IIS.pdf", "Server Management"),
+          oakNotes("Windows Sistem Yönetimi ve Siber Güvenlik.pdf", "Server Management"),
+          oakNotes("Windows Server 2019 Yönetimi - Server Manager, IIS ve DNS Rolleri.pdf", "Server Management"),
+        ],
+        [
+          "Open the matching Oak Windows Server PDF for this title first",
+          "Do one console action (Task Manager, services.msc, Server Manager, or RDP setting) if you have a lab VM",
+          "Dual lens: attacker persistence/misconfig vs defender signal (process, service, or role)",
+        ],
+        foundationTourSteps(
+          "Oak Windows admin PDF for this title",
+          "the tool or role purpose while clicking or sketching",
+          "attacker: abuse the feature / defender: what you would monitor",
+        ),
+      ),
+  },
+  {
+    // Avoid bare "process(es)" — steals Windows processes / APT titles into Linux drills.
+    // Avoid bare "apt" — steals APT (Advanced Persistent Threat); use apt-get/aptitude.
+    test: /linux.*command|\bbash\b|\bchmod\b|\bchown\b|\bsystemctl\b|\/etc\/passwd|\bapt-get\b|\baptitude\b|\bdpkg\b|filesystem hierarchy|linux processes|\bps,\s*top|pstree|\bdf\b|\bdu\b|\btar\b|\bgzip\b|remote linux|\bsudo\b|\badduser\b|\busermod\b|\bifconfig\b|\bip addr\b/i,
+    build: ({ konu }) => {
+      const pdf =
+        /passwd|shadow|user\/group|adduser|usermod|sudo|su\b|whoami/i.test(konu)
+          ? "3.04 - Linux User Management.pdf"
+          : /chmod|chown|filesystem hierarchy|permissions/i.test(konu)
+            ? "3.05 - Linux File System.pdf"
+            : /ifconfig|ip addr|network/i.test(konu)
+              ? "3.06 - Linux Network Configuration.pdf"
+              : /systemctl|service management/i.test(konu)
+                ? "3.07 - Linux Services.pdf"
+                : /process|ps,|pstree|kill/i.test(konu)
+                  ? "3.08 - Linux Processes.pdf"
+                  : /df|du|\/proc|monitoring|disk|memory/i.test(konu)
+                    ? "3.09 - Linux System Monitoring.pdf"
+                    : /tar|gzip|apt-get|aptitude|dpkg|package/i.test(konu)
+                      ? "3.10 - Linux Package Management Systems.pdf"
+                      : /basic command|navigation|files/i.test(konu)
+                        ? "3.02- Linux Basic Commands – 1.pdf"
+                        : "3.01 - Introduction to Linux.pdf";
+      const extra =
+        /tar|gzip|package|apt/i.test(konu)
+          ? [oakNotes("Linux Archiving_Compression and Package Management.pdf", "Server Management")]
+          : /passwd|user|sudo|chmod|filesystem/i.test(konu)
+            ? [oakNotes("Linux File System & User Management.pdf", "Server Management")]
+            : /process|service|monitoring|systemctl/i.test(konu)
+              ? [oakNotes("Linux Process & Service Management and System Monitoring.pdf", "Server Management")]
+              : /ifconfig|ip addr/i.test(konu)
+                ? [oakNotes("Linux Network Settings.pdf", "Server Management")]
+                : [oakNotes("Linux Giriş.pdf", "Server Management")];
+      return mkGuide(
+        konu,
+        [
+          oakNotes(pdf, "Server Management"),
+          ...extra,
+          doc("https://man7.org/linux/man-pages/", "Linux man pages"),
+          thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals Part 1 (optional)"),
+        ],
+        [
+          `Oak Server Management PDF first (${pdf}) — one concept tour, not a full THM room`,
+          "Practice 3–5 commands in a local/authorized VM only if energy remains",
+          "Dual lens: how an attacker abuses the command/config vs which log or permission defenders check",
+        ],
+        foundationTourSteps(
+          pdf.replace(/\.pdf$/i, ""),
+          "commands or concepts in your own words while doing them",
+          "attacker misuse / defender log or permission check",
+        ),
+      );
+    },
   },
   {
     test: /powershell|registry|task scheduler|windows service|iis|defender firewall|net user|smb share|ntfs/i,
-    build: ({ konu }) =>
-      mkGuide(
+    build: ({ konu }) => {
+      const pdf = /powershell|net user/i.test(konu)
+        ? "3.2.6 - Windows Commandline-Powershell.pdf"
+        : /windows service/i.test(konu)
+          ? "3.2.3 - Managing Windows Services.pdf"
+          : /iis/i.test(konu)
+            ? "3.2.5 - Windows DHCP-DNS-IIS.pdf"
+            : /defender firewall/i.test(konu)
+              ? "3.2.7 - Windows Server Configuration.pdf"
+              : "Windows Sistem Yönetimi ve Siber Güvenlik.pdf";
+      return mkGuide(
         konu,
-        [thm("windowsprivesc20", "TryHackMe — Windows PrivEsc (admin basics)"), thm("windowseventlogs", "TryHackMe — Windows Event Logs"), oakResource(konu)],
-        ["Run 5 PowerShell cmdlets for enumeration", "Check Services and Scheduled Tasks", "Review firewall inbound rule"],
-        standardStudySteps(konu, 25),
-      ),
-  },
-  {
-    // Word-bound short tokens — bare "du"/"process"/"tar" falsely steal IT Fund titles (e.g. Introdu**du**ction).
-    test: /linux.*command|\bbash\b|\bchmod\b|\bchown\b|\bsystemctl\b|\/etc\/passwd|\bapt\b|\bdpkg\b|filesystem hierarchy|\bprocess(?:es)?\b|\bdf\b|\bdu\b|\btar\b|\bgzip\b|remote.*ssh/i,
-    build: ({ konu }) =>
-      mkGuide(
-        konu,
-        [thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals Part 1"), thm("linuxfundamentalspart2", "TryHackMe — Linux Fundamentals Part 2"), doc("https://man7.org/linux/man-pages/", "Linux man pages"), oakResource(konu)],
-        ["Complete commands in live Linux VM", "Fix permissions on misconfigured file", "Check service status and /var/log entry"],
         [
-          { action: "Read Oak Linux section for this topic", durationMin: 15, logHint: "5 commands to memorize" },
-          { action: "Practice in VM; capture terminal snippet", durationMin: 20, logHint: "Command + output" },
-          { action: "THM Linux fundamentals task block", durationMin: 25, logHint: "Tasks completed" },
-          { action: "Log with evidence screenshot path", durationMin: 5, logHint: "Screenshot filename" },
+          oakNotes(pdf, "Server Management"),
+          oakNotes("3.2.2 - Windows Administrative Tools.pdf", "Server Management"),
+          oakNotes("Windows Sistem Yönetimi ve Siber Güvenlik.pdf", "Server Management"),
+          thm("windowsprivesc20", "TryHackMe — Windows PrivEsc (optional later)"),
         ],
-      ),
+        [
+          "Oak Windows PDF first — understand the admin surface before any priv-esc room",
+          "One hands-on check in lab VM (cmdlet, service, share, or firewall rule)",
+          "Dual lens: attacker persistence/abuse path vs Event ID or hardening control",
+        ],
+        foundationTourSteps(
+          pdf.replace(/\.pdf$/i, ""),
+          "what the tool changes on the host",
+          "attacker: persistence or lateral step / defender: what to monitor or lock down",
+        ),
+      );
+    },
   },
   {
     test: /siem architecture|splunk|spl query|wazuh|sysmon|soc alert|alert triage|incident investigation|mini soc|project 4/i,
@@ -934,27 +1064,168 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /edr|sophos|tamper|quarantine|live discover|threat graph|endpoint isolation|fim|dlp|bitlocker|antivirus|sandbox/i,
-    build: ({ konu }) =>
-      mkGuide(
-        konu,
-        [SOC_L1, doc("https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/", "Microsoft Defender for Endpoint"), oakResource(konu)],
-        ["Compare signature vs behavioral detection", "Walk through EDR alert triage steps", "Note isolation/quarantine lifecycle"],
-        standardStudySteps(konu, 30),
-      ),
-  },
-  {
     test: /soc analyst|soc workflow|alert.*rca|false positive|true positive|3-2-1 backup|hardening|virustotal/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [SOC_L1, LETS_DEFEND, CYBER_DEF, doc("https://www.virustotal.com/", "VirusTotal"), oakResource(konu)],
-        ["Follow alert → enrich → decide → escalate workflow", "Look up sample hash on VirusTotal", "Draft 3-step SOC playbook bullets"],
         [
-          { action: "Review SOC L1 Alert Triage module on THM", durationMin: 20, logHint: "Key triage steps" },
-          { action: "Complete 2 LetsDefend alert scenarios", durationMin: 30, logHint: "Alert titles + decisions" },
-          { action: "Document FP vs TP criteria for one alert type", durationMin: 15, logHint: "3 criteria bullets" },
+          oakNotes("Advanced Endpoint Detection and Response Management.pdf", "EDR"),
+          oakNotes("Zararlı Yazılımlar (Malware) ve Modern Siber Güvenlik Stratejileri.pdf", "EDR"),
+          doc("https://www.virustotal.com/", "VirusTotal"),
+          SOC_L1,
+          LETS_DEFEND,
         ],
+        [
+          "Oak EDR / malware notes first for workflow vocabulary — not a long SOC L1 binge",
+          "Walk alert → enrich → decide → escalate in 4 bullets with one FP vs TP example",
+          "Dual lens: what the attacker hoped you would miss vs your close criteria",
+        ],
+        foundationTourSteps(
+          "Oak EDR analyst workflow notes",
+          "your triage steps out loud",
+          "attacker: blend into noise / defender: evidence bar for TP vs FP",
+        ),
+      ),
+  },
+  {
+    test: /edr|sophos|tamper|quarantine|live discover|threat graph|endpoint isolation|fim|dlp|bitlocker|antivirus|sandbox/i,
+    build: ({ konu }) => {
+      const pdf = /live discover|threat graph/i.test(konu)
+        ? "Live Discover.pdf"
+        : /polic/i.test(konu)
+          ? "EDR Sisteminde Politikalar.pdf"
+          : /agent|console|architecture|sophos/i.test(konu)
+            ? "Endpoint Detection and Response Management.pdf"
+            : /antivirus|signature|heuristic|edr vs|behavior/i.test(konu)
+              ? "1- Antivirus - EDR.pdf"
+              : /sandbox/i.test(konu)
+                ? "Advanced Endpoint Detection and Response Management.pdf"
+                : "Advanced Endpoint Detection and Response Management.pdf";
+      return mkGuide(
+        konu,
+        [
+          oakNotes(pdf, "EDR"),
+          oakNotes("1- Antivirus - EDR.pdf", "EDR"),
+          oakNotes("Endpoint Detection and Response Management.pdf", "EDR"),
+          oakNotes("Advanced Endpoint Detection and Response Management.pdf", "EDR"),
+          oakNotes("EDR Sisteminde Politikalar.pdf", "EDR"),
+          oakNotes("Live Discover.pdf", "EDR"),
+          doc("https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/", "Microsoft Defender for Endpoint (optional)"),
+          SOC_L1,
+        ],
+        [
+          `Oak EDR PDF first (${pdf}) — console/agent concepts before SOC L1 path grinding`,
+          "Compare signature vs behavioral detection in one sentence each",
+          "Dual lens: attacker evasion (tamper, fileless) vs isolation/quarantine lifecycle for defenders",
+        ],
+        foundationTourSteps(
+          pdf.replace(/\.pdf$/i, ""),
+          "EDR vs AV (or the specific control) while sketching agent ↔ console",
+          "attacker: evade or disable endpoint controls / defender: isolate + investigate",
+        ),
+      );
+    },
+  },
+  {
+    test: /firewall|fortigate|ids|ips|waf|vpn|ipsec|ngfw|implicit deny|deep inspection|owasp|host-based vs network-based/i,
+    build: ({ konu }) => {
+      const pdf = /ids|ips/i.test(konu)
+        ? "4.09 - IDS-IPS.pdf"
+        : /vpn|ipsec/i.test(konu)
+          ? "4.10 - VPN _ IPSec.pdf"
+          : /nat|vip|port forwarding/i.test(konu)
+            ? "Ağ Adres Çevirisi (NAT) ve Sanal IP (VIP) Yapılandırması.pdf"
+            : /fortigate policy|implicit deny|ngfw|app control|web filter|ssl.*inspection|deep inspection/i.test(konu)
+              ? "FortiGate Güvenlik Duvarı Politikaları ve NGFW Özellikleri.pdf"
+              : /waf|owasp/i.test(konu)
+                ? "Ağ Saldırısını Önleme Sistemleri.pdf"
+                : /fortigate.*interface|yönetimi/i.test(konu)
+                  ? "FortiGate Güvenlik Duvarı Arayüzü ve Yönetimi.pdf"
+                  : "4.08 - Firewall.pdf";
+      return mkGuide(
+        konu,
+        [
+          oakNotes(pdf, "Firewall"),
+          oakNotes("4.08 - Firewall.pdf", "Firewall"),
+          oakNotes("4.09 - IDS-IPS.pdf", "Firewall"),
+          oakNotes("Güvenlik Duvarı(Firewall) Nedir.pdf", "Firewall"),
+          oakNotes("FortiGate Güvenlik Duvarı Politikaları ve NGFW Özellikleri.pdf", "Firewall"),
+          oakNotes("Ağ Saldırısını Önleme Sistemleri.pdf", "Firewall"),
+          oakNotes("4.10 - VPN _ IPSec.pdf", "Firewall"),
+          doc("https://docs.fortinet.com/document/fortigate/7.4.0/administration-guide/954635/firewall-policy", "FortiGate — firewall policy"),
+          thm("firewalls", "TryHackMe — Firewalls (optional)"),
+        ],
+        [
+          `Oak Firewall PDF first (${pdf}) — policy ideas before a long firewall room`,
+          "Sketch allow vs implicit deny; IDS listen-only vs IPS block",
+          "Dual lens: attacker bypass/tunnel idea vs where logs/alerts appear for defenders",
+        ],
+        foundationTourSteps(
+          pdf.replace(/\.pdf$/i, ""),
+          "rule/order or IDS vs IPS in your own words",
+          "attacker: slip past or abuse allow rules / defender: which log proves the decision",
+        ),
+      );
+    },
+  },
+  {
+    test: /encrypt|hash|aes|rsa|sha|md5|digital signature|mac.*hmac|e2ee|password hash|bcrypt|argon|cyberchef|openssl|symmetric|asymmetric|diffie|pki|certificate|ocsp|crl|tls handshake/i,
+    build: ({ konu }) => {
+      const pdf = /mac|hmac/i.test(konu)
+        ? "4.2 - Cryptography-4.1.pdf"
+        : /password hash|salt|pepper|bcrypt|argon|cyberchef|openssl/i.test(konu)
+          ? "4.2 - Cryptography-4.2.pdf"
+          : /encoding|encrypt.*hash|hash.*encod/i.test(konu)
+            ? "4.2 - Cryptography-3.pdf"
+            : /symmetric|asymmetric|aes|des|rsa|ecc|diffie/i.test(konu)
+              ? "4.2 - Cryptography-2.pdf"
+              : "4.2 - Cryptography-1.pdf";
+      return mkGuide(
+        konu,
+        [
+          oakNotes(pdf, "Cryptography"),
+          oakNotes("4.2 - Cryptography-1.pdf", "Cryptography"),
+          oakNotes("4.2 - Cryptography-3.pdf", "Cryptography"),
+          oakNotes("Kriptografiye Giriş.pdf", "Cryptography"),
+          oakNotes("Siber Güvenlik ve Kriptografi.pdf", "Cryptography"),
+          oakNotes("Kriptografik Kavramların Uygulama Analizi.pdf", "Cryptography"),
+          tool("https://gchq.github.io/CyberChef/", "CyberChef"),
+          thm("encryptioncrypto", "TryHackMe — Encryption & Crypto (optional)"),
+        ],
+        [
+          `Oak Cryptography PDF first (${pdf}) — vocabulary before room autopilot`,
+          "Distinguish encryption vs hashing vs encoding with one CyberChef demo if useful",
+          "Dual lens: attacker cracking/misuse vs defender integrity/TLS/cert checks",
+        ],
+        foundationTourSteps(
+          pdf.replace(/\.pdf$/i, ""),
+          "which primitive solves C vs I (and when keys matter)",
+          "attacker: crack or downgrade / defender: verify hash, cert, or HMAC",
+        ),
+      );
+    },
+  },
+  {
+    test: /pentest steps|recon → exploit|reconnaissance.*exploit.*report/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("4.05 - Cyber Kill Chain.pdf", "Intro To Security"),
+          oakNotes("4.02 - Cybersecurity Terminology.pdf", "Intro To Security"),
+          MITRE,
+          JR_PENTEST,
+        ],
+        [
+          "Oak Kill Chain / terminology first — map recon → exploit → report without starting Jr Pentest path",
+          "For one stage: attacker action + defender interrupt",
+          "Authorized labs only later; today is the mental model",
+        ],
+        foundationTourSteps(
+          "4.05 stages as pentest storyboard",
+          "stage order and one interrupt point",
+          "attacker: progress the engagement / defender: where you would detect it",
+        ),
       ),
   },
   {
@@ -1109,26 +1380,6 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /firewall|fortigate|ids|ips|waf|vpn|ipsec|ngfw|implicit deny|deep inspection|owasp/i,
-    build: ({ konu }) =>
-      mkGuide(
-        konu,
-        [doc("https://docs.fortinet.com/document/fortigate/7.4.0/administration-guide/954635/firewall-policy", "FortiGate — firewall policy"), thm("firewalls", "TryHackMe — Firewalls"), oakResource(konu)],
-        ["Sketch FortiGate policy order (top-down)", "Compare IDS vs IPS placement", "Explain implicit deny default"],
-        standardStudySteps(konu, 25),
-      ),
-  },
-  {
-    test: /encrypt|hash|aes|rsa|sha|md5|digital signature|mac.*hmac|e2ee|password hash|bcrypt|argon|cyberchef|openssl/i,
-    build: ({ konu }) =>
-      mkGuide(
-        konu,
-        [thm("encryptioncrypto", "TryHackMe — Encryption & Crypto"), doc("https://gchq.github.io/CyberChef/", "CyberChef"), oakResource(konu)],
-        ["Distinguish encryption vs hashing vs encoding", "Use CyberChef for one hash/decode demo", "Explain why MD5/SHA-1 are weak for passwords"],
-        standardStudySteps(konu),
-      ),
-  },
-  {
     test: /python|script|automation|log parse|socket/i,
     build: ({ konu }) =>
       mkGuide(
@@ -1163,14 +1414,23 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [thm("nmap", "TryHackMe — Nmap"), JR_PENTEST, HTB_START, doc("https://nmap.org/book/man.html", "Nmap reference manual"), oakResource(konu)],
-        ["Run safe scan on lab target only (-sV -sC)", "Interpret open ports and service versions", "List 3 detections a SOC could build from scan traffic"],
         [
-          { action: "Read Oak / THM Nmap theory (port states, scan types)", durationMin: 15, logHint: "3 scan types" },
-          { action: "Complete THM Nmap room tasks in lab VPN", durationMin: 35, logHint: "Room progress %" },
-          { action: "Document one command chain and expected defender log", durationMin: 15, logHint: "Command + log source" },
-          { action: "Map findings to MITRE T1046 (Network Service Discovery)", durationMin: 10, logHint: "Technique ID" },
+          oakNotes("1- Network Security.pdf", "Network Scanning (Nmap)"),
+          oakNotes("Ağ Taraması ve Nmap ile Aktif Keşif.pdf", "Network Scanning (Nmap)"),
+          doc("https://nmap.org/book/man.html", "Nmap reference manual"),
+          thm("nmap", "TryHackMe — Nmap (optional lab)"),
+          JR_PENTEST,
         ],
+        [
+          "Oak Network Scanning notes first — host discovery / port states before a full Nmap room",
+          "Run one safe lab-only scan if energy remains (-sn or -sV on authorized target)",
+          "Dual lens: what the scan reveals to an attacker vs what IDS/SIEM sees",
+        ],
+        foundationTourSteps(
+          "Oak Nmap / network scanning notes",
+          "scan purpose and one safe command idea",
+          "attacker: map attack surface / defender: scan noise and alerts",
+        ),
       ),
   },
   {
@@ -1179,25 +1439,23 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       mkGuide(
         konu,
         [
-          thm("vulnversity", "TryHackMe — Vulnversity"),
+          oakNotes("Vulnerability Management.pdf", "Vulnerability Scanning & Management (Nessus)"),
+          oakNotes("Vulnerability Scanning.pdf", "Vulnerability Scanning & Management (Nessus)"),
+          oakNotes("Nmap-Nessus-Cheat-Sheet.pdf", "Vulnerability Scanning & Management (Nessus)"),
           doc("https://docs.tenable.com/nessus/Content/GettingStarted.htm", "Nessus — getting started"),
           doc("https://www.first.org/cvss/", "FIRST — CVSS overview"),
-          JR_PENTEST,
-          oakResource(konu),
+          thm("vulnversity", "TryHackMe — Vulnversity (optional)"),
         ],
         [
-          "Separate vulnerability scanning from exploitation / pentest",
-          "Prioritize findings by CVSS, exploitability, and asset criticality",
-          "Draft a remediation ticket a SOC/IT team could act on",
-          "Note how mass scanning appears in network/EDR telemetry (defender lens)",
+          "Oak Vulnerability Management PDFs first — lifecycle before Vulnversity grinding",
+          "Separate scanning from exploitation; prioritize by CVSS + asset criticality",
+          "Dual lens: mass scan as attacker recon vs defender detection of scanner traffic",
         ],
-        [
-          { action: "Oak notes: Vulnerability Management lifecycle (discover → prioritize → remediate → verify)", durationMin: 20, logHint: "4 lifecycle stages" },
-          { action: "Oak notes: Vulnerability Scanning — scan types, auth vs unauth, false positives", durationMin: 20, logHint: "2 scan types" },
-          { action: "Review Nessus-style or THM Vulnversity output; pick top 3 findings", durationMin: 25, logHint: "Top 3 CVEs / plugins" },
-          { action: "Write defender detection idea for aggressive vulnerability scanning", durationMin: 15, logHint: "1 detection bullet" },
-          { action: "Optional: Nmap–Nessus cheat-sheet refresh for safe lab-only commands", durationMin: 10, logHint: "2 commands" },
-        ],
+        foundationTourSteps(
+          "Oak Vulnerability Management lifecycle",
+          "discover → prioritize → remediate → verify",
+          "attacker: find weak services / defender: ticket + scan telemetry",
+        ),
       ),
   },
   {
@@ -1289,16 +1547,42 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
   linux: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals"), doc("https://man7.org/linux/man-pages/", "Linux man pages"), oakResource(konu)],
-      ["Practice commands in live VM without copy-paste", "Check /var/log for relevant entries", "Dual lens: attacker command vs defender log line"],
-      standardStudySteps(konu, 25),
+      [
+        oakNotes("3.01 - Introduction to Linux.pdf", "Server Management"),
+        oakNotes("Linux Giriş.pdf", "Server Management"),
+        doc("https://man7.org/linux/man-pages/", "Linux man pages"),
+        thm("linuxfundamentalspart1", "TryHackMe — Linux Fundamentals Part 1 (optional)"),
+      ],
+      [
+        "Oak Server Management Linux PDF first — skip full-room autopilot",
+        "Practice a few commands in an authorized VM only after explain-back",
+        "Dual lens: attacker command vs defender log line",
+      ],
+      foundationTourSteps(
+        "Oak Linux PDF for this title",
+        "core commands in your own words while doing them",
+        "attacker misuse / defender log or permission check",
+      ),
     ),
   win: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("windowseventlogs", "TryHackMe — Windows Event Logs"), thm("attacktivedirectory", "TryHackMe — Attacktive Directory"), oakResource(konu)],
-      ["Use PowerShell or GUI for admin task", "Identify relevant Event ID", "Map attacker action to the Event ID defenders collect"],
-      standardStudySteps(konu, 25),
+      [
+        oakNotes("3.2.1 - Introduction to Windows Servers.pdf", "Server Management"),
+        oakNotes("3.2.2 - Windows Administrative Tools.pdf", "Server Management"),
+        oakNotes("Windows Sistem Yönetimi ve Siber Güvenlik.pdf", "Server Management"),
+        thm("windowseventlogs", "TryHackMe — Windows Event Logs (optional)"),
+      ],
+      [
+        "Oak Windows Server PDF first — admin tools before priv-esc rooms",
+        "One GUI or PowerShell check in lab if available",
+        "Dual lens: attacker abuse of the feature vs Event ID defenders collect",
+      ],
+      foundationTourSteps(
+        "Oak Windows Server PDF for this title",
+        "what the tool or role does",
+        "attacker path / defender signal",
+      ),
     ),
   secfund: ({ konu }) =>
     mkGuide(
@@ -1322,25 +1606,78 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
   crypto: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("encryptioncrypto", "TryHackMe — Encryption & Crypto"), doc("https://gchq.github.io/CyberChef/", "CyberChef"), oakResource(konu)],
-      ["Distinguish encrypt vs hash vs encode", "Use CyberChef for one demo", "Note TLS/cert relevance for SOC"],
-      standardStudySteps(konu),
+      [
+        oakNotes("4.2 - Cryptography-1.pdf", "Cryptography"),
+        oakNotes("4.2 - Cryptography-3.pdf", "Cryptography"),
+        oakNotes("Kriptografiye Giriş.pdf", "Cryptography"),
+        tool("https://gchq.github.io/CyberChef/", "CyberChef"),
+        thm("encryptioncrypto", "TryHackMe — Encryption & Crypto (optional)"),
+      ],
+      [
+        "Oak Cryptography PDF first — vocabulary before room grinding",
+        "Distinguish encrypt vs hash vs encode with one demo",
+        "Dual lens: attacker misuse vs defender integrity/TLS checks",
+      ],
+      foundationTourSteps(
+        "Oak Cryptography PDF for this title",
+        "which primitive solves which problem",
+        "attacker crack/downgrade / defender verify",
+      ),
     ),
   netsec: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("firewalls", "TryHackMe — Firewalls"), doc("https://docs.fortinet.com/", "FortiGate documentation"), oakResource(konu)],
-      ["Sketch policy or rule order", "Compare host vs network control", "Relate to alert types in NGFW"],
-      standardStudySteps(konu, 25),
+      [
+        oakNotes("4.08 - Firewall.pdf", "Firewall"),
+        oakNotes("4.09 - IDS-IPS.pdf", "Firewall"),
+        oakNotes("Güvenlik Duvarı(Firewall) Nedir.pdf", "Firewall"),
+        doc("https://docs.fortinet.com/", "FortiGate documentation"),
+        thm("firewalls", "TryHackMe — Firewalls (optional)"),
+      ],
+      [
+        "Oak Firewall PDF first — policy and IDS/IPS ideas",
+        "Sketch host vs network control or allow vs implicit deny",
+        "Dual lens: bypass idea vs which log proves the firewall decision",
+      ],
+      foundationTourSteps(
+        "Oak Firewall / netsec PDF for this title",
+        "control purpose in your own words",
+        "attacker bypass / defender log or block",
+      ),
     ),
-  def: ({ konu }) => integratedSecurityGuide(konu, 30),
+  def: ({ konu }) =>
+    mkGuide(
+      konu,
+      [
+        oakNotes("1- Antivirus - EDR.pdf", "EDR"),
+        oakNotes("Endpoint Detection and Response Management.pdf", "EDR"),
+        oakNotes("Advanced Endpoint Detection and Response Management.pdf", "EDR"),
+        SOC_L1,
+        LETS_DEFEND,
+      ],
+      [
+        "Oak EDR PDF first — endpoint detection before long SOC path binge",
+        "Compare AV signature vs EDR behavior in one sentence each",
+        "Dual lens: evasion vs isolation/triage",
+      ],
+      foundationTourSteps(
+        "Oak EDR PDF for this title",
+        "EDR role on the endpoint",
+        "attacker evade / defender isolate and investigate",
+      ),
+    ),
   off: ({ konu }) => integratedSecurityGuide(konu, 30),
   cloud: ({ konu }) =>
     mkGuide(
       konu,
-      [thm("introductorydocker", "TryHackMe — Intro to Docker"), oakResource(konu)],
-      ["Compare VM vs container", "Note cloud log sources", "Sketch simple cloud architecture"],
-      standardStudySteps(konu),
+      [
+        oakNotes("1.10 - Cloud Computing.pdf"),
+        oakNotes("1.9 - Virtualization.pdf"),
+        thm("introductorydocker", "TryHackMe — Intro to Docker (optional)"),
+        oakResource(konu),
+      ],
+      ["Prefer Oak PDF concepts before lab commands", "Compare VM vs container or cloud service model as applicable", "Note cloud log sources for SOC"],
+      foundationTourSteps("Oak cloud/virt PDF for this title", "the core model in your own words", "one SOC-relevant visibility gap"),
     ),
   port: ({ konu, kind }) => {
     const proj = PORTFOLIO_PROJECTS[0];

@@ -34,9 +34,9 @@ export function MentorBriefingPanel({
         <div>
           <h3 className="mentor-brief__title">Send today to your mentor</h3>
           <p className="mentor-brief__lead">
-            Paste into your study chat. The text sets Teacher / mentor mode: light level-check → teach &amp; Study
-            steps → practice → optional check — guided study, not examiner-first. After the session, come back to{" "}
-            <strong>Record work</strong>.
+            Paste into your study chat. Teacher / mentor mode: light level-check → Oak PDF / Study steps → do +
+            explain-back → dual lens → optional check. One solid tour beats clearing every card. After the session,
+            come back to <strong>Record work</strong>.
           </p>
         </div>
         <button

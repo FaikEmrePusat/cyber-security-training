@@ -242,6 +242,72 @@ for (const task of scheduleTasks) {
   if (!cia.resources.some((r) => /4\.01 - CIA Triad/i.test(r.label))) {
     fail("CIA triad should prefer Oak 4.01 PDF");
   }
+
+  const linuxKernel = buildStudyGuide({
+    kind: "temel",
+    baslik: "Linux kernel / distro / shell (bash)",
+    alan: "linux",
+  });
+  if (!linuxKernel.resources.some((r) => /3\.01 - Introduction to Linux|Oak Study Notes/i.test(r.label))) {
+    fail("Linux kernel topic should prefer Oak Server Management PDF");
+  }
+  if (linuxKernel.resources[0] && /TryHackMe/i.test(linuxKernel.resources[0].label) && !/optional/i.test(linuxKernel.resources[0].label)) {
+    fail("Linux kernel must not lead with non-optional THM");
+  }
+
+  const aptThreat = buildStudyGuide({
+    kind: "temel",
+    baslik: "APT (Advanced Persistent Threat)",
+    alan: "secfund",
+  });
+  if (aptThreat.resources.some((r) => /Linux Fundamentals/i.test(r.label))) {
+    fail("APT threat title must not match Linux apt-get guide");
+  }
+  if (!aptThreat.resources.some((r) => /4\.06 - Advanced Persistent Threat/i.test(r.label))) {
+    fail("APT threat should prefer Oak 4.06 PDF");
+  }
+
+  const winProc = buildStudyGuide({
+    kind: "temel",
+    baslik: "Windows processes / Task Manager / PID",
+    alan: "win",
+  });
+  if (winProc.resources.some((r) => /Linux Fundamentals/i.test(r.label))) {
+    fail("Windows processes must not resolve to Linux Fundamentals");
+  }
+
+  const cryptoEnc = buildStudyGuide({
+    kind: "temel",
+    baslik: "Encryption vs Hashing vs Encoding",
+    alan: "crypto",
+  });
+  if (!cryptoEnc.resources.some((r) => /Cryptography/i.test(r.label) && /Oak Study Notes/i.test(r.label))) {
+    fail("Crypto encode/hash topic should prefer Oak Cryptography PDF");
+  }
+  if (cryptoEnc.resources[0] && /TryHackMe/i.test(cryptoEnc.resources[0].label) && !/optional/i.test(cryptoEnc.resources[0].label)) {
+    fail("Crypto encode/hash must not lead with non-optional THM");
+  }
+
+  const fwTypes = buildStudyGuide({
+    kind: "temel",
+    baslik: "Firewall types (packet filter / proxy / WAF / NGFW)",
+    alan: "netsec",
+  });
+  if (!fwTypes.resources.some((r) => /Oak Study Notes/i.test(r.label) && /Firewall|4\.08|IDS-IPS|FortiGate|Güvenlik Duvarı/i.test(r.label))) {
+    fail("Firewall types should prefer Oak Firewall PDF");
+  }
+
+  const edrAv = buildStudyGuide({
+    kind: "temel",
+    baslik: "EDR vs classic AV (behavior analysis)",
+    alan: "def",
+  });
+  if (!edrAv.resources.some((r) => /Antivirus - EDR|Oak Study Notes.*EDR/i.test(r.label))) {
+    fail("EDR vs AV should prefer Oak EDR PDF");
+  }
+  if (edrAv.resources[0] && /TryHackMe/i.test(edrAv.resources[0].label) && !/optional/i.test(edrAv.resources[0].label)) {
+    fail("EDR vs AV must not lead with non-optional THM path");
+  }
 }
 
 console.log(`\nTopics checked: ${ALL_TOPICS.length} × ${KINDS.length} kinds = ${ALL_TOPICS.length * KINDS.length} guides`);

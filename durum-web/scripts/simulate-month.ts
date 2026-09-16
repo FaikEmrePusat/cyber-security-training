@@ -3,6 +3,9 @@
  * Simulates 5–6 study days/week, reinforcing one spine topic per day,
  * optional light Nessus lane, optional skip of FSRS reviews.
  *
+ * Also samples Server / Crypto / Firewall / EDR guides (PASS_SOLID must not
+ * ignore modules beyond the first ~22 days).
+ *
  * Run: npx vite-node scripts/simulate-month.ts
  */
 import { OAK_COVERED, OAK_COURSE_FOCUS, topicKey } from "../src/data/oakCurriculum";
@@ -17,6 +20,26 @@ for (const t of OAK_COVERED) statuses.set(t.id, "ogreniyorum");
 function openSpine() {
   const open = OAK_COVERED.filter((t) => statuses.get(t.id) !== "pekiştirildi");
   return sortByOakSpineOrder(open);
+}
+
+function guideFlags(topic: { konu: string; alan: string }): string[] {
+  const guide = buildStudyGuide({ kind: "temel", baslik: topic.konu, alan: topic.alan });
+  const oakRes = guide.resources.find((r) => /Oak Study Notes/i.test(r.label));
+  const thmFirst =
+    guide.resources[0] && /TryHackMe/i.test(guide.resources[0].label) && !/optional/i.test(guide.resources[0].label);
+  const dual =
+    guide.steps.some((s) => /Dual lens|attacker|attack\//i.test(s.action)) ||
+    guide.actions.some((a) => /Dual lens|attacker/i.test(a));
+  const flags: string[] = [];
+  if (thmFirst) flags.push("THM-first resource");
+  if (!oakRes && topic.alan !== "lang") flags.push("no Oak Study Notes PDF resource");
+  if (!dual) flags.push("weak dual-lens steps");
+  if (/Complete THM|full room|Linux Fundamentals(?! Part 1 \(optional)/i.test(guide.steps.map((s) => s.action).join(" "))) {
+    flags.push("autopilot room pressure in steps");
+  }
+  const stepMins = guide.steps.reduce((n, s) => n + (s.durationMin ?? 0), 0);
+  if (stepMins > 55) flags.push(`tour steps sum ${stepMins}m (>45m budget)`);
+  return flags;
 }
 
 type DayRow = {
@@ -41,20 +64,9 @@ for (let d = 1; d <= STUDY_DAYS; d++) {
 
   const guide = buildStudyGuide({ kind: "temel", baslik: topic.konu, alan: topic.alan });
   const oakRes = guide.resources.find((r) => /Oak Study Notes/i.test(r.label));
-  const thmFirst = guide.resources[0] && /TryHackMe/i.test(guide.resources[0].label) && !/optional/i.test(guide.resources[0].label);
-  const dual =
-    guide.steps.some((s) => /Dual lens|attacker|attack\/|technique/i.test(s.action)) ||
-    guide.actions.some((a) => /Dual lens|attacker/i.test(a));
-
-  const flags: string[] = [];
-  if (thmFirst) flags.push("THM-first resource");
-  if (!oakRes && topic.alan !== "lang") flags.push("no Oak Study Notes PDF resource");
-  if (!dual) flags.push("weak dual-lens steps");
-  if (/Complete THM|full room|Linux Fundamentals(?! Part 1 \(optional)/i.test(guide.steps.map((s) => s.action).join(" "))) {
-    flags.push("autopilot room pressure in steps");
-  }
-  const stepMins = guide.steps.reduce((n, s) => n + (s.durationMin ?? 0), 0);
-  if (stepMins > 55) flags.push(`tour steps sum ${stepMins}m (>45m budget)`);
+  const flags = guideFlags(topic);
+  const thmFirst = flags.includes("THM-first resource");
+  const dual = !flags.includes("weak dual-lens steps");
 
   const classTopic = OAK_COVERED.find((t) => t.konu === OAK_COURSE_FOCUS);
   const classLane =
@@ -68,14 +80,13 @@ for (let d = 1; d <= STUDY_DAYS; d++) {
     spine: topic.konu,
     module: spineModuleLabel(topic),
     primaryPdf: oakRes?.label.replace(/^Oak Study Notes — /, "") ?? null,
-    thmPrimary: !!thmFirst,
+    thmPrimary: thmFirst,
     dualLens: dual,
     classLane,
     flags,
   });
   flagsAll.push(...flags.map((f) => `D${d}: ${f}`));
 
-  // Learner completes one understanding tour → reinforce spine topic
   statuses.set(topic.id, "pekiştirildi");
 }
 
@@ -105,17 +116,38 @@ console.log(`After ${rows.length} tours: ${rows.length} reinforced, ${remaining.
 console.log(`Next modules in queue: ${nextModules.join(" → ") || "(none)"}`);
 console.log(`Class lane throughout: ${OAK_COURSE_FOCUS} stays light/parallel (not blocking spine)\n`);
 
+// Sample later modules the 22-day window never reaches (false PASS_SOLID guard)
+const laterMods = new Set(["Server Management", "Cryptography", "Firewall", "EDR", "Intro To Security"]);
+const laterTopics = sortByOakSpineOrder(OAK_COVERED).filter((t) => laterMods.has(spineModuleLabel(t)));
+const laterFlags: string[] = [];
+let laterOk = 0;
+for (const t of laterTopics) {
+  const f = guideFlags(t);
+  if (f.length) laterFlags.push(`${spineModuleLabel(t)} · ${t.konu}: ${f.join("; ")}`);
+  else laterOk++;
+}
+
+console.log("=== Later-module sample (beyond month-1 window) ===");
+console.log(`Clean guides: ${laterOk}/${laterTopics.length}`);
+if (laterFlags.length) {
+  for (const f of laterFlags.slice(0, 25)) console.log(`  - ${f}`);
+  if (laterFlags.length > 25) console.log(`  … +${laterFlags.length - 25} more`);
+}
+
 const thmHits = rows.filter((r) => r.thmPrimary).length;
 const dualMiss = rows.filter((r) => !r.dualLens).length;
-const flagHits = flagsAll.length;
+const flagHits = flagsAll.length + laterFlags.length;
 
-console.log("=== Verdict inputs ===");
-console.log(`THM-first primary days: ${thmHits}/${rows.length}`);
-console.log(`Missing dual-lens days: ${dualMiss}/${rows.length}`);
-console.log(`Flag events: ${flagHits}`);
+console.log("\n=== Verdict inputs ===");
+console.log(`THM-first primary days (month window): ${thmHits}/${rows.length}`);
+console.log(`Missing dual-lens days (month window): ${dualMiss}/${rows.length}`);
+console.log(`Flag events (month + later modules): ${flagHits}`);
 if (flagHits) {
-  for (const f of flagsAll.slice(0, 20)) console.log(`  - ${f}`);
+  for (const f of [...flagsAll, ...laterFlags.map((x) => `LATER: ${x}`)].slice(0, 30)) console.log(`  - ${f}`);
 }
 
 const ok = thmHits === 0 && dualMiss === 0 && flagHits === 0;
-console.log(`\nVERDICT_CODE: ${ok ? "PASS_SOLID" : flagHits <= 3 && thmHits === 0 ? "PASS_WITH_NOTES" : "NEEDS_FIX"}`);
+console.log(`\nVERDICT_CODE: ${ok ? "PASS_SOLID" : flagHits <= 5 && thmHits === 0 ? "PASS_WITH_NOTES" : "NEEDS_FIX"}`);
+console.log(
+  "NOTE: PASS_SOLID = workable baseline for PDF-first + dual-lens spine (month window + later modules). Not a claim that deep fit work is finished forever.",
+);

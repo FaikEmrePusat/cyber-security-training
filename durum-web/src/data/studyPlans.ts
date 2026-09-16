@@ -69,9 +69,12 @@ export function buildStudyGuide(task: StudyGuideInput): StudyGuide {
     roiId: task.roiId,
   };
 
-  const roiText = `${task.baslik} ${task.detay ?? ""} ${task.roiId ?? ""}`;
-  const fromRoi = matchGuide(ROI_GUIDES, roiText, ctx);
-  if (fromRoi) return fromRoi;
+  // Portfolio / ROI titles only — never steal foundation spine topic cards.
+  if (task.kind === "lab" || task.roiId) {
+    const roiText = `${task.baslik} ${task.detay ?? ""} ${task.roiId ?? ""}`;
+    const fromRoi = matchGuide(ROI_GUIDES, roiText, ctx);
+    if (fromRoi) return fromRoi;
+  }
 
   const fromTopic = matchGuide(TOPIC_GUIDES, konu, ctx);
   if (fromTopic) return fromTopic;

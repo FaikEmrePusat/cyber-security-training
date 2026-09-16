@@ -79,6 +79,50 @@ const NETWORK_SPINE_TITLES: string[] = [
   "Port/connection analysis with netstat",
 ];
 
+/**
+ * Server Management pedagogical order (Oak Linux → Windows Server → AD/GPO).
+ * Catalog file stays domain-grouped; this list is within-module spine order only.
+ */
+const SERVER_SPINE_TITLES: string[] = [
+  "Linux kernel / distro / shell (bash)",
+  "Linux basic commands (navigation / files)",
+  "/etc/passwd and /etc/shadow",
+  "User/group management (adduser, usermod, deluser)",
+  "sudo / su / whoami",
+  "File permissions (rwx) and chmod",
+  "chown and least privilege",
+  "Linux filesystem hierarchy (/bin /etc /var /home…)",
+  "ifconfig / ip addr",
+  "Linux processes (ps, top, pstree, kill)",
+  "Linux service management (systemctl / service)",
+  "Disk/memory monitoring (df, du, /proc)",
+  "tar / gzip archiving",
+  "APT / DPKG package management",
+  "Remote Linux access via SSH",
+  "Windows Server / Client–Server basics",
+  "Server Manager (roles / features)",
+  "Windows processes / Task Manager / PID",
+  "Windows Services (services.msc, startup types)",
+  "Computer Management / local users and groups",
+  "net user / net localgroup",
+  "RDP configuration and security",
+  "Windows DHCP / DNS / IIS roles",
+  "IIS security (directory browsing, auth)",
+  "PowerShell cmdlet basics",
+  "SMB shares and NTFS permissions",
+  "Windows Defender Firewall (inbound/outbound)",
+  "Registry (HKLM/HKCU, Run keys)",
+  "Task Scheduler (persistence awareness)",
+  "Disk Management / NTFS vs FAT32",
+  "Active Directory: Domain / DC / OU",
+  "AD user and group management",
+  "LDAP and Kerberos (AD context)",
+  "NTDS.dit / SAM / NTLM awareness",
+  "GPO basics (Default Domain Policy)",
+  "GPO password and account lockout policy",
+  "gpupdate /force",
+];
+
 /** Intro To Security module atoms — Oak 4.01 → 4.07 order. */
 const INTRO_SEC_TITLES: string[] = [
   "Intro To Security",
@@ -104,6 +148,7 @@ const INTRO_SEC_TITLES: string[] = [
 const IT_FUND_SET = new Set(IT_FUND_TITLES.map((t) => t.toLowerCase()));
 const IT_FUND_ORDER = new Map(IT_FUND_TITLES.map((t, i) => [t.toLowerCase(), i]));
 const NETWORK_ORDER = new Map(NETWORK_SPINE_TITLES.map((t, i) => [t.toLowerCase(), i]));
+const SERVER_ORDER = new Map(SERVER_SPINE_TITLES.map((t, i) => [t.toLowerCase(), i]));
 const INTRO_SEC_ORDER = new Map(INTRO_SEC_TITLES.map((t, i) => [t.toLowerCase(), i]));
 
 /** Fallback: stable catalog line order from tekrar-ekle (does not change topic IDs). */
@@ -140,6 +185,8 @@ function withinModuleOrder(t: CurriculumTopic): number {
   if (it != null) return it;
   const net = NETWORK_ORDER.get(key);
   if (net != null) return net;
+  const server = SERVER_ORDER.get(key);
+  if (server != null) return server;
   const intro = INTRO_SEC_ORDER.get(key);
   if (intro != null) return intro;
   if (t.alan === "off") {
