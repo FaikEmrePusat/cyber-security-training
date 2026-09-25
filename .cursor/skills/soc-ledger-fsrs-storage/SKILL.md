@@ -1,12 +1,12 @@
 ---
 name: soc-ledger-fsrs-storage
 description: >-
-  Preserve SOC Ledger FSRS retrieval, gate, seed, and localStorage invariants.
+  Preserve Cyber Ledger FSRS retrieval, gate, seed, and localStorage invariants.
   Use when changing MODEL.tekrar, store load/save, seed, curriculum storage keys,
   Gate C evidence promote, carry limits, or migrateState / backup import.
 ---
 
-# SOC Ledger — FSRS, gates & localStorage
+# Cyber Ledger — FSRS, gates & localStorage
 
 ## Keys (do not rename lightly)
 
@@ -16,8 +16,8 @@ description: >-
 | `durum-curriculum-v1` | `CURRICULUM_STORAGE_KEY` in `src/data/oakCurriculum.ts` | Topic statuses |
 | Publish token | `publicProgress.ts` | Browser-only GitHub PAT |
 
-Internal package/storage names may stay `durum-*`; UI brand is **SOC Ledger** (subtitle: Germany cyber multi-role foundation tracker).
-
+Internal package/storage names may stay `durum-*`; UI brand is **Cyber Ledger** (subtitle: Germany cyber multi-role foundation tracker).
+Skill folder name `soc-ledger-fsrs-storage` is kept for path stability.
 ## Load / seed safety
 
 - Load path: `normalizeLoadedState` / `loadState` in `src/model/migrateState.ts` + `src/store.tsx`.

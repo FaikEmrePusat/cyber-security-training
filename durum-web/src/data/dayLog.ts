@@ -1,5 +1,6 @@
 import type { BugunGorev } from "../useRollingSchedule";
 import type { SessionFormData } from "../model";
+import { APP_NAME } from "../model/brand";
 
 export const LOG_TAGS = [
   { id: "linux", label: "Linux" },
@@ -127,7 +128,7 @@ export function dayLogChatPrompt(template: DayLogJson): string {
   const tagList = LOG_TAGS.map((t) => t.id).join(", ");
   const sourceList = LOG_SOURCES.map((s) => s.id).join(", ");
   const modeList = LOG_MODES.map((m) => m.id).join(", ");
-  return `Fill this SOC Ledger day log as JSON only (no markdown). Keep the same "topic" strings. Delete entries we did not do. Use only these tags: ${tagList}. source must be one of: ${sourceList}. mode must be one of: ${modeList}. quality is 1–10. minutes is a number. summary = what we actually did. attacker/defender = 1–2 sentences each (empty for German). evidence = URL or empty.
+  return `Fill this ${APP_NAME} day log as JSON only (no markdown). Keep the same "topic" strings. Delete entries we did not do. Use only these tags: ${tagList}. source must be one of: ${sourceList}. mode must be one of: ${modeList}. quality is 1–10. minutes is a number. summary = what we actually did. attacker/defender = 1–2 sentences each (empty for German). evidence = URL or empty.
 
 ${JSON.stringify(template, null, 2)}`;
 }

@@ -1,10 +1,10 @@
 # Durum-Web — Technical Documentation
 
-**Version:** Model 2.1 · Application `durum-web`  
+**Version:** Model 2.1 · Application `durum-web` (display brand: **Cyber Ledger**)  
 **Normative reference:** [`Ilerleme-Durum-Modeli.md`](../Ilerleme-Durum-Modeli.md)  
 **Audit & Test Report:** [`SYSTEM-AUDIT-AND-TEST-REPORT.md`](./SYSTEM-AUDIT-AND-TEST-REPORT.md)  
-**Last updated:** 2026-08-30  
-**Single source of truth (code):** `src/model/constants.ts` → `MODEL` block
+**Last updated:** 2026-09-25  
+**Single source of truth (code):** `src/model/constants.ts` → `MODEL` block · display name in `src/model/brand.ts`
 
 This document explains how the **durum-web** progress panel works, which formulas it uses, and where data lives. If the Canvas (`ilerleme-durum-dashboard.canvas.tsx`) diverges from the code, **the code wins**; this document must be kept in sync with the code.
 

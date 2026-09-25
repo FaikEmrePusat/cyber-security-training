@@ -19,6 +19,7 @@ import {
   streakDays,
 } from "../src/model/compute.ts";
 import { MODEL } from "../src/model/constants.ts";
+import { APP_NAME } from "../src/model/brand.ts";
 import { createSeedState } from "../src/model/seed.ts";
 import type { AppState } from "../src/model/types.ts";
 
@@ -99,9 +100,9 @@ function summarySvg(opts: {
     })
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="SOC Ledger summary R ${round1(opts.R)}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${APP_NAME} summary R ${round1(opts.R)}">
   <rect width="100%" height="100%" fill="#f7f9fa" rx="12"/>
-  <text x="24" y="32" fill="#14212b" font-size="16" font-weight="700">SOC Ledger · Model ${MODEL.surum}</text>
+  <text x="24" y="32" fill="#14212b" font-size="16" font-weight="700">${APP_NAME} · Model ${MODEL.surum}</text>
   <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8eef0" stroke-width="12"/>
   <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a6b5c" stroke-width="12" stroke-linecap="round"
     stroke-dasharray="${c}" stroke-dashoffset="${offset}" transform="rotate(-90 ${cx} ${cy})"/>

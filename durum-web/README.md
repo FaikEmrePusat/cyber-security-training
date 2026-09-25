@@ -1,6 +1,6 @@
-# SOC Ledger — app (`durum-web`)
+# Cyber Ledger — app (`durum-web`)
 
-Browser app for **SOC Ledger** (Model 2.1): Germany cyber multi-role foundation tracker — daily plan, competency state, gates, Germany path fields, FSRS review, and session log.
+Browser app for **Cyber Ledger** (Model 2.1): Germany cyber multi-role foundation tracker — daily plan, competency state, gates, Germany path fields, FSRS review, and session log.
 
 Product overview and live link: [repository README](../README.md)  
 Technical reference: [TECHNICAL-DOCUMENTATION.md](./TECHNICAL-DOCUMENTATION.md)

@@ -1,12 +1,12 @@
 ---
 name: soc-ledger-study-guides
 description: >-
-  Author and validate SOC Ledger study plans (TOPIC_GUIDES, ROI_GUIDES, ALAN_GUIDES).
+  Author and validate Cyber Ledger study plans (TOPIC_GUIDES, ROI_GUIDES, ALAN_GUIDES).
   Use when adding curriculum topic guides, fixing keyword false positives, editing
   studyPlanGuides.ts / studyPlans.ts, or when Today Study plan steps look wrong.
 ---
 
-# SOC Ledger — Study guides
+# Cyber Ledger — Study guides
 
 ## Resolution order
 

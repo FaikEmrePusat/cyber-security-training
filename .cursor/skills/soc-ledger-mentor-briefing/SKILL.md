@@ -1,13 +1,13 @@
 ---
 name: soc-ledger-mentor-briefing
 description: >-
-  QA and edit SOC Ledger mentor session briefings and English product voice.
+  QA and edit Cyber Ledger mentor session briefings and English product voice.
   Use when changing mentorBriefing.ts, MentorBriefingPanel, day-log mentor prompts,
   brand copy, Teacher-first protocol, Study-steps guidance, or English UI strings
   for Today → mentor → Record.
 ---
 
-# SOC Ledger — Mentor briefing & voice
+# Cyber Ledger — Mentor briefing & voice
 
 ## Product loop
 
@@ -35,7 +35,7 @@ Briefings **must**:
 4. Examiner / no-hints only after teaching, or when the learner asks for a check.
 5. After each micro-step: learner **explain-back** (2–3 sentences) before more teaching / dual-lens extras.
 6. No vendor AI names (`ChatGPT`, `Claude`, `Gemini`, `OpenAI`) in user-facing or briefing text.
-7. Product name **SOC Ledger** (`APP_NAME`), not generic “tracker” as the brand.
+7. Product name **Cyber Ledger** (`APP_NAME`), not generic “tracker” as the brand.
 8. Respect **foundation spine**: deep tour in **Oak module order** (IT Fundamentals → Network → Server → … via `oakSpineOrder.ts`); class/Nessus = light lane; one solid tour > clearing every Today card.
 9. Gap bridge: unknown concept → map to earlier spine topic + 2-min bridge or return to foundation.
 
@@ -62,10 +62,12 @@ Briefings **must**:
 
 | Constant | Role |
 |----------|------|
-| `APP_NAME` | **SOC Ledger** (keep) |
+| `APP_NAME` | **Cyber Ledger** |
 | `APP_SUBTITLE` | Multi-role Germany cyber foundation tracker |
 | `LEARNER_ROLE` | Multi-role foundation wording — not “Aspiring Junior SOC Analyst” destiny |
 | `STUDY_APPROACH_NOTE` | Dual lens across DE cyber roles |
+
+Skill folder name `soc-ledger-mentor-briefing` is kept for path stability; product brand is Cyber Ledger.
 
 ## Verify
 

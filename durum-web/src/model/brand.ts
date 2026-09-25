@@ -1,6 +1,6 @@
 /** Product display name — internal package/storage keys stay `durum-*` for compatibility. */
-export const APP_NAME = "SOC Ledger";
-/** Light subtitle: multi-role tracker (app name stays SOC Ledger). */
+export const APP_NAME = "Cyber Ledger";
+/** Light subtitle: multi-role Germany cyber foundation tracker. */
 export const APP_SUBTITLE = "Germany cyber multi-role foundation tracker";
 /** Public tracker: next topics for the learner, competency snapshot for others. */
 export const APP_TAGLINE = "Today’s topic here · study with your mentor · record what you did";

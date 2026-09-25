@@ -63,7 +63,7 @@ function assert(name: string, cond: boolean, detail = "") {
 }
 
 console.log("\n=== 1. Brand / UI product names ===");
-assert("APP_NAME is SOC Ledger", APP_NAME === "SOC Ledger");
+assert("APP_NAME is Cyber Ledger", APP_NAME === "Cyber Ledger");
 assert("APP_SUBTITLE clarifies multi-role foundation", /multi-role|Germany cyber/i.test(APP_SUBTITLE));
 assert("Learner name set", LEARNER_NAME.length > 0);
 assert(

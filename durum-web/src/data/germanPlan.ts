@@ -1,5 +1,5 @@
 ﻿/**
- * German B2 path — durable schedule rules for SOC Ledger language channel.
+ * German B2 path — durable schedule rules for Cyber Ledger language channel.
  * Source: 9-month CEFR/Goethe B2 plan + SLA/memory-science summary (translated to English).
  * German tasks remain language-only (not SOC theory).
  */

@@ -1,12 +1,12 @@
 ---
 name: soc-ledger-pages-publish
 description: >-
-  Ship SOC Ledger as a static Vite SPA on GitHub Pages and publish public progress.
+  Ship Cyber Ledger as a static Vite SPA on GitHub Pages and publish public progress.
   Use when changing vite base, deploy.yml, public/progress.json, PublishPanel,
   or GitHub Pages / static hosting setup.
 ---
 
-# SOC Ledger — GitHub Pages & publish
+# Cyber Ledger — GitHub Pages & publish
 
 ## Static app
 
