@@ -1,5 +1,5 @@
 import { APP_NAME, LEARNER_NAME, LEARNER_ROLE, STUDY_APPROACH_NOTE } from "../model/brand";
-import { stepLabel, type StudyGuide } from "./studyPlans";
+import { primaryOakPdf, stepLabel, type StudyGuide } from "./studyPlans";
 import type { BugunGorev, JourneySnapshot } from "../useRollingSchedule";
 
 export type MentorBriefingContext = {
@@ -15,8 +15,13 @@ export type MentorBriefingContext = {
 function formatGuide(guide: StudyGuide): string {
   const lines: string[] = [];
   if (guide.actions.length) {
-    lines.push("What you can do:");
+    lines.push("Goal (what to practice):");
     for (const a of guide.actions) lines.push(`  - ${a}`);
+  }
+  const pdf = primaryOakPdf(guide);
+  if (pdf) {
+    lines.push("Open this PDF first (PDF-first spine):");
+    lines.push(`  - ${pdf.label} (${pdf.type}): ${pdf.url}`);
   }
   if (guide.steps.length) {
     lines.push("Study steps:");
@@ -24,6 +29,10 @@ function formatGuide(guide: StudyGuide): string {
       lines.push(`  ${stepLabel(s)}`);
       if (s.logHint) lines.push(`     Log hint: ${s.logHint}`);
     }
+  }
+  if (guide.outcomes.length) {
+    lines.push("After this tour you should be able to (done-when):");
+    for (const o of guide.outcomes) lines.push(`  - ${o}`);
   }
   if (guide.resources.length) {
     lines.push("Resources:");
@@ -80,7 +89,7 @@ B — CONTEXT (what you need to know about me)
 C — STATE (where I am right now)
 ════════════════════════════════════
 - Follow the task list below in order (Task 1 first unless I say otherwise).
-- Within a task, treat Study steps / resources as the primary guided path. Adapt depth to the light level-check: if I am new or shaky, teach and walk me through those steps; if I already know the topic, skip ahead or deepen.
+- Within a task, treat Study steps / resources / done-when outcomes as the primary guided path. Adapt depth to the light level-check: if I am new or shaky, teach and walk me through those steps; if I already know the topic, skip ahead or deepen.
 - Journey / gate / readiness lines above (if present) describe current progress — use them for pacing, not as an excuse to skip today’s tasks.
 
 ════════════════════════════════════
@@ -121,23 +130,46 @@ For each technical task:
 12. German tasks: stay in language-practice mode (input + SRS + output + short grammar). No cybersecurity lecture during German blocks.
 
 ════════════════════════════════════
-F — OUTPUT FORMAT (default per teaching turn)
+F — FIXED SESSION SCRIPT (do not improvise past this)
+════════════════════════════════════
+Run every technical tour in this exact order. Do not invent a different lesson arc.
+
+1. Light level-check (1–2 easy questions or “what do you already know?”). STOP. Wait for my reply.
+2. Point me to Open this PDF first (Oak Study Notes in the task block). Do NOT dump definitions, glossaries, or term lists before I confirm I opened the PDF.
+3. One micro-step only from Study steps. STOP. Wait.
+4. Require my 2–3 sentence explain-back before any more teaching or dual-lens extras.
+5. Check progress against “After this tour you should be able to (done-when)” — ask which bullets I can already demonstrate.
+6. Only then: light dual lens (attack/technique + defender) in one short beat.
+7. When the tour is done (or time is up): remind me to return to ${APP_NAME} → Record work or Day log (JSON).
+
+ANTI-VARIANCE RULES (mandatory — same quality across any mentor model):
+- PDF-first: no term-dump / encyclopedia before the learner opens the Oak PDF.
+- One micro-step per turn; never clear the whole ~40–45 min tour in one message.
+- Explain-back required before the next teach block or dual-lens extras.
+- Multi-role Germany cyber foundation — not SOC-only destiny language.
+- THM / long rooms optional unless I ask; never “read the whole room” as the primary path.
+- Gap bridge on “BU NE?” / unknown concept: map to earlier spine topic + 2-minute bridge OR return to that foundation — do not pile jargon.
+- Stay inside this briefing’s Goal / PDF / Study steps / done-when outcomes.
+
+════════════════════════════════════
+G — OUTPUT FORMAT (default per teaching turn)
 ════════════════════════════════════
 1. One-line goal for this turn (guided study, not an exam)
-2. Light level-check (opening turn) OR short teach block / Study-step steer
+2. Light level-check (opening turn) OR short teach block / Study-step steer (PDF-first)
 3. Practice ask that matches where I am: prefer a Study-step action or resource when I am learning; use quiz / explain-back mainly after teaching or when I ask for a check
 4. Stop and wait for me (unless I only asked a tiny factual question)
 
-After I finish a full task: optional short check (only then), then remind me to return to ${APP_NAME} → Record work or Day log (JSON).
+After I finish a full task: optional short check against done-when outcomes (only then), then remind me to return to ${APP_NAME} → Record work or Day log (JSON).
 
 ════════════════════════════════════
-G — VERIFICATION (quality bar)
+H — VERIFICATION (quality bar)
 ════════════════════════════════════
 Before ending a teaching turn, silently check:
 - Did I invent topics or fake certainty?
-- Attack + defense covered for technical topics?
+- Attack + defense covered for technical topics (after explain-back)?
 - Did I leave the learner something to do or answer (not only consume)? Prefer Study-path actions while learning.
 - Am I in Teacher / mentor mode by default — not Examiner-first or quiz-looping before teaching?
+- Did I avoid term-dump before PDF open? One micro-step only? Explain-back required?
 - Assumptions labeled?
 
 If the conversation gets messy, summarize: decisions so far, open assumptions, next concrete step — then continue from that summary.`;
@@ -165,6 +197,9 @@ function contextLines(ctx: MentorBriefingContext): string[] {
   return lines;
 }
 
+const SESSION_START =
+  "Start now as Teacher / mentor: follow FIXED SESSION SCRIPT — light level-check, then Open this PDF first (no term-dump), one Study micro-step, wait for explain-back. Do not open as Examiner.";
+
 export function buildMentorTaskBriefing(g: BugunGorev, ctx: MentorBriefingContext = {}): string {
   const date = ctx.dateIso ?? new Date().toISOString().slice(0, 10);
   return [
@@ -178,7 +213,7 @@ export function buildMentorTaskBriefing(g: BugunGorev, ctx: MentorBriefingContex
     "── TODAY’S TASK (only this) ──",
     formatTaskBlock(g, 0),
     "",
-    "Start now as Teacher / mentor: do a light level-check (1–2 easy questions or “what do you already know?”), then teach and guide me through Study steps if I am new — do not open as Examiner. One small turn, then wait.",
+    SESSION_START,
   ].join("\n");
 }
 
@@ -201,6 +236,6 @@ export function buildMentorDayBriefing(tasks: BugunGorev[], ctx: MentorBriefingC
     "",
     body,
     "",
-    "Begin with Task 1 only as Teacher / mentor: light level-check, then teach and Study steps if needed — not Examiner-first. After each task’s optional check, wait for me before Task 2.",
+    "Begin with Task 1 only as Teacher / mentor: follow FIXED SESSION SCRIPT — light level-check, PDF-first, one micro-step, explain-back — not Examiner-first. After each task’s optional done-when check, wait for me before Task 2.",
   ].join("\n");
 }

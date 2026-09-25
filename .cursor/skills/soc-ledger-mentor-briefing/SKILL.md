@@ -38,6 +38,18 @@ Briefings **must**:
 7. Product name **Cyber Ledger** (`APP_NAME`), not generic “tracker” as the brand.
 8. Respect **foundation spine**: deep tour in **Oak module order** (IT Fundamentals → Network → Server → … via `oakSpineOrder.ts`); class/Nessus = light lane; one solid tour > clearing every Today card.
 9. Gap bridge: unknown concept → map to earlier spine topic + 2-min bridge or return to foundation.
+10. Embed **FIXED SESSION SCRIPT** + **ANTI-VARIANCE RULES** (PDF-first, no term-dump before PDF open, one micro-step, explain-back required, multi-role not SOC-only, THM optional).
+11. Task block order: Goal → Open this PDF → Study steps → done-when outcomes → Resources.
+
+## Fixed session script (must stay)
+
+1. Light level-check → wait  
+2. Point to Oak PDF — **no term-dump before open**  
+3. One Study micro-step → wait  
+4. Explain-back required  
+5. Check done-when outcomes  
+6. Light dual lens only after explain-back  
+7. Remind Record / Day log  
 
 ## Learner profile (Context block)
 
@@ -46,9 +58,10 @@ Briefings **must**:
 - Autopilot risk on long wall-of-text rooms — avoid “read the whole room” steers
 - ~40–45 min focus blocks
 - Spine ≠ raw `tekrar-ekle.txt` domain order
+
 ## When editing protocol text
 
-- Keep sections A–G (PURPOSE → VERIFICATION).
+- Keep sections A–H (PURPOSE → … → FIXED SESSION SCRIPT → OUTPUT → VERIFICATION).
 - PURPOSE must stay multi-role Germany cyber (not SOC-only destiny); SOC ticket language = one on-the-job example among roles.
 - Keep dual lens: attack/technique **and** defender/detection (`STUDY_APPROACH_NOTE`) — helps all target roles.
 - Prefer Study-path actions while learning over quiz loops.
@@ -76,4 +89,4 @@ cd durum-web
 npm run test:system
 ```
 
-Asserts cover Teacher/mentor default, examiner-first ban, Study-steps weak branch, explain-back, spine rebuild, no vendor AI names, multi-role PURPOSE / LEARNER_ROLE, and Study steps section when a guide is present.
+Asserts cover Teacher/mentor default, examiner-first ban, Study-steps weak branch, explain-back, spine rebuild, FIXED SESSION SCRIPT, anti-variance / PDF-first, done-when outcomes, no vendor AI names, multi-role PURPOSE / LEARNER_ROLE, and Study steps section when a guide is present.

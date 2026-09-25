@@ -42,9 +42,24 @@ export type StudyPlanStep = {
 export type StudyGuide = {
   topic: string;
   resources: StudyResource[];
+  /** Session goals / what to practice (shown as Goal on Today). */
   actions: string[];
   steps: StudyPlanStep[];
+  /**
+   * Done-when checks — “After this tour you should be able to…”.
+   * Prefer 3–5 concrete, explain-back-friendly bullets (not a term dump).
+   */
+  outcomes: string[];
 };
+
+/** Primary Oak Study Notes PDF resource when present (PDF-first spine). */
+export function primaryOakPdf(guide: StudyGuide): StudyResource | undefined {
+  const oakNotes = guide.resources.find(
+    (r) => r.type === "oak" && /Oak Study Notes/i.test(r.label),
+  );
+  if (oakNotes) return oakNotes;
+  return guide.resources.find((r) => r.type === "oak");
+}
 
 function matchGuide(
   entries: Array<{ test: RegExp; build: GuideBuilder }>,

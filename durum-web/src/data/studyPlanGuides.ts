@@ -90,13 +90,32 @@ function steps(...items: Omit<StudyPlanStep, "order">[]): StudyPlanStep[] {
   return items.map((s, i) => ({ ...s, order: i + 1 }));
 }
 
+/** Fallback done-when checks when a guide omits explicit outcomes. */
+function defaultOutcomes(konu: string, actions: string[]): string[] {
+  if (actions.length >= 3) return actions.slice(0, Math.min(5, actions.length));
+  return [
+    `Explain "${konu}" in your own words while doing one concrete action`,
+    "Name one attacker/technique angle and one defender/detection angle",
+    "Pass a quick from-memory check without reopening the PDF first",
+  ];
+}
+
 function mkGuide(
   konu: string,
   resources: StudyResource[],
   actions: string[],
   stepItems: Omit<StudyPlanStep, "order">[],
+  outcomes?: string[],
 ): StudyGuide {
-  return { topic: konu, resources, actions, steps: steps(...stepItems) };
+  const resolved =
+    outcomes && outcomes.length >= 3 ? outcomes.slice(0, 5) : defaultOutcomes(konu, actions);
+  return {
+    topic: konu,
+    resources,
+    actions,
+    steps: steps(...stepItems),
+    outcomes: resolved,
+  };
 }
 
 const SOC_L1 = thmPath("soclevel1", "TryHackMe — SOC Level 1 path");
@@ -188,6 +207,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what cybersecurity protects and what it does not",
           "attacker: harm assets in cyberspace / defender: how a practitioner uses these terms on the job (SOC ticket, admin note, or risk note)",
         ),
+        [
+          "Define cyberspace and cybersecurity scope without reading from the PDF",
+          "Name 3 Germany-relevant cyber role families and which fit you for now",
+          "Give one on-the-job example of confidentiality, integrity, or availability (preview)",
+          "Explain what the field protects vs what it does not (2–3 sentence explain-back)",
+        ],
       ),
   },
   {
@@ -210,6 +235,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how the major hardware pieces cooperate",
           "where malware or physical access could interfere with the I/O loop",
         ),
+        [
+          "Sketch input → process → output and place CPU, RAM, motherboard, bus",
+          "Say one sentence each for CPU, RAM, motherboard, and bus roles",
+          "Name one hardware-adjacent interference idea (e.g. keylogger on the input path)",
+          "Explain-back: how the major pieces cooperate while you point at the sketch",
+        ],
       ),
   },
   {
@@ -232,6 +263,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "when data lives in RAM vs on disk and why it matters",
           "volatile vs persistent evidence after an alert",
         ),
+        [
+          "Compare primary vs secondary memory and HDD vs SSD vs NVMe from memory",
+          "Explain RAM vs disk with one analogy (not a definition dump)",
+          "State volatile vs persistent evidence after an alert in one line each",
+          "Explain-back: when data lives in RAM vs on disk and why a practitioner cares",
+        ],
       ),
   },
   {
@@ -254,6 +291,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what each processing device does",
           "how abnormal CPU/GPU load can show up as a monitoring / triage signal",
         ),
+        [
+          "Distinguish CPU vs GPU vs motherboard roles without reopening the PDF",
+          "Explain why the CPU is the 'brain' in one plain sentence",
+          "Name one abnormal load signal (e.g. crypto-mining / DoS) a monitor would notice",
+          "Explain-back: what each processing device does while you point at notes",
+        ],
       ),
   },
   {
@@ -276,6 +319,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "why IoT expands the attack surface",
           "what a security practitioner would ask when an unknown IoT device appears on the network",
         ),
+        [
+          "Define IoT and list 4 use-case domains from memory",
+          "Name privacy/security risks unique to always-connected devices",
+          "Write one enterprise concern (shadow IoT, default creds, or patch lag)",
+          "Explain-back: what you would ask when an unknown IoT device appears on the network",
+        ],
       ),
   },
   {
@@ -297,6 +346,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how a host joins a network at the hardware layer",
           "why link/NIC issues matter before blaming 'malware' in an alert",
         ),
+        [
+          "Identify NIC, cabling/media, and basic device roles from the PDF pass",
+          "Explain how NIC choice affects speed/connectivity in one sentence",
+          "Relate physical media to later packet capture or link troubleshooting",
+          "Explain-back: why check link/NIC before blaming malware on an alert",
+        ],
       ),
   },
   {
@@ -319,6 +374,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what the OS does and why hardware is useless without it",
           "how EOL OS shows up as vulnerability/risk context in tickets",
         ),
+        [
+          "Explain OS as the bridge between hardware and applications",
+          "Define kernel vs user space in one sentence each",
+          "Note EOL / unpatched OS as asset/risk context in one line",
+          "Explain-back: what the OS does and why bare hardware is not enough",
+        ],
       ),
   },
   {
@@ -340,6 +401,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how the four concepts differ",
           "how you would describe a suspicious process to a teammate",
         ),
+        [
+          "Define application, service, process, and interface without mixing them up",
+          "Explain client–server request/response with one concrete example",
+          "Say why 'process' in an EDR alert is not the same as 'service' or 'app'",
+          "Explain-back: how you would describe a suspicious process to a teammate",
+        ],
       ),
   },
   {
@@ -362,6 +429,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "when CLI is required and what # vs $ signals",
           "why privilege level matters in security investigations",
         ),
+        [
+          "Compare CLI vs GUI and when each is required",
+          "Explain root (#) vs user ($) privilege meaning",
+          "Say why privilege level matters in a security investigation",
+          "Explain-back: what # vs $ signals while looking at a prompt example",
+        ],
       ),
   },
   {
@@ -384,6 +457,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "Type 1 vs Type 2 in your own words",
           "how VMs help security labs and what isolation does not guarantee",
         ),
+        [
+          "Define virtualization and Type 1 vs Type 2 hypervisor from memory",
+          "Sketch host vs guest and what a snapshot is for",
+          "Name one security angle (isolation, rollback, or shared-host risk)",
+          "Explain-back: Type 1 vs Type 2 and what isolation does not guarantee",
+        ],
       ),
   },
   {
@@ -406,6 +485,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what each isolates and what they share",
           "how container escapes / shared kernel change the risk story",
         ),
+        [
+          "Compare VM vs container isolation and what they share (kernel)",
+          "State when a security lab uses a VM vs a container",
+          "Explain how shared-kernel / escape themes change the risk story",
+          "Explain-back: what each isolates while pointing at your sketch",
+        ],
       ),
   },
   {
@@ -428,6 +513,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "IaaS vs PaaS vs SaaS with one example each",
           "shared-responsibility idea for a junior practitioner",
         ),
+        [
+          "Define cloud computing and list IaaS / PaaS / SaaS with one example each",
+          "Compare one deployment model (public / private / hybrid)",
+          "State the shared-responsibility idea in one plain sentence",
+          "Explain-back: which log sources a junior might see from cloud apps later",
+        ],
       ),
   },
   {
@@ -450,6 +541,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "who controls and who can access cloud-stored data",
           "how data residency / ownership shows up in incident impact",
         ),
+        [
+          "Explain cloud storage privacy and ownership risks from the PDF pass",
+          "Contrast local disk control vs provider-held data",
+          "Ask one question before syncing sensitive lab notes to cloud storage",
+          "Explain-back: how data residency/ownership shows up in incident impact",
+        ],
       ),
   },
   // --- Network Fundamentals spine (Oak module 2 PDFs) — Oak first; THM optional ---
@@ -473,6 +570,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what you filtered and why (technique + detection)",
           "attacker: hide in noise / defender: which field would you alert on",
         ),
+        [
+          "Open Oak Network101-LAB / Wireshark notes before any wall-of-text room",
+          "Apply 2–3 filters for one protocol and say what each filter selects",
+          "Explain attacker use vs defender visibility for the same packet view",
+          "Log one capture artifact + one pattern you would flag on triage/monitoring",
+        ],
       ),
   },
   {
@@ -495,6 +598,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how you split network vs host bits on one example",
           "attacker: lateral range / defender: internal vs external IP in a ticket",
         ),
+        [
+          "Work one /26 and one /24 by hand before using a calculator",
+          "Identify network / broadcast / usable hosts for that example",
+          "Explain attacker subnet scoping vs internal vs external IP in a ticket",
+          "Explain-back: how you split network vs host bits on your example",
+        ],
       ),
   },
   {
@@ -517,6 +626,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "each layer’s job in one sentence",
           "attacker: which layer to abuse / defender: which pane or log first",
         ),
+        [
+          "Draw OSI 7 layers with one protocol each from memory after the PDF pass",
+          "Trace encapsulation for an HTTPS request in one sketch",
+          "Say where an attacker tampers vs which layer a defender inspects first",
+          "Explain-back: each layer’s job in one sentence while pointing at the sketch",
+        ],
       ),
   },
   {
@@ -539,6 +654,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how a host learns MAC for an IP",
           "attacker: poison mapping / defender: unexpected MAC for gateway",
         ),
+        [
+          "Explain ARP request/reply without reopening the PDF",
+          "Say what an ARP table entry means (optional arp -a once)",
+          "Contrast ARP spoofing goal vs noticing a wrong gateway MAC",
+          "Explain-back: how a host learns MAC for an IP",
+        ],
       ),
   },
   {
@@ -560,6 +681,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "why VLANs and domains matter for segmentation",
           "attacker: same broadcast domain / defender: segment + monitor trunks",
         ),
+        [
+          "Compare collision vs broadcast domain from memory",
+          "Explain VLAN purpose in one sentence",
+          "Contrast flat LAN attacker reach vs VLAN segmentation for defenders",
+          "Explain-back: why domains/VLANs matter for segmentation",
+        ],
       ),
   },
   {
@@ -581,6 +708,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how a packet leaves a LAN toward the internet",
           "attacker: reachability limits / defender: internal vs external IP fields",
         ),
+        [
+          "Recall private RFC1918 ranges and why NAT exists",
+          "Explain default gateway / loopback / link-local in one line each",
+          "Say what NAT hides from an attacker vs what defenders still see in logs",
+          "Explain-back: how a packet leaves a LAN toward the internet",
+        ],
       ),
   },
   {
@@ -603,6 +736,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "each DORA step in one sentence",
           "attacker: rogue DHCP / defender: unexpected gateway or DNS",
         ),
+        [
+          "Explain DORA (Discover–Offer–Request–Ack) in your own words",
+          "Optional short capture: filter bootp/dhcp — not a full THM room",
+          "Contrast rogue DHCP offer vs lease/gateway anomalies defenders notice",
+          "Explain-back: each DORA step in one sentence",
+        ],
       ),
   },
   {
@@ -625,6 +764,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "how a name becomes an IP",
           "attacker: resolve or hide C2 / defender: unusual queries or NXDOMAIN bursts",
         ),
+        [
+          "Draw recursive DNS lookup flow without clearing a full THM room",
+          "List A, AAAA, CNAME, MX, TXT with one use each",
+          "Contrast DNS for C2/tunneling ideas vs odd query patterns defenders hunt",
+          "Explain-back: how a name becomes an IP",
+        ],
       ),
   },
   {
@@ -646,6 +791,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what ping and traceroute prove and what they do not",
           "attacker: path discovery / defender: ICMP flood or sweep signals",
         ),
+        [
+          "State what ICMP is for (not “just ping”)",
+          "Optional: one ping + traceroute; explain TTL meaning",
+          "Contrast ICMP for recon vs when defenders treat ICMP as scan noise",
+          "Explain-back: what ping/traceroute prove and what they do not",
+        ],
       ),
   },
   {
@@ -667,6 +818,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "handshake + reliability difference",
           "attacker: probe open ports / defender: port + protocol in firewall or SIEM",
         ),
+        [
+          "Draw TCP 3-way handshake from memory after the PDF pass",
+          "Compare TCP vs UDP with two real services each",
+          "Contrast SYN scan idea vs SYN/half-open patterns defenders watch",
+          "Explain-back: handshake + reliability difference while pointing at the sketch",
+        ],
       ),
   },
   {
@@ -689,6 +846,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "your top ports and their services",
           "attacker: service exposure / defender: unexpected listeners or internet noise",
         ),
+        [
+          "Recite a 10–15 port cheat sheet (22, 53, 80, 443, 445, 3389…)",
+          "Map port → service → typical log source for your top entries",
+          "Say why attackers hit 445/3389 vs which ports are high-signal for defenders",
+          "Explain-back: your top ports and their services without the PDF",
+        ],
       ),
   },
   {
@@ -710,6 +873,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "request vs response and what a status code means",
           "attacker: abuse verbs/paths / defender: status and method anomalies in logs",
         ),
+        [
+          "Explain client–server HTTP and common methods from the PDF pass",
+          "List 5 status codes you must recall (200/301/302/404/500)",
+          "Contrast odd methods (PUT/DELETE) as technique hints vs web-log signals",
+          "Explain-back: request vs response and what a status code means",
+        ],
       ),
   },
   {
@@ -731,6 +900,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "what TLS protects and what it does not",
           "attacker: trust or downgrade themes / defender: cert expiry or TLS errors in tickets",
         ),
+        [
+          "Explain HTTPS as HTTP over TLS without a term dump",
+          "Inspect one certificate; name subject / issuer / expiry",
+          "Say what TLS hides from sniffers vs what defenders still see (SNI, cert)",
+          "Explain-back: what TLS protects and what it does not",
+        ],
       ),
   },
   {
@@ -752,6 +927,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "ports and roles of SMTP/IMAP/POP3",
           "attacker: deliver lure / defender: header + SPF/DKIM clues",
         ),
+        [
+          "Map SMTP/IMAP/POP3 to ports from memory",
+          "Explain which is send vs retrieve",
+          "Contrast phish delivery via SMTP vs header fields a defender checks",
+          "Explain-back: ports and roles of SMTP/IMAP/POP3",
+        ],
       ),
   },
   {
@@ -774,6 +955,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "which protocols are encrypted and which are not",
           "attacker: exposed remote service / defender: 3389/445 internet noise",
         ),
+        [
+          "Compare SSH vs Telnet security from the PDF pass",
+          "Note RDP 3389 and SMB 445 as high-signal exposure",
+          "Contrast exposure/bruteforce themes vs Event/firewall signals (no Linux Fundamentals room)",
+          "Explain-back: which remote protocols are encrypted and which are not",
+        ],
       ),
   },
   {
@@ -812,6 +999,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
           "the device or zone purpose in your own words",
           "attacker: bypass or pivot path / defender: sensor or log placement",
         ),
+        [
+          `Open the matching Oak PDF (${pdf}) before any secondary article`,
+          "Sketch device/zone roles relevant to this title",
+          "Contrast how an attacker abuses misplacement vs where defenders place sensors/logs",
+          "Explain-back: the device or zone purpose in your own words",
+        ],
       );
     },
   },
@@ -1799,6 +1992,9 @@ export function labStudyGuide(konu: string, gateContext?: StudyGuideGateContext)
         ...proj.guide.actions,
         "Priority: Gate C requires 2 public artifacts with ≥1 valuable SOC/AD lab",
       ],
+      outcomes: proj.guide.outcomes.length >= 3
+        ? proj.guide.outcomes
+        : proj.guide.actions.slice(0, 5),
     };
   }
   return mkGuide(

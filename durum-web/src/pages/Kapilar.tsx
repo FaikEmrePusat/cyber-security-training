@@ -97,6 +97,16 @@ export function KapilarPage() {
                         ))}
                       </ol>
                     </section>
+                    {p.guide.outcomes.length > 0 && (
+                      <section className="study-plan__section">
+                        <h4 className="study-plan__heading">After this tour you should be able to…</h4>
+                        <ul className="study-plan__actions">
+                          {p.guide.outcomes.map((o) => (
+                            <li key={o}>{o}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
                   </div>
                 </details>
               </li>

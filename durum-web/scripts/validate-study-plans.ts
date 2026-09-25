@@ -72,6 +72,7 @@ if (!avGuide.actions.some((a) => /signature|behavioral|EDR/i.test(a))) {
 // --- Coverage across curriculum ---
 const thin: string[] = [];
 const emptyResources: string[] = [];
+const thinOutcomes: string[] = [];
 
 for (const topic of ALL_TOPICS) {
   for (const kind of KINDS) {
@@ -85,11 +86,35 @@ for (const topic of ALL_TOPICS) {
     if (kind !== "dinlenme" && guide.resources.length === 0) {
       emptyResources.push(`${kind}:${topic.konu}`);
     }
+    if (kind !== "dinlenme" && guide.outcomes.length < 3) {
+      thinOutcomes.push(`${kind}:${topic.konu} (${guide.outcomes.length} outcomes)`);
+    }
   }
 }
 
 if (thin.length > 0) warn(`${thin.length} guide(s) with fewer than 3 steps`);
 if (emptyResources.length > 0) warn(`${emptyResources.length} guide(s) with no resources`);
+if (thinOutcomes.length > 0) fail(`${thinOutcomes.length} guide(s) with fewer than 3 outcomes (sample: ${thinOutcomes.slice(0, 3).join("; ")})`);
+
+{
+  const fieldIntro = buildStudyGuide({
+    kind: "temel",
+    baslik: "Introduction to cybersecurity (field overview)",
+    alan: "secfund",
+  });
+  if (fieldIntro.outcomes.length < 3) {
+    fail("IT Fund intro must ship explicit learning outcomes");
+  }
+  if (!fieldIntro.outcomes.some((o) => /cyberspace|role|explain-back/i.test(o))) {
+    fail("IT Fund intro outcomes should be done-when (cyberspace / roles / explain-back)");
+  }
+
+  const tcp = buildStudyGuide({ kind: "temel", baslik: "TCP 3-way handshake", alan: "net" });
+  if (tcp.outcomes.length < 3) fail("TCP handshake guide missing outcomes");
+  if (!tcp.outcomes.some((o) => /handshake|TCP|UDP|explain-back/i.test(o))) {
+    fail("TCP outcomes should mention handshake / dual transport / explain-back");
+  }
+}
 
 // --- Schedule-like task smoke ---
 const scheduleTasks = [

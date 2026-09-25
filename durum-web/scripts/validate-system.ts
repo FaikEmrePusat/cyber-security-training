@@ -374,11 +374,26 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing dual lens attack+defense", /attack\/ops|attacker|technique works/i.test(day) && /detect|defender/i.test(day));
   assert("Day briefing one-tour over clearing cards", /one solid spine tour|clearing every Today card|Task 1/i.test(day));
   assert("Day briefing embeds Study steps section", /Study steps:/i.test(day));
-  assert("Day briefing embeds What you can do", /What you can do:/i.test(day));
+  assert("Day briefing embeds Goal section", /Goal \(what to practice\):/i.test(day));
+  assert("Day briefing embeds done-when outcomes", /After this tour you should be able to \(done-when\):/i.test(day));
+  assert("Day briefing has FIXED SESSION SCRIPT", /F — FIXED SESSION SCRIPT|FIXED SESSION SCRIPT/i.test(day));
+  assert(
+    "Day briefing anti-variance / PDF-first",
+    /ANTI-VARIANCE RULES|PDF-first|no term-dump|no term dump/i.test(day) &&
+      /One micro-step|explain-back required/i.test(day),
+  );
   assert("Day briefing reminds Record / Day log", /Record work|Day log/i.test(day));
   assert("Single briefing includes topic", single.includes("TCP 3-way handshake"));
   assert("Single briefing starts as Teacher", /Start now as Teacher/i.test(single));
+  assert("Single briefing steers FIXED SESSION SCRIPT", /FIXED SESSION SCRIPT/i.test(single));
   assert("No vendor AI names in briefings", !/chatgpt|gemini|claude|openai/i.test(day + single));
+
+  const withOutcomes = task.studyGuide;
+  assert("TCP guide has outcomes", (withOutcomes?.outcomes?.length ?? 0) >= 3);
+  assert(
+    "TCP outcomes are concrete done-when",
+    withOutcomes!.outcomes.some((o) => /handshake|TCP|UDP|explain-back/i.test(o)),
+  );
 
   const md = buildLabWriteupMarkdown("Sysmon + Wazuh lab", "2026-09-04");
   assert("Write-up has sections", md.includes("## 1. Hypothesis") && md.includes("## 7. Public evidence URL"));
@@ -400,12 +415,14 @@ console.log("\n=== 9. Study guide smoke ===");
 {
   const g = buildStudyGuide({ kind: "konu", baslik: "Antivirus: signature vs heuristic", alan: "def" });
   assert("Antivirus guide has steps", g.steps.length >= 2);
+  assert("Antivirus guide has outcomes", g.outcomes.length >= 3);
   assert("Antivirus not NAT", !g.actions.some((a) => /RFC1918|SNAT|DNAT/i.test(a)));
   const lab = buildStudyGuide({
     kind: "lab",
     baslik: "Integrated Lab — Attack Timeline + Detection Write-up",
   });
   assert("Lab guide has steps", lab.steps.length >= 2);
+  assert("Lab guide has outcomes", lab.outcomes.length >= 3);
   const winEvt = buildStudyGuide({
     kind: "konu",
     baslik: "Windows event log basics",
@@ -413,6 +430,18 @@ console.log("\n=== 9. Study guide smoke ===");
   });
   assert("Windows Event Log guide has Event IDs", /4624|4625|4688|Event ID/i.test(winEvt.actions.join(" ") + winEvt.steps.map((s) => s.action).join(" ")));
   assert("Windows Event Log has THM room", winEvt.resources.some((r) => /windowseventlogs/i.test(r.url)));
+  assert("Windows Event Log has outcomes", winEvt.outcomes.length >= 3);
+
+  const itFund = buildStudyGuide({
+    kind: "temel",
+    baslik: "Introduction to cybersecurity (field overview)",
+    alan: "secfund",
+  });
+  assert("IT Fund intro has outcomes", itFund.outcomes.length >= 3);
+  assert(
+    "IT Fund intro outcomes are done-when",
+    itFund.outcomes.some((o) => /cyberspace|role|explain-back|confidentiality/i.test(o)),
+  );
 }
 
 console.log("\n=== 10. Model constants sanity ===");

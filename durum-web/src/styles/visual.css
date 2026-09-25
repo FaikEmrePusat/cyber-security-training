@@ -1309,7 +1309,8 @@
 
 .study-plan__actions,
 .study-plan__resources,
-.study-plan__steps {
+.study-plan__steps,
+.study-plan__checklist {
   margin: 0;
   padding-left: 1.1rem;
   font-size: 0.84rem;
@@ -1356,6 +1357,48 @@
   font-size: 0.78rem;
   color: var(--ink-mute);
   margin-top: 0.1rem;
+}
+
+.study-plan__pdf-lead,
+.study-plan__selfcheck-note,
+.study-plan__record-note {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: var(--ink-mute);
+  line-height: 1.4;
+}
+
+.study-plan__pdf-link {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.study-plan__outcomes {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.55rem;
+}
+
+.study-plan__checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.study-plan__check-label {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  cursor: pointer;
+  margin-bottom: 0.35rem;
+}
+
+.study-plan__check-label input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.study-plan__record {
+  border-top: 1px dashed var(--line);
+  padding-top: 0.45rem;
 }
 
 .portfolio-projects {

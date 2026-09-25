@@ -15,6 +15,15 @@ function steps(...items: Omit<StudyPlanStep, "order">[]): StudyPlanStep[] {
   return items.map((s, i) => ({ ...s, order: i + 1 }));
 }
 
+function guide(partial: Omit<StudyGuide, "outcomes"> & { outcomes?: string[] }): StudyGuide {
+  return {
+    ...partial,
+    outcomes: partial.outcomes?.length
+      ? partial.outcomes.slice(0, 5)
+      : partial.actions.slice(0, Math.min(5, Math.max(3, partial.actions.length))),
+  };
+}
+
 const INVESTIGATION_TEMPLATE: StudyResource = {
   label: "SOC investigation write-up template (GitHub)",
   url: "https://github.com/search?q=soc+investigation+writeup+template&type=repositories",
@@ -31,7 +40,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 60,
     summary:
       "Deploy Wazuh on Linux, forward Sysmon/WinEvent from a Windows VM, write 2 detection rules, triage 1 alert end-to-end.",
-    guide: {
+    guide: guide({
       topic: "Mini SOC Lab — Sysmon + Wazuh",
       resources: [
         { label: "Wazuh — Getting started", url: "https://documentation.wazuh.com/current/getting-started/index.html", type: "doc" },
@@ -54,7 +63,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Create 2 Wazuh rules from Sigma or custom XML; test each", durationMin: 45, logHint: "Rule names + trigger event" },
         { action: "Write investigation report (5 Ws); publish repo with screenshots", durationMin: 60, logHint: "Public GitHub URL" },
       ),
-    },
+    }),
   },
   {
     id: "proj-splunk-bots",
@@ -65,7 +74,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 50,
     summary:
       "Load Splunk BOTS v1 attack-only dataset, complete 5 hunt questions, convert 3 Sigma rules to SPL.",
-    guide: {
+    guide: guide({
       topic: "Splunk BOTS Investigation + Sigma Rules",
       resources: [
         { label: "TryHackMe — Splunk Basics", url: "https://tryhackme.com/room/splunk101", type: "thm" },
@@ -88,7 +97,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Convert 3 Sigma rules to SPL; test each in BOTS index", durationMin: 45, logHint: "Rule titles" },
         { action: "Publish write-up repo with queries, IOCs, and timeline", durationMin: 60, logHint: "Public GitHub URL" },
       ),
-    },
+    }),
   },
   {
     id: "proj-ad-detection",
@@ -99,7 +108,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 40,
     summary:
       "Lab AD environment, simulate failed logon + suspicious Kerberos, detect via Event 4624/4625/4768, publish analysis.",
-    guide: {
+    guide: guide({
       topic: "AD Lab — Kerberos/NTLM Detection",
       resources: [
         { label: "TryHackMe — Attacktive Directory", url: "https://tryhackme.com/room/attacktivedirectory", type: "thm" },
@@ -121,7 +130,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Draft detection logic (which Event IDs → which alert)", durationMin: 20, logHint: "3 detection bullets" },
         { action: "Publish GitHub write-up with Event ID table + MITRE mapping", durationMin: 45, logHint: "Public URL" },
       ),
-    },
+    }),
   },
   {
     id: "proj-letsdefend-triage",
@@ -132,7 +141,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 15,
     summary:
       "Complete 10 LetsDefend alert triage scenarios; document FP vs TP decisions and escalation rationale.",
-    guide: {
+    guide: guide({
       topic: "LetsDefend Alert Triage Practice",
       resources: [
         { label: "LetsDefend — free SOC training", url: "https://letsdefend.io/", type: "lab" },
@@ -151,7 +160,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Triage alerts 6–10; note patterns in FP vs TP", durationMin: 45, logHint: "FP/TP ratio estimate" },
         { action: "Compile triage cheat sheet (5 bullets); save 3 screenshots", durationMin: 15, logHint: "Screenshot paths" },
       ),
-    },
+    }),
   },
   {
     id: "proj-cyberdefenders-blue",
@@ -162,7 +171,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 20,
     summary:
       "Solve 3 free CyberDefenders blue team challenges; publish investigation write-ups with IOCs.",
-    guide: {
+    guide: guide({
       topic: "CyberDefenders Blue Team Challenges",
       resources: [
         { label: "CyberDefenders — blue team challenges", url: "https://cyberdefenders.org/blueteam-ctf-challenges/", type: "lab" },
@@ -181,7 +190,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Complete challenges 2–3 with same template", durationMin: 120, logHint: "All 3 done" },
         { action: "Publish GitHub repo with 3 write-ups + public link", durationMin: 30, logHint: "Public URL" },
       ),
-    },
+    }),
   },
   {
     id: "proj-integrated-lab-writeup",
@@ -192,7 +201,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 25,
     summary:
       "Complete one TryHackMe Jr Pentest or HTB Starting Point machine in one session: document the attack timeline and the detection/response view (legal scope only).",
-    guide: {
+    guide: guide({
       topic: "Integrated lab write-up (attack + detection)",
       resources: [
         { label: "TryHackMe — Jr Penetration Tester path", url: "https://tryhackme.com/path/outline/jrpenetrationtester", type: "thm" },
@@ -215,7 +224,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Add 'Blue team view' section: detections, Event IDs, mitigations", durationMin: 25, logHint: "3 detection ideas" },
         { action: "Publish GitHub repo; add public URL to portfolio artifact", durationMin: 20, logHint: "Public URL" },
       ),
-    },
+    }),
   },
   {
     id: "proj-python-soc",
@@ -226,7 +235,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     hoursEstimate: 15,
     summary:
       "Write a Python script that parses CSV/JSON logs, extracts IOCs, and outputs a summary report.",
-    guide: {
+    guide: guide({
       topic: "Python SOC Log Parser",
       resources: [
         { label: "TryHackMe — Python for Cybersecurity", url: "https://tryhackme.com/room/pythonforcybersecurity", type: "thm" },
@@ -244,7 +253,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
         { action: "Run on real or sample log; review output report", durationMin: 20, logHint: "Sample finding" },
         { action: "Publish GitHub repo with usage instructions", durationMin: 20, logHint: "Public URL" },
       ),
-    },
+    }),
   },
 ];
 

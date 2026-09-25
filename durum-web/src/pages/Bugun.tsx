@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { ALAN_COLOR, FOUNDATION_SPINE_REBUILD } from "../data/oakCurriculum";
-import { stepLabel, type StudyGuide } from "../data/studyPlans";
+import { primaryOakPdf, stepLabel, type StudyGuide } from "../data/studyPlans";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE, STUDY_APPROACH_NOTE } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
 import { GaugeRing } from "../components/GaugeRing";
@@ -69,16 +69,73 @@ const KIND_CLASS: Record<string, string> = {
   dinlenme: "gorev-card--dinlenme",
 };
 
+function StudyPlanSelfCheck({ outcomes, topicKey }: { outcomes: string[]; topicKey: string }) {
+  const storageKey = `cyber-ledger-selfcheck:${topicKey}`;
+  const [checked, setChecked] = useState<Record<number, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as Record<string, boolean>;
+      return Object.fromEntries(
+        Object.entries(parsed).map(([k, v]) => [Number(k), Boolean(v)]),
+      );
+    } catch {
+      return {};
+    }
+  });
+
+  const toggle = (i: number) => {
+    setChecked((cur) => {
+      const next = { ...cur, [i]: !cur[i] };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        /* ignore quota / private mode */
+      }
+      return next;
+    });
+  };
+
+  return (
+    <section className="study-plan__section study-plan__selfcheck">
+      <h3 className="study-plan__heading">Self-check</h3>
+      <p className="study-plan__selfcheck-note">Local only — tick when you can do + explain each item.</p>
+      <ul className="study-plan__checklist">
+        {outcomes.map((o, i) => (
+          <li key={`${i}-${o}`}>
+            <label className="study-plan__check-label">
+              <input
+                type="checkbox"
+                checked={Boolean(checked[i])}
+                onChange={() => toggle(i)}
+              />
+              <span>{o}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev["kind"] }) {
   const showApproach = kind !== "dil" && kind !== "dinlenme";
+  const pdf = primaryOakPdf(guide);
+  const otherResources = pdf
+    ? guide.resources.filter((r) => r.url !== pdf.url || r.label !== pdf.label)
+    : guide.resources;
+
   return (
-    <details className="study-plan">
-      <summary className="study-plan__summary">Study plan — {guide.steps.length} steps</summary>
+    <details className="study-plan" open>
+      <summary className="study-plan__summary">
+        Study path — Goal → PDF → Steps → Outcomes → Record
+      </summary>
       <div className="study-plan__body">
         {showApproach && <p className="study-plan__approach">{STUDY_APPROACH_NOTE}</p>}
+
         {guide.actions.length > 0 && (
           <section className="study-plan__section">
-            <h3 className="study-plan__heading">What you can do</h3>
+            <h3 className="study-plan__heading">Goal</h3>
             <ul className="study-plan__actions">
               {guide.actions.map((a) => (
                 <li key={a}>{a}</li>
@@ -86,12 +143,50 @@ function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev[
             </ul>
           </section>
         )}
-        {guide.resources.length > 0 && (
+
+        {pdf && (
+          <section className="study-plan__section study-plan__pdf">
+            <h3 className="study-plan__heading">Open this PDF</h3>
+            <p className="study-plan__pdf-lead">Start here — do not ask the mentor for a term dump first.</p>
+            <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="study-plan__link study-plan__pdf-link">
+              {pdf.label}
+            </a>
+          </section>
+        )}
+
+        <section className="study-plan__section">
+          <h3 className="study-plan__heading">Steps</h3>
+          <ol className="study-plan__steps">
+            {guide.steps.map((s) => (
+              <li key={s.order} className="study-plan__step">
+                <span className="study-plan__step-action">{stepLabel(s)}</span>
+                {s.logHint && <span className="study-plan__step-hint">{s.logHint}</span>}
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {guide.outcomes.length > 0 && (
+          <section className="study-plan__section study-plan__outcomes">
+            <h3 className="study-plan__heading">After this tour you should be able to…</h3>
+            <ul className="study-plan__actions">
+              {guide.outcomes.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {guide.outcomes.length > 0 && (
+          <StudyPlanSelfCheck outcomes={guide.outcomes} topicKey={guide.topic} />
+        )}
+
+        {otherResources.length > 0 && (
           <section className="study-plan__section">
-            <h3 className="study-plan__heading">Resources</h3>
+            <h3 className="study-plan__heading">More resources</h3>
             <ul className="study-plan__resources">
-              {guide.resources.map((r) => (
-                <li key={r.url}>
+              {otherResources.map((r) => (
+                <li key={`${r.url}-${r.label}`}>
                   <a href={r.url} target="_blank" rel="noopener noreferrer" className="study-plan__link">
                     {r.label}
                   </a>
@@ -101,16 +196,13 @@ function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev[
             </ul>
           </section>
         )}
-        <section className="study-plan__section">
-          <h3 className="study-plan__heading">Step-by-step</h3>
-          <ol className="study-plan__steps">
-            {guide.steps.map((s) => (
-              <li key={s.order} className="study-plan__step">
-                <span className="study-plan__step-action">{stepLabel(s)}</span>
-                {s.logHint && <span className="study-plan__step-hint">{s.logHint}</span>}
-              </li>
-            ))}
-          </ol>
+
+        <section className="study-plan__section study-plan__record">
+          <h3 className="study-plan__heading">Record</h3>
+          <p className="study-plan__record-note">
+            When the tour (or time) is done, return here → <strong>Record work</strong> or Day log — so{" "}
+            {APP_NAME} keeps the spine honest.
+          </p>
         </section>
       </div>
     </details>
