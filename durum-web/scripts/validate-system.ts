@@ -41,7 +41,7 @@ import { buildLabWriteupMarkdown, slugifyTopic } from "../src/data/labWriteupTem
 import { buildStudyGuide } from "../src/data/studyPlans";
 import { getDayType } from "../src/useRollingSchedule";
 import type { BugunGorev } from "../src/useRollingSchedule";
-import { APP_NAME, LEARNER_NAME } from "../src/model/brand";
+import { APP_NAME, APP_SUBTITLE, LEARNER_NAME, LEARNER_ROLE } from "../src/model/brand";
 import { kaynakLabel } from "../src/components/sessionLogFormUtils";
 
 let failures = 0;
@@ -64,7 +64,14 @@ function assert(name: string, cond: boolean, detail = "") {
 
 console.log("\n=== 1. Brand / UI product names ===");
 assert("APP_NAME is SOC Ledger", APP_NAME === "SOC Ledger");
+assert("APP_SUBTITLE clarifies multi-role foundation", /multi-role|Germany cyber/i.test(APP_SUBTITLE));
 assert("Learner name set", LEARNER_NAME.length > 0);
+assert(
+  "LEARNER_ROLE is Germany multi-role foundation",
+  /Germany cybersecurity multi-role foundation/i.test(LEARNER_ROLE) &&
+    /SOC.*IT security|IT security.*SOC/i.test(LEARNER_ROLE) &&
+    !/Aspiring Junior SOC Analyst/i.test(LEARNER_ROLE),
+);
 assert("STORAGE_KEY is durum-v22", STORAGE_KEY === "durum-v22");
 assert("No ChatGPT in mentor briefing text", !/chatgpt|gemini|claude/i.test(buildMentorDayBriefing([])));
 assert("kaynakLabel maps legacy chatgpt", kaynakLabel("chatgpt") === "Mentor session");
@@ -352,6 +359,12 @@ console.log("\n=== 7. Mentor briefing + write-up scaffold ===");
   assert("Day briefing includes topic", day.includes("TCP 3-way handshake"));
   assert("Day briefing mentor rules", /source of truth for TODAY/i.test(day));
   assert("Day briefing has purpose block", /A — PURPOSE/i.test(day));
+  assert(
+    "Day briefing PURPOSE is multi-role Germany cyber",
+    /Germany multi-role cybersecurity foundation|job-ready cybersecurity foundation for Germany/i.test(day) &&
+      /do not lock identity to SOC-only|not the only destiny/i.test(day) &&
+      !/Germany Junior SOC \/ Blue Team path/i.test(day),
+  );
   assert("Day briefing has working style", /WORKING STYLE|Light level-check/i.test(day));
   assert("Day briefing defaults to Teacher/mentor", /Default role:\s*Teacher\s*\/\s*mentor/i.test(day));
   assert("Day briefing forbids examiner-first", /Do not open as an examiner|not Examiner-first|Never open as Examiner/i.test(day));

@@ -180,13 +180,13 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         ],
         [
           "Define cyberspace, cybersecurity scope, and why the field exists (from Oak 0.2)",
-          "List 3 career/role families and which one you are aiming at",
-          "Write one SOC-relevant example of confidentiality, integrity, or availability (preview only)",
+          "List 3 career/role families and which ones you could apply to in Germany",
+          "Write one security-practice example of confidentiality, integrity, or availability (preview only)",
         ],
         foundationTourSteps(
           "0.2 terminology / scope / principles",
           "what cybersecurity protects and what it does not",
-          "attacker: harm assets in cyberspace / defender: how a junior SOC uses these terms in a ticket",
+          "attacker: harm assets in cyberspace / defender: how a practitioner uses these terms on the job (SOC ticket, admin note, or risk note)",
         ),
       ),
   },
@@ -225,7 +225,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Compare primary vs secondary memory and HDD vs SSD vs NVMe",
           "Explain RAM vs disk in one analogy from the PDF",
-          "Note forensic/SOC angle: volatile vs persistent evidence",
+          "Note forensic / security-ops angle: volatile vs persistent evidence",
         ],
         foundationTourSteps(
           "1.2 storage devices / memory types",
@@ -247,12 +247,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Distinguish CPU vs GPU vs motherboard roles from Oak 1.3",
           "Explain why CPU is the 'brain' in one plain sentence",
-          "Note one abuse/load idea (crypto-mining / DoS overload) for SOC awareness",
+          "Note one abuse/load idea (crypto-mining / DoS overload) for security-practice awareness",
         ],
         foundationTourSteps(
           "1.3 processing devices (CPU / GPU)",
           "what each processing device does",
-          "how abnormal CPU/GPU load can show up as a SOC signal",
+          "how abnormal CPU/GPU load can show up as a monitoring / triage signal",
         ),
       ),
   },
@@ -269,12 +269,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Define IoT and list 4 use-case domains from Oak 1.4",
           "Name privacy/security risks unique to always-connected devices",
-          "Write one SOC/enterprise concern (shadow IoT, default creds, patch lag)",
+          "Write one security/enterprise concern (shadow IoT, default creds, patch lag)",
         ],
         foundationTourSteps(
           "1.4 IoT and mobile risks",
           "why IoT expands the attack surface",
-          "what a SOC would ask when an unknown IoT device appears on the network",
+          "what a security practitioner would ask when an unknown IoT device appears on the network",
         ),
       ),
   },
@@ -312,7 +312,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Explain OS as the bridge between hardware and applications (Temelleri II)",
           "Define kernel vs user space in one sentence each",
-          "Note EOL / unpatched OS risk for SOC asset context",
+          "Note EOL / unpatched OS risk for asset / risk context",
         ],
         foundationTourSteps(
           "1.6 OS role + Temelleri II",
@@ -333,7 +333,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Define application, service, process, and interface from Oak 1.7 (no Linux lab yet)",
           "Explain client–server request/response with one example",
-          "SOC lens: why 'process' in an EDR alert is not the same as 'service' or 'app'",
+          "Security lens: why 'process' in an EDR alert is not the same as 'service' or 'app'",
         ],
         foundationTourSteps(
           "1.7 application / service / process / interface",
@@ -360,7 +360,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         foundationTourSteps(
           "1.7 CLI vs GUI and privilege prompts",
           "when CLI is required and what # vs $ signals",
-          "why privilege level matters in SOC investigations",
+          "why privilege level matters in security investigations",
         ),
       ),
   },
@@ -382,7 +382,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         foundationTourSteps(
           "1.9 virtualization / hypervisor types",
           "Type 1 vs Type 2 in your own words",
-          "how VMs help SOC labs and what isolation does not guarantee",
+          "how VMs help security labs and what isolation does not guarantee",
         ),
       ),
   },
@@ -398,7 +398,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         ],
         [
           "Compare VM vs container isolation from Oak 1.9",
-          "State when a SOC lab uses a VM vs a container",
+          "State when a security lab uses a VM vs a container",
           "Optional: one authorized docker info/ps command after the concept pass",
         ],
         foundationTourSteps(
@@ -421,12 +421,12 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Define cloud computing and list IaaS / PaaS / SaaS from Oak 1.10",
           "Compare one deployment model (public / private / hybrid)",
-          "Note which log sources a SOC might see from cloud apps later",
+          "Note which log sources a practitioner might see from cloud apps later",
         ],
         foundationTourSteps(
           "1.10 cloud service and deployment models",
           "IaaS vs PaaS vs SaaS with one example each",
-          "shared-responsibility idea for a junior analyst",
+          "shared-responsibility idea for a junior practitioner",
         ),
       ),
   },
@@ -466,7 +466,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Open Oak Network101-LAB: Wireshark/tcpdump first — not a full wall-of-text room",
           "Apply 2–3 filters for one protocol; explain attacker use vs defender visibility",
-          "Log one capture artifact + one suspicious pattern a SOC would flag",
+          "Log one capture artifact + one suspicious pattern you would flag on triage or monitoring",
         ],
         foundationTourSteps(
           "2.9 Network101-LAB packet tools",
@@ -618,7 +618,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Draw recursive DNS lookup flow from Oak 2.5 (no full THM room)",
           "List A, AAAA, CNAME, MX, TXT with one use each",
-          "Dual lens: DNS for C2/tunneling ideas vs odd query patterns a SOC hunts",
+          "Dual lens: DNS for C2/tunneling ideas vs odd query patterns defenders hunt",
         ],
         foundationTourSteps(
           "2.5 DNS hierarchy and records",
@@ -682,7 +682,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Build a 10–15 port cheat sheet (22, 53, 80, 443, 445, 3389…)",
           "Map port → service → typical log source",
-          "Dual lens: why attackers hit 445/3389 vs which ports are high-signal for SOC",
+          "Dual lens: why attackers hit 445/3389 vs which ports are high-signal for defenders / security ops",
         ],
         foundationTourSteps(
           "2.4 ports + Network101-LAB connection view",
@@ -926,7 +926,7 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         ],
         [
           "Oak Server PDFs: what a server provides vs a client",
-          "Name 3 roles/features and why an SOC cares if they are exposed",
+          "Name 3 roles/features and why security practitioners care if they are exposed",
           "Dual lens: mis-exposed role as attack surface vs inventory/hardening for defenders",
         ],
         foundationTourSteps(
@@ -1263,11 +1263,11 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
         [
           "Define C, I, A from Oak 4.01 with one concrete example each",
           "For each letter: one attacker action + one defender control",
-          "Write one SOC ticket sentence that names which CIA letter was hit",
+          "Write one on-the-job sentence (ticket, change note, or risk note) that names which CIA letter was hit",
         ],
         foundationTourSteps(
           "4.01 CIA Triad",
-          "CIA in your own words with ticket-ready examples",
+          "CIA in your own words with practice-ready examples",
           "attacker goal per letter / defender control per letter",
         ),
       ),
@@ -1656,7 +1656,7 @@ export const ALAN_GUIDES: Record<string, GuideBuilder> = {
         LETS_DEFEND,
       ],
       [
-        "Oak EDR PDF first — endpoint detection before long SOC path binge",
+        "Oak EDR PDF first — endpoint detection before a long SIEM/SOC binge",
         "Compare AV signature vs EDR behavior in one sentence each",
         "Dual lens: evasion vs isolation/triage",
       ],

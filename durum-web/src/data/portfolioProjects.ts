@@ -204,7 +204,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
       actions: [
         "Pick one in-scope machine (THM room or HTB Starting Point — no production targets)",
         "Document recon → exploit → privilege steps with commands used",
-        "For each step: note which log/Event ID a SOC analyst would see",
+        "For each step: note which log/Event ID a defender (e.g. SOC analyst) would see",
         "Map at least 3 techniques to MITRE ATT&CK",
         "Publish public GitHub write-up (attack + defender sections)",
       ],

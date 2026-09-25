@@ -1,12 +1,12 @@
 import type { Difficulty } from "../model";
 
-/** Suggested FSRS topics — junior SOC selection from roadmap.sh cyber-security. Not auto-added. */
+/** Suggested FSRS topics — core cyber foundation selection from roadmap.sh cyber-security. Not auto-added. */
 export type SuggestedTopic = {
   id: string;
   topic: string;
   alan: string;
   difficulty: Difficulty;
-  /** true = post–junior SOC / deep dive */
+  /** true = advanced / later-path / deep dive */
   later?: boolean;
 };
 
@@ -74,7 +74,7 @@ export const ROADMAP_SUGGESTIONS: SuggestedTopic[] = [
   { id: "rm-cloud-models", topic: "IaaS / PaaS / SaaS + shared responsibility", alan: "cloud", difficulty: "kolay", later: true },
   { id: "rm-cloud-aws", topic: "AWS/Azure security basics", alan: "cloud", difficulty: "orta", later: true },
 
-  // Later / beyond junior SOC
+  // Later / advanced path
   { id: "rm-soar", topic: "SOAR concept", alan: "siem", difficulty: "zor", later: true },
   { id: "rm-threat-hunt", topic: "Threat hunting basics", alan: "def", difficulty: "zor", later: true },
   { id: "rm-forensics", topic: "Forensics basics (disk/memory)", alan: "def", difficulty: "zor", later: true },

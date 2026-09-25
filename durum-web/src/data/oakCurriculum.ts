@@ -24,7 +24,7 @@ export type CurriculumTopic = {
 
 export const CURRICULUM_STORAGE_KEY = "durum-curriculum-v1";
 
-/** Foundation channel independent of weak area in daily plan — baseline for the SOC path. */
+/** Foundation channel independent of weak area in daily plan — baseline for the Germany cyber foundation spine. */
 export const FOUNDATION_ALANS = ["net", "linux", "secfund"] as const;
 
 export const ALAN_ORDER = [

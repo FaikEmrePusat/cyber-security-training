@@ -26,7 +26,7 @@ export const SEED_SKILLS: Skill[] = [
   { id: "def", name: "Detection & response", kisa: "Def/SOC", weight: 1.5, neden: "SOC role + always paired with technique context", claimed: 3, evidence: "yok", ref: "" },
   { id: "off", name: "Techniques & detection", kisa: "Tech", weight: 0.7, neden: "Attack mechanics learned with defender visibility", claimed: 2, evidence: "yok", ref: "" },
   { id: "py", name: "Python", kisa: "Python", weight: 0.8, neden: "Automation / log parsing", claimed: 5, evidence: "yok", ref: "" },
-  { id: "cloud", name: "Cloud", kisa: "Cloud", weight: 0.4, neden: "Secondary in junior SOC job posts", claimed: 2, evidence: "yok", ref: "" },
+  { id: "cloud", name: "Cloud", kisa: "Cloud", weight: 0.4, neden: "Secondary in many DE cyber job posts", claimed: 2, evidence: "yok", ref: "" },
   { id: "port", name: "Portfolio", kisa: "Portfolio", weight: 1.4, neden: "Employability — common job posting requirement", claimed: 2, evidence: "yok", ref: "" },
 ];
 

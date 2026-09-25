@@ -41,7 +41,7 @@ Durum-web is **not a calendar app**. It does not issue date-based orders like "D
 | **D2 Production (P)** | Lab / project / proof artifacts | `computeAll` → `P` |
 | **D3 Language (L)** | DE + EN composite score | `computeAll` → `L` |
 | **D4 Career (C)** | CV, network, funnel, interview prep | `computeAll` → `C` |
-| **R (Readiness)** | Germany junior application readiness (0–100) | `computeRFromDims` |
+| **R (Readiness)** | Germany cyber job-readiness / application readiness (0–100) | `computeRFromDims` |
 | **Gates** | Condition-based career stages (0, A–F) | `evaluateGates` |
 | **Velocity** | CTL/ATL/TSB + predicted/measured velocity | `buildPmc`, `predictedVelocity` |
 | **Review** | FSRS-based forgetting queue | `retrieval[]`, `isRetrievalDue` |
@@ -590,7 +590,7 @@ flowchart TD
 
 | Channel | Domains | Ordering | Purpose |
 |---------|---------|----------|---------|
-| **Foundation** | `net`, `linux`, `secfund` | ascending `claimed/weight` + round-robin | SOC path spine |
+| **Foundation** | `net`, `linux`, `secfund` | ascending `claimed/weight` + round-robin | Germany cyber foundation spine |
 | **Weak** | `bottleneckAlan` | Oak curriculum order, `studyCandidates` | Close bottleneck |
 
 **Task durations and limits:**
@@ -957,7 +957,7 @@ Old keys are **not** auto-migrated; manual import or seed reset is required.
 ## 11. Seed data (EDR-stage profile)
 
 **Date:** `2026-08-27T12:00:00+03:00` (`SEED_ISO`)  
-**Profile:** Pre-Oak EDR · Germany junior SOC readiness start
+**Profile:** Pre-Oak EDR · Germany cyber multi-role foundation readiness start
 
 ### 11.1 Skill snapshot
 

@@ -381,7 +381,7 @@ function main() {
   rows.push(["End date (141 Oak topics)", endDate.toISOString().slice(0, 10)]);
   rows.push(["Total days", String(totalDays)]);
   rows.push(["Weeks (approx)", String(Math.ceil(totalDays / 7))]);
-  rows.push(["Goal R (Germany junior target)", String(rHedef())]);
+  rows.push(["Goal R (Germany cyber job-readiness target)", String(rHedef())]);
   rows.push(["Rhythm", "2 Topic days + 1 Integrated Lab day (A, A, B, …)"]);
   rows.push([
     "After Oak 141",

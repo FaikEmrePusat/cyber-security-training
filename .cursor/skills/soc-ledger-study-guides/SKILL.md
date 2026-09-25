@@ -47,6 +47,6 @@ npm run test:plans
 
 `validate-study-plans.ts` already guards Antivirus vs NAT. When adding short regexes, add a similar guard if collision risk is high.
 
-## Weak / SIEM topics
+## Weak / detection topics
 
-Junior SOC weak areas (Windows Event Logs, Sysmon, SIEM triage, AD detection) should get **dedicated** TOPIC_GUIDES with Event IDs / lab rooms — do not rely only on generic `ALAN_GUIDES.win`.
+Detection-heavy weak areas (Windows Event Logs, Sysmon, SIEM triage, AD detection) should get **dedicated** TOPIC_GUIDES with Event IDs / lab rooms — do not rely only on generic `ALAN_GUIDES.win`. Frame them for a **security practitioner / multiple DE cyber roles**, not “only so you can close a SOC ticket.” Dual lens (attack + defense) still applies; SOC triage language is one useful example among admin/risk/ops practice.

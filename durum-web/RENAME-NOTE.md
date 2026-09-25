@@ -1,8 +1,9 @@
 # Product rename: Durum → SOC Ledger
 
-**Proposed display name:** **SOC Ledger**
+**Proposed display name:** **SOC Ledger**  
+**Subtitle:** Germany cyber multi-role foundation tracker
 
-**Rationale:** Conveys a professional competency ledger for Junior SOC / Blue Team progress tracking — structured, evidence-oriented, and distinct from generic "dashboard" names.
+**Rationale:** Keeps a recognizable ledger brand while framing progress as a broad cybersecurity foundation for Germany applications — SOC / Blue Team is one useful dual-lens mode and possible outcome, not the only destiny.
 
 **Alternatives if you prefer another direction:**
 - **Compass** — navigation metaphor; less domain-specific

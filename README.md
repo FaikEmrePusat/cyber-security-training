@@ -5,7 +5,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-**SOC Ledger** is a client-side competency tracker for a Junior SOC / Blue Team path — especially toward work in Germany. It tracks skills with evidence caps, career gates, FSRS spaced repetition, and a rolling “Today” study plan. Progress lives in the browser (`localStorage`); there is no account server.
+**SOC Ledger** is a client-side competency tracker for a **Germany cybersecurity multi-role foundation** — networking, systems, identity, crypto, detection, and attack-mechanics awareness — so you can apply broadly (SOC, IT security, junior admin+sec, vuln/scan-adjacent, support→sec, and related roles). SOC / Blue Team remains one useful training lens and possible outcome, not the only identity. It tracks skills with evidence caps, career gates, FSRS spaced repetition, and a rolling “Today” study plan. Progress lives in the browser (`localStorage`); there is no account server.
 
 Built and maintained by **[Faik Emre Pusat](https://github.com/FaikEmrePusat)** as a personal training ledger (not a multi-tenant SaaS product).
 
@@ -15,7 +15,7 @@ Built and maintained by **[Faik Emre Pusat](https://github.com/FaikEmrePusat)** 
 
 ## Who it is for
 
-- Learners building a **Junior SOC Analyst / Blue Team** profile
+- Learners building a **job-ready cybersecurity foundation for Germany** across multiple possible roles
 - Anyone who wants **evidence-backed** skill scores instead of calendar checklists
 - Readers of the public **Record** / published progress snapshot (view-only)
 

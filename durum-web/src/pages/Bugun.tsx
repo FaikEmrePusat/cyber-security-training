@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { ALAN_COLOR, FOUNDATION_SPINE_REBUILD } from "../data/oakCurriculum";
 import { stepLabel, type StudyGuide } from "../data/studyPlans";
-import { APP_NAME, APP_TAGLINE, STUDY_APPROACH_NOTE } from "../model/brand";
+import { APP_NAME, APP_SUBTITLE, APP_TAGLINE, STUDY_APPROACH_NOTE } from "../model/brand";
 import { GatePipeline } from "../components/GatePipeline";
 import { GaugeRing } from "../components/GaugeRing";
 import { SiemGapCallout } from "../components/SiemGapCallout";
@@ -38,7 +38,7 @@ const METRIC_HELP = [
     key: "r",
     mark: "R",
     label: "Readiness",
-    line: "How close you are to Germany junior target (0–100)",
+    line: "How close you are to Germany cyber job-readiness (0–100)",
   },
   {
     key: "gm",
@@ -426,6 +426,7 @@ export function BugunPage() {
       <header className="hero">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">{APP_NAME}</p>
+        <p className="hero__tagline">{APP_SUBTITLE}</p>
         <p className="hero__tagline">{APP_TAGLINE}</p>
         <div className="hero__focus-row">
           <h1 className="hero__headline">Today</h1>
@@ -645,7 +646,7 @@ export function BugunPage() {
             display={String(round1(d.live.R))}
             ratio={rRatio}
             tone="accent"
-            title="Readiness (R): how close you are to Germany junior (0–100)"
+            title="Readiness (R): how close you are to Germany cyber job-readiness (0–100)"
           />
           <GaugeRing
             label="Safety margin"

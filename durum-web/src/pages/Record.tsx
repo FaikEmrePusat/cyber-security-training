@@ -18,7 +18,7 @@ import {
   type PublicProgress,
 } from "../data/publicProgress";
 import { resolveStatus } from "../useCurriculumStatuses";
-import { APP_NAME, APP_TAGLINE, LEARNER_NAME, LEARNER_ROLE } from "../model/brand";
+import { APP_NAME, APP_SUBTITLE, APP_TAGLINE, LEARNER_NAME, LEARNER_ROLE } from "../model/brand";
 import {
   MODEL,
   computeAll,
@@ -149,6 +149,7 @@ export function RecordPage() {
       <header className="hero hero--compact">
         <div className="hero__atmosphere" aria-hidden />
         <p className="hero__brand">{APP_NAME}</p>
+        <p className="hero__tagline">{APP_SUBTITLE}</p>
         <p className="hero__tagline">{APP_TAGLINE}</p>
         <h1 className="hero__headline">{learnerName}</h1>
         <p className="hero__sub hero__sub--short">{learnerRole}</p>

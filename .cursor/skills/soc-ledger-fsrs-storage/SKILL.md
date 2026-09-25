@@ -16,7 +16,7 @@ description: >-
 | `durum-curriculum-v1` | `CURRICULUM_STORAGE_KEY` in `src/data/oakCurriculum.ts` | Topic statuses |
 | Publish token | `publicProgress.ts` | Browser-only GitHub PAT |
 
-Internal package/storage names may stay `durum-*`; UI brand is **SOC Ledger**.
+Internal package/storage names may stay `durum-*`; UI brand is **SOC Ledger** (subtitle: Germany cyber multi-role foundation tracker).
 
 ## Load / seed safety
 

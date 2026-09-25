@@ -416,7 +416,7 @@ export function TekrarPage() {
 
       <Section
         title="Add from suggestions"
-        lead="Junior SOC focused selection. Only add topics you have studied — do not fill the entire roadmap here."
+        lead="Core cyber foundation selection for Germany multi-role readiness. Only add topics you have studied — do not fill the entire roadmap here."
       >
         <label className="note" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
           <input
@@ -424,7 +424,7 @@ export function TekrarPage() {
             checked={showLater}
             onChange={(e) => setShowLater(e.target.checked)}
           />
-          Also show post–Junior SOC topics
+          Also show advanced / later-path topics
         </label>
 
         {suggestions.length === 0 ? (

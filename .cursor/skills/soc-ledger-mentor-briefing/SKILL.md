@@ -22,7 +22,7 @@ Do not invent topics outside the briefing. English only (see `.cursor/rules/engl
 | Protocol + builders | `durum-web/src/data/mentorBriefing.ts` |
 | Day copy UI | `durum-web/src/components/MentorBriefingPanel.tsx` |
 | Per-task copy | `durum-web/src/pages/Bugun.tsx` |
-| Brand names | `durum-web/src/model/brand.ts` (`APP_NAME`, `STUDY_APPROACH_NOTE`) |
+| Brand names | `durum-web/src/model/brand.ts` (`APP_NAME`, `APP_SUBTITLE`, `LEARNER_ROLE`, `STUDY_APPROACH_NOTE`) |
 | Regression | `durum-web/scripts/validate-system.ts` §7 |
 
 ## Teacher-first invariants
@@ -41,6 +41,7 @@ Briefings **must**:
 
 ## Learner profile (Context block)
 
+- Goal: **Germany cybersecurity multi-role foundation** — apply broadly; SOC / Blue Team is one possible outcome and dual-lens training mode, not the only identity
 - Understands when they can **do + explain while doing**
 - Autopilot risk on long wall-of-text rooms — avoid “read the whole room” steers
 - ~40–45 min focus blocks
@@ -48,13 +49,23 @@ Briefings **must**:
 ## When editing protocol text
 
 - Keep sections A–G (PURPOSE → VERIFICATION).
-- Keep dual lens: attack/technique **and** defender/detection (`STUDY_APPROACH_NOTE`).
+- PURPOSE must stay multi-role Germany cyber (not SOC-only destiny); SOC ticket language = one on-the-job example among roles.
+- Keep dual lens: attack/technique **and** defender/detection (`STUDY_APPROACH_NOTE`) — helps all target roles.
 - Prefer Study-path actions while learning over quiz loops.
 - Closing turn: remind learner to return to Record / Day log.
 
 ## Panel copy
 
 `MentorBriefingPanel` lead should describe the loop: light level-check → teach & Study steps → practice → optional check — **not examiner-first**.
+
+## Brand
+
+| Constant | Role |
+|----------|------|
+| `APP_NAME` | **SOC Ledger** (keep) |
+| `APP_SUBTITLE` | Multi-role Germany cyber foundation tracker |
+| `LEARNER_ROLE` | Multi-role foundation wording — not “Aspiring Junior SOC Analyst” destiny |
+| `STUDY_APPROACH_NOTE` | Dual lens across DE cyber roles |
 
 ## Verify
 
@@ -63,4 +74,4 @@ cd durum-web
 npm run test:system
 ```
 
-Asserts cover Teacher/mentor default, examiner-first ban, Study-steps weak branch, explain-back, spine rebuild, no vendor AI names, and Study steps section when a guide is present.
+Asserts cover Teacher/mentor default, examiner-first ban, Study-steps weak branch, explain-back, spine rebuild, no vendor AI names, multi-role PURPOSE / LEARNER_ROLE, and Study steps section when a guide is present.
