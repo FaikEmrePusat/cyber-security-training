@@ -82,7 +82,7 @@ const TEKRAR_SAAT = 8 / 60;
 const TEMEL_SAAT = 0.75;
 /** Legacy / non-rebuild topic slot. */
 const KONU_SAAT = 0.5;
-/** Light class / current-course lane (homework, Nessus, quiz). */
+/** Light class / current-course lane (homework, Exploitation, quiz). */
 const CLASS_SAAT = 0.25;
 const LAB_SAAT_MIN = 0.5;
 const DIL_SAAT = 0.5;
@@ -185,7 +185,7 @@ function spineCandidates(
   return sortByOakSpineOrder(open);
 }
 
-/** Prefer current class topic (e.g. Nessus); else first incomplete weak-area candidate. */
+/** Prefer current class topic (e.g. Exploitation); else first incomplete weak-area candidate. */
 function classLaneCandidates(
   alan: string,
   getStatus: (id: string) => CurriculumStatus,

@@ -255,9 +255,9 @@ export const OAK_BY_ID: Record<string, CurriculumTopic> = Object.fromEntries(
 
 /**
  * Light "class lane" topic (homework / current Oak lecture) — not the daily deep-work spine.
- * Intro To Security atoms live in covered secfund; Nmap + Nessus are covered post-EDR.
+ * Intro To Security atoms live in covered secfund; Nmap → Nessus → Project 2 → Exploitation are covered post-EDR.
  */
-export const OAK_COURSE_FOCUS = "Vulnerability Scanning & Management (Nessus)";
+export const OAK_COURSE_FOCUS = "Exploitation";
 
 /**
  * When true, Topic Day deep work walks the Oak **module** spine

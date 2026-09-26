@@ -577,7 +577,7 @@ export function BugunPage() {
               </span>
             </div>
             <p className="bugun-gorevler__pace note">
-              One ~40–45 min foundation tour is enough: Oak PDF → do + explain-back → dual lens → Record. Class/Nessus is
+              One ~40–45 min foundation tour is enough: Oak PDF → do + explain-back → dual lens → Record. Class/Exploitation is
               light parallel; reviews are optional — do not pressure-clear every card.
             </p>
             {schedule.carryCount > 0 && (

@@ -101,8 +101,8 @@ console.log("\n=== 2. Seed + readiness model ===");
 }
 
 console.log("\n=== 3. Curriculum ===");
-assert("Oak covered = 152", OAK_COVERED.length === 152, `got ${OAK_COVERED.length}`);
-assert("Oak upcoming = 8", OAK_UPCOMING.length === 8, `got ${OAK_UPCOMING.length}`);
+assert("Oak covered = 154", OAK_COVERED.length === 154, `got ${OAK_COVERED.length}`);
+assert("Oak upcoming = 6", OAK_UPCOMING.length === 6, `got ${OAK_UPCOMING.length}`);
 assert("topicKey trims", topicKey("  DNS  ") === "dns");
 {
   const ids = new Set(OAK_COVERED.map((t) => t.id));
@@ -117,10 +117,20 @@ assert("topicKey trims", topicKey("  DNS  ") === "dns");
       !OAK_UPCOMING.some((t) => /network scanning \(nmap\)/i.test(t.konu)),
   );
   assert(
+    "Project 2 Vulnerability Management is covered",
+    OAK_COVERED.some((t) => /project\s*2.*vulnerab/i.test(t.konu)) &&
+      !OAK_UPCOMING.some((t) => /project\s*2/i.test(t.konu)),
+  );
+  assert(
+    "Exploitation is covered (not upcoming)",
+    OAK_COVERED.some((t) => t.konu === "Exploitation") &&
+      !OAK_UPCOMING.some((t) => t.konu === "Exploitation"),
+  );
+  assert(
     "Intro To Security module topic covered",
     OAK_COVERED.some((t) => t.konu === "Intro To Security"),
   );
-  assert("Course focus is Nessus", OAK_COURSE_FOCUS.includes("Nessus"));
+  assert("Course focus is Exploitation", OAK_COURSE_FOCUS === "Exploitation");
   assert(
     "Course focus topic exists in covered",
     OAK_COVERED.some((t) => t.konu === OAK_COURSE_FOCUS),

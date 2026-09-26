@@ -1,7 +1,7 @@
 /**
  * Dry-run ~1 month of learner use (not a wall-clock wait).
  * Simulates 5–6 study days/week, reinforcing one spine topic per day,
- * optional light Nessus lane, optional skip of FSRS reviews.
+ * optional light Exploitation class lane, optional skip of FSRS reviews.
  *
  * Also samples Server / Crypto / Firewall / EDR guides (PASS_SOLID must not
  * ignore modules beyond the first ~22 days).
@@ -13,7 +13,7 @@ import { sortByOakSpineOrder, spineModuleLabel } from "../src/data/oakSpineOrder
 import { buildStudyGuide } from "../src/data/studyPlans";
 import type { CurriculumStatus } from "../src/data/oakCurriculum";
 
-const STUDY_DAYS = 22; // ~5–6 days/week × 4 weeks
+const STUDY_DAYS = 28; // ~5–6 days/week × ~5 weeks (~1 month of study)
 const statuses = new Map<string, CurriculumStatus>();
 for (const t of OAK_COVERED) statuses.set(t.id, "ogreniyorum");
 
@@ -98,7 +98,7 @@ for (const r of rows) {
   byWeek.set(r.week, list);
 }
 
-console.log("=== 1-month learner dry-run (22 study days) ===\n");
+console.log(`=== 1-month learner dry-run (${STUDY_DAYS} study days) ===\n`);
 for (const [week, list] of byWeek) {
   console.log(`Week ${week}: ${list[0].module} → ${list[list.length - 1].module}`);
   for (const r of list) {

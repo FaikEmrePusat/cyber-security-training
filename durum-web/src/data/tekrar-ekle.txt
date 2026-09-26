@@ -131,6 +131,8 @@ def|orta|Hardening basics (unnecessary services / RDP-SMB restriction)
 def|orta|False positive vs true positive (EDR/SOC)
 off|orta|Network Scanning (Nmap)
 off|orta|Vulnerability Scanning & Management (Nessus)
+off|orta|Project 2: Vulnerability Management
+off|orta|Exploitation
 off|orta|DoS / DDoS awareness
 off|orta|Spoofing / sniffing awareness
 off|orta|SQL Injection / XSS awareness

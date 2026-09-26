@@ -13,7 +13,7 @@ export const OAK_SPINE_MODULES = [
   { id: "crypto", label: "Cryptography" },
   { id: "firewall", label: "Firewall" },
   { id: "edr", label: "EDR" },
-  { id: "scan", label: "Scanning & awareness" },
+  { id: "scan", label: "Scanning & exploitation" },
 ] as const;
 
 export type OakSpineModuleId = (typeof OAK_SPINE_MODULES)[number]["id"];
@@ -154,8 +154,8 @@ const INTRO_SEC_ORDER = new Map(INTRO_SEC_TITLES.map((t, i) => [t.toLowerCase(),
 /** Fallback: stable catalog line order from tekrar-ekle (does not change topic IDs). */
 const CATALOG_ORDER = new Map(OAK_COVERED.map((t, i) => [t.konu.trim().toLowerCase(), i]));
 
-function isNmapOrNessus(konu: string): boolean {
-  return /nmap|nessus/i.test(konu);
+function isScanOrExploitModule(konu: string): boolean {
+  return /nmap|nessus|project\s*2|project\s*3|exploitation/i.test(konu);
 }
 
 /** Module index 0…n-1; unknown topics sort last within a high bucket. */
@@ -168,7 +168,7 @@ export function spineModuleIndex(t: CurriculumTopic): number {
   if (t.alan === "crypto") return 4;
   if (t.alan === "netsec") return 5;
   if (t.alan === "def") return 6;
-  if (t.alan === "off") return isNmapOrNessus(t.konu) ? 7 : 7;
+  if (t.alan === "off") return isScanOrExploitModule(t.konu) ? 7 : 7;
   if (t.alan === "siem" || t.alan === "py") return 8;
   return 9;
 }
@@ -191,7 +191,11 @@ function withinModuleOrder(t: CurriculumTopic): number {
   if (intro != null) return intro;
   if (t.alan === "off") {
     if (/nmap/i.test(t.konu)) return 0;
-    if (/nessus/i.test(t.konu)) return 1;
+    if (/nessus/i.test(t.konu) && !/project\s*2/i.test(t.konu)) return 1;
+    if (/project\s*2/i.test(t.konu)) return 2;
+    if (/^exploitation$/i.test(t.konu.trim()) || (/exploitation/i.test(t.konu) && !/project\s*3/i.test(t.konu)))
+      return 3;
+    if (/project\s*3/i.test(t.konu)) return 4;
     return 10;
   }
   return CATALOG_ORDER.get(key) ?? 10_000;

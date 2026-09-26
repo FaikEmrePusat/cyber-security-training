@@ -124,6 +124,8 @@ const scheduleTasks = [
   { kind: "lab" as const, baslik: "Integrated Lab — Attack Timeline + Detection Write-up", alan: "def" },
   { kind: "konu" as const, baslik: "Intro To Security", alan: "secfund" },
   { kind: "konu" as const, baslik: "Vulnerability Scanning & Management (Nessus)", alan: "off" },
+  { kind: "konu" as const, baslik: "Project 2: Vulnerability Management", alan: "off" },
+  { kind: "konu" as const, baslik: "Exploitation", alan: "off" },
 ];
 
 console.log("\nSchedule smoke tests:");
@@ -155,6 +157,49 @@ for (const task of scheduleTasks) {
   }
   if (!nessus.steps.some((s) => /lifecycle|Nessus|Vulnversity|Oak/i.test(s.action))) {
     fail("Nessus guide missing Oak/Nessus study steps");
+  }
+  if (!nessus.resources.some((r) => /Vulnerability Management\.pdf/i.test(r.label))) {
+    fail("Nessus guide should name Vulnerability Management.pdf");
+  }
+}
+
+{
+  const project2 = buildStudyGuide({
+    kind: "konu",
+    baslik: "Project 2: Vulnerability Management",
+    alan: "off",
+  });
+  if (!project2.resources.some((r) => /Vulnerability Management\.pdf/i.test(r.label))) {
+    fail("Project 2 guide should use Nessus folder Vulnerability Management.pdf");
+  }
+  if (!project2.actions.some((a) => /Project 2|triage|lifecycle report/i.test(a))) {
+    fail("Project 2 guide missing project/lifecycle actions");
+  }
+  if (project2.resources.some((r) => /4\.23 - Exploitation/i.test(r.label))) {
+    fail("Project 2 must not resolve to Exploitation PDFs");
+  }
+}
+
+{
+  const exploitation = buildStudyGuide({
+    kind: "konu",
+    baslik: "Exploitation",
+    alan: "off",
+  });
+  if (!exploitation.resources.some((r) => /4\.23 - Exploitation\.pdf/i.test(r.label))) {
+    fail("Exploitation guide should prefer Oak 4.23 Exploitation PDF");
+  }
+  if (!exploitation.resources.some((r) => /Metasploit Framework\.pdf/i.test(r.label))) {
+    fail("Exploitation guide should include Metasploit Framework.pdf");
+  }
+  if (!exploitation.resources.some((r) => /Post-Exploitation\.pdf/i.test(r.label))) {
+    fail("Exploitation guide should include Post-Exploitation.pdf");
+  }
+  if (!exploitation.outcomes.some((o) => /vulnerability vs exploit vs payload|payload triad/i.test(o))) {
+    fail("Exploitation outcomes should include vulnerability/exploit/payload triad");
+  }
+  if (exploitation.resources[0] && /TryHackMe/i.test(exploitation.resources[0].label) && !/optional/i.test(exploitation.resources[0].label)) {
+    fail("Exploitation guide must not lead with THM as primary");
   }
 }
 

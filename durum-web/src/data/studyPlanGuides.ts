@@ -1627,6 +1627,37 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
+    // Project 2 must beat the broader Nessus / vuln-manage pattern below.
+    test: /project\s*2/i,
+    build: ({ konu }) =>
+      mkGuide(
+        konu,
+        [
+          oakNotes("Vulnerability Management.pdf", "Vulnerability Scanning & Management (Nessus)"),
+          oakNotes("Vulnerability Scanning.pdf", "Vulnerability Scanning & Management (Nessus)"),
+          oakNotes("Nmap-Nessus-Cheat-Sheet.pdf", "Vulnerability Scanning & Management (Nessus)"),
+          doc("https://docs.tenable.com/nessus/Content/GettingStarted.htm", "Nessus — getting started"),
+          doc("https://www.first.org/cvss/", "FIRST — CVSS overview"),
+        ],
+        [
+          "Oak Nessus PDFs first — treat Project 2 as a lifecycle report, not a scan grind",
+          "Produce a short triage table: finding → CVSS/severity → asset criticality → remediation owner",
+          "Dual lens: scanner as attacker recon noise vs defender ticket + scan telemetry",
+        ],
+        foundationTourSteps(
+          "Oak Vulnerability Management project notes",
+          "discover → prioritize → remediate → verify for one authorized target set",
+          "attacker: ranked weak services / defender: ticket path + scan alerts",
+        ),
+        [
+          "Explain vulnerability management as a cycle (not a one-shot scan)",
+          "Separate authenticated vs unauthenticated scan depth from memory",
+          "Rank 3 findings by CVSS + business impact and name a remediation owner",
+          "Say what defenders should log when vulnerability scanners run",
+        ],
+      ),
+  },
+  {
     test: /vulnerability scan|nessus|vuln.*manage/i,
     build: ({ konu }) =>
       mkGuide(
@@ -1652,17 +1683,35 @@ export const TOPIC_GUIDES: Array<{ test: RegExp; build: GuideBuilder }> = [
       ),
   },
   {
-    test: /exploitation|metasploit|exploit/i,
+    // Exact folder: Oak-Study-Notes/Exploitation — PDF names are source of truth.
+    test: /project\s*3|\bexploitation\b|metasploit/i,
     build: ({ konu }) =>
       mkGuide(
         konu,
-        [JR_PENTEST, thm("vulnversity", "TryHackMe — Vulnversity"), HTB_START, MITRE, oakResource(konu)],
-        ["Walk through exploit only in authorized lab", "Document attack chain steps for blue-team detection", "Identify patch or control that would block exploit"],
         [
-          { action: "Review exploit phases: recon → exploit → post-exploit", durationMin: 15, logHint: "3 phases" },
-          { action: "Complete one THM Jr Pentest or Starting Point machine", durationMin: 45, logHint: "Machine name + flag" },
-          { action: "List Event IDs / logs defenders should monitor", durationMin: 15, logHint: "3 log sources" },
-          { action: "Draft mini write-up: attack timeline + detection points", durationMin: 20, logHint: "Public or private notes URL" },
+          oakNotes("4.23 - Exploitation.pdf", "Exploitation"),
+          oakNotes("Metasploit Framework.pdf", "Exploitation"),
+          oakNotes("Post-Exploitation.pdf", "Exploitation"),
+          oakNotes("İleri Seviye Sızma Testi Yönetimi.pdf", "Exploitation"),
+          oakNotes("sans-metasploit-cheat-sheet.pdf", "Exploitation"),
+          thm("vulnversity", "TryHackMe — Vulnversity (optional authorized lab)"),
+          MITRE,
+        ],
+        [
+          "Oak Exploitation PDFs first — vulnerability vs exploit vs payload before any lab tool",
+          "Authorized lab only; treat Metasploit as project/workspace management, not a free-fire button",
+          "Dual lens: what changes on the host after access vs which logs/EDR signals defenders collect",
+        ],
+        foundationTourSteps(
+          "Oak 4.23 Exploitation + Metasploit Framework notes",
+          "vulnerability → exploit → payload triad and why wrong payload fails the op",
+          "attacker: gain access / privilege path · defender: process, auth, and network clues",
+        ),
+        [
+          "Explain vulnerability vs exploit vs payload from memory (Oak triad)",
+          "Name Metasploit’s modular roles at concept level (exploit / payload / post / auxiliary)",
+          "Describe post-exploitation goals without step-by-step attack commands",
+          "List 3 defender signals (process, auth, or network) that should fire after unauthorized access",
         ],
       ),
   },

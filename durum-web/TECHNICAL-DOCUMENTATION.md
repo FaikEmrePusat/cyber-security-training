@@ -688,24 +688,22 @@ v = (20.23 − 3.7) / 9.25 ≈ 1.84 ΔR/week
 
 | File | Topic count | Meaning |
 |------|------------:|---------|
-| `src/data/tekrar-ekle.txt` | **144** | Active Oak path (through Nmap + Nessus; includes Intro To Security module) |
-| `src/data/tekrar-sonra.txt` | **8** | Post-Nessus — vuln project, exploitation, SIEM/IR labs, GRC (`upcoming: true`, locked/unlockable) |
+| `src/data/tekrar-ekle.txt` | **154** | Active Oak path (through Project 2 + Exploitation; includes Intro To Security module) |
+| `src/data/tekrar-sonra.txt` | **6** | Post-Exploitation — Project 3, SIEM/IR labs, GRC (`upcoming: true`, locked/unlockable) |
 | `src/data/germanPlan.ts` | — | 9-month German B2 daily/monthly plan + learning-science rules (language channel) |
 
-Source: `Oak-Study-Notes/TEKRAR-EKLE.txt`, `TEKRAR-SONRA.txt`
+Source: `Oak-Study-Notes/` note folders (Nmap, Nessus, Exploitation PDFs) + catalog files below.
 
-### 6.2 Post-EDR locked topics and concrete SOC labs
+### 6.2 Post-Exploitation locked topics and concrete SOC labs
 
-Topics in `tekrar-sonra.txt` are detailed to industry standards for direct unlock after the EDR stage:
+Topics in `tekrar-sonra.txt` stay locked until unlocked after the Exploitation stage:
 
-1. `SIEM Mimarisi ve Log Toplama (Syslog / WinEvent / Sysmon)`
-2. `Splunk Temelleri ve SPL Sorgulama`
-3. `SOC Alarm Triage ve Olay İnceleme (IR Workflow)`
-4. `Nessus & Zaafiyet Taraması Temelleri`
-5. `Project 2: Active Directory & Network Hardening`
-6. `Project 3: Web & Network Sızma Testi Raporu`
-7. `Project 4: Mini SOC & SIEM Lab (Wazuh / Splunk + Sysmon)`
-8. `Temel GRC: ISO 27001, BSI IT-Grundschutz ve GDPR`
+1. `Project 3: Exploitation`
+2. `SIEM Architecture and Log Collection (Syslog / WinEvent / Sysmon)`
+3. `Splunk Basics and SPL Querying`
+4. `SOC Alert Triage and Incident Investigation (IR Workflow)`
+5. `Project 4: Mini SOC & SIEM Lab (Wazuh / Splunk + Sysmon)`
+6. `GRC (Governance, Risk, Compliance)`
 
 **Gate B & Gate C lab actions (`compute.ts`):**
 - *Sysmon + Wazuh / Splunk Lab Setup and Analysis* ($v=3.0$, opens Gate B and C)

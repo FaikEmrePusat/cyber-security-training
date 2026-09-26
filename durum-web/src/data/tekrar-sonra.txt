@@ -1,8 +1,6 @@
-# Oak Academy — not yet covered (course position: post-Nessus). Do not dump into FSRS.
+# Oak Academy — not yet covered (course position: post-Exploitation). Do not dump into FSRS.
 # Format: alan|zorluk|konu
-# Covered through Nessus (notes exist): Nmap + Vulnerability Scanning & Management (Nessus) → tekrar-ekle.txt
-off|orta|Project 2: Vulnerability Management
-off|orta|Exploitation
+# Covered through Exploitation (notes exist): Nmap + Nessus + Project 2 + Exploitation → tekrar-ekle.txt
 off|orta|Project 3: Exploitation
 siem|orta|SIEM Architecture and Log Collection (Syslog / WinEvent / Sysmon)
 siem|orta|Splunk Basics and SPL Querying
