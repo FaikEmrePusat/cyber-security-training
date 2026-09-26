@@ -128,7 +128,7 @@ function StudyPlanPanel({ guide, kind }: { guide: StudyGuide; kind?: BugunGorev[
   return (
     <details className="study-plan" open>
       <summary className="study-plan__summary">
-        Study path — Goal → PDF → Steps → Outcomes → Record
+        Study path — Goal → PDF → Steps → Outcomes → Self-check → Record
       </summary>
       <div className="study-plan__body">
         {showApproach && <p className="study-plan__approach">{STUDY_APPROACH_NOTE}</p>}

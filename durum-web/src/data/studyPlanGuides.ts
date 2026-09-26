@@ -1934,9 +1934,9 @@ export function germanStudyGuide(konu: string): StudyGuide {
   const anki = blocks.find((b) => b.id === "anki")!;
   const output = blocks.find((b) => b.id === "output")!;
   const grammar = blocks.find((b) => b.id === "grammar")!;
-  return {
-    topic: konu,
-    resources: [
+  return mkGuide(
+    konu,
+    [
       doc("https://learngerman.dw.com/en/nicos-weg/c-1", "DW — Nicos Weg (A1–B1 track)"),
       doc("https://learngerman.dw.com/", "DW Learn German"),
       doc("https://www.goethe.de/en/spr/kup/prf/prf/gb2.html", "Goethe-Institut — B2 exam"),
@@ -1944,14 +1944,14 @@ export function germanStudyGuide(konu: string): StudyGuide {
       doc("https://www.easygerman.org/", "Easy German"),
       tool("https://apps.ankiweb.net/", "Anki / FSRS desktop"),
     ],
-    actions: [
+    [
       `Run the ${GERMAN_B2_PLAN.durationMonths}-month B2 daily routine (~${GERMAN_B2_PLAN.dailyMinutes.min}–${GERMAN_B2_PLAN.dailyMinutes.max} min) — language only`,
       GERMAN_LEARNING_SCIENCE.pillars[0],
       "Clear Anki dues with active recall + feedback (no cramming backlog)",
       `Speaking target: ${GERMAN_B2_PLAN.speakingPerWeek.months1to4}×/week early; ${GERMAN_B2_PLAN.speakingPerWeek.months5to9}×/week from month 5`,
       GERMAN_B2_PLAN.criticalRules[0],
     ],
-    steps: steps(
+    [
       {
         action: `${input.label} (comprehensible input — Nicos Weg / DW / Easy German)`,
         durationMin: input.minutesMin,
@@ -1977,8 +1977,14 @@ export function germanStudyGuide(konu: string): StudyGuide {
         durationMin: 2,
         logHint: "Minutes + quality",
       },
-    ),
-  };
+    ],
+    [
+      "Complete today's input + Anki blocks without mixing in cyber study",
+      "Produce one corrected output (speak or write) you can replay from memory",
+      "Name one grammar pattern you practiced (articles or verb position)",
+      "Log minutes + quality so the B2 streak stays honest",
+    ],
+  );
 }
 
 export function labStudyGuide(konu: string, gateContext?: StudyGuideGateContext): StudyGuide {

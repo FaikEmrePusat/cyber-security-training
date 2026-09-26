@@ -1373,9 +1373,23 @@
   font-size: 0.88rem;
 }
 
-.study-plan__outcomes {
+.study-plan__outcomes,
+.study-plan__selfcheck {
   border-left: 3px solid var(--accent);
   padding-left: 0.55rem;
+  background: rgba(26, 107, 92, 0.06);
+  border-radius: 0 4px 4px 0;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  padding-right: 0.45rem;
+}
+
+.study-plan__outcomes .study-plan__heading,
+.study-plan__selfcheck .study-plan__heading {
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.88rem;
 }
 
 .study-plan__checklist {
