@@ -1,6 +1,8 @@
 import type { BugunGorev } from "../useRollingSchedule";
 import type { SessionFormData } from "../model";
+import { LOG_SOURCES } from "../data/dayLog";
 import type { StudyPlanStep } from "../data/studyPlans";
+import { mergeSources } from "../data/sessionMultiFields";
 
 export const AKTIVITE_OPTIONS = [
   { value: "konu-tekrar", label: "Topic review" },
@@ -76,7 +78,9 @@ export function aktiviteLabel(value: string, custom?: string): string {
 export function kaynakLabel(value: string): string {
   if (value === "chatgpt") return "Mentor session";
   const opt = KAYNAK_OPTIONS.find((o) => o.value === value);
-  return opt?.label ?? value;
+  if (opt) return opt.label;
+  const log = LOG_SOURCES.find((s) => s.id === value);
+  return log?.label ?? value;
 }
 
 export function modLabel(value: string): string {
@@ -85,8 +89,9 @@ export function modLabel(value: string): string {
 }
 
 export function generateSessionNot(form: SessionFormData, studyStep?: StudyPlanStep): string {
+  const sources = mergeSources(form.kaynak, form.extraSources);
   const parts = [
-    kaynakLabel(form.kaynak),
+    sources.map(kaynakLabel).join(" + "),
     aktiviteLabel(form.aktivite, form.aktiviteCustom),
     `${form.dakika} min`,
     modLabel(form.mod),

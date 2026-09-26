@@ -1,6 +1,7 @@
 import type { BugunGorev } from "../useRollingSchedule";
 import type { SessionFormData } from "../model";
 import { APP_NAME } from "../model/brand";
+import { mergeEvidenceUrls, mergeSources, uniqueTrimmedStrings } from "./sessionMultiFields";
 
 export const LOG_TAGS = [
   { id: "linux", label: "Linux" },
@@ -42,14 +43,20 @@ export type DayLogEntry = {
   area?: string;
   tags?: string[];
   mode?: string;
+  /** Primary source (also first of sources when multi). */
   source?: string;
+  /** All sources for the session (optional). */
+  sources?: string[];
   minutes?: number;
   quality?: number;
   stepsDone?: number[];
   attacker?: string;
   defender?: string;
   summary: string;
+  /** Primary evidence string. */
   evidence?: string;
+  /** All evidence paths/URLs (optional). */
+  evidenceUrls?: string[];
 };
 
 export type DayLogJson = {
@@ -128,7 +135,7 @@ export function dayLogChatPrompt(template: DayLogJson): string {
   const tagList = LOG_TAGS.map((t) => t.id).join(", ");
   const sourceList = LOG_SOURCES.map((s) => s.id).join(", ");
   const modeList = LOG_MODES.map((m) => m.id).join(", ");
-  return `Fill this ${APP_NAME} day log as JSON only (no markdown). Keep the same "topic" strings. Delete entries we did not do. Use only these tags: ${tagList}. source must be one of: ${sourceList}. mode must be one of: ${modeList}. quality is 1–10. minutes is a number. summary = what we actually did. attacker/defender = 1–2 sentences each (empty for German). evidence = URL or empty.
+  return `Fill this ${APP_NAME} day log as JSON only (no markdown). Keep the same "topic" strings. Delete entries we did not do. Use only these tags: ${tagList}. source must be one of: ${sourceList} (primary). Optional sources array lists all sources used. mode must be one of: ${modeList}. quality is 1–10. minutes is a number. summary = what we actually did. attacker/defender = 1–2 sentences each (empty for German). evidence = URL/path or empty; optional evidenceUrls array for multiple.
 
 ${JSON.stringify(template, null, 2)}`;
 }
@@ -139,22 +146,33 @@ function asEntry(raw: unknown): DayLogEntry | null {
   const topic = String(o.topic ?? o.baslik ?? "").trim();
   const summary = String(o.summary ?? o.not ?? "").trim();
   if (!topic || !summary) return null;
-  const source = normalizeSource(String(o.source ?? o.kaynak ?? "mentor"));
+  const primarySource = normalizeSource(String(o.source ?? o.kaynak ?? "mentor"));
+  const extraFromArray = uniqueTrimmedStrings(o.sources ?? o.kaynaklar).map(normalizeSource);
+  const sources = mergeSources(primarySource, extraFromArray);
   const mode = String(o.mode ?? o.mod ?? "lab");
+  const evidencePrimary =
+    o.evidence != null
+      ? String(o.evidence)
+      : o.kanit != null
+        ? String(o.kanit)
+        : undefined;
+  const evidenceUrls = mergeEvidenceUrls(evidencePrimary, uniqueTrimmedStrings(o.evidenceUrls ?? o.kanitlar));
   return {
     topic,
     kind: o.kind != null ? String(o.kind) : undefined,
     area: o.area != null ? String(o.area) : o.alan != null ? String(o.alan) : undefined,
     tags: normalizeTags(o.tags),
     mode: MODE_IDS.has(mode) ? mode : "lab",
-    source,
+    source: sources[0] ?? primarySource,
+    sources: sources.length > 1 ? sources : undefined,
     minutes: Number(o.minutes ?? o.dakika ?? 30) || 30,
     quality: Number(o.quality ?? o.kalite ?? 7) || 7,
     stepsDone: Array.isArray(o.stepsDone) ? o.stepsDone.map(Number).filter((n) => n > 0) : undefined,
     attacker: o.attacker != null ? String(o.attacker) : undefined,
     defender: o.defender != null ? String(o.defender) : undefined,
     summary,
-    evidence: o.evidence != null ? String(o.evidence) : o.kanit != null ? String(o.kanit) : undefined,
+    evidence: evidenceUrls[0],
+    evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
   };
 }
 
@@ -202,14 +220,20 @@ export function entryToForm(entry: DayLogEntry, task?: BugunGorev): SessionFormD
     entry.stepsDone?.length ? `Steps: ${entry.stepsDone.join(", ")}` : "",
     entry.tags?.length ? `Tags: ${entry.tags.join(", ")}` : "",
   ].filter(Boolean);
+  const sources = mergeSources(entry.source, entry.sources);
+  const evidenceUrls = mergeEvidenceUrls(entry.evidence, entry.evidenceUrls);
+  const primary = sources[0] ?? "mentor";
+  const extras = sources.slice(1);
   return {
     aktivite: kindToAktivite(entry.kind ?? task?.kind),
     aktiviteCustom: entry.topic,
-    kaynak: entry.source ?? "mentor",
+    kaynak: primary,
+    extraSources: extras.length > 0 ? extras : undefined,
     dakika: Math.max(5, Math.min(300, Math.round(entry.minutes ?? 30))),
     mod: entry.mode ?? "lab",
     alan: entry.area || task?.alan || "net",
-    kanit: entry.evidence?.trim() || undefined,
+    kanit: evidenceUrls[0],
+    evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
     kalite: qualityToKalite(entry.quality),
     not: lines.join("\n"),
     tags: entry.tags,

@@ -33,7 +33,8 @@ import {
   type Tempo,
 } from "./model";
 import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
-import { applySessionEvidence } from "./data/evidencePromote";
+import { applySessionEvidence, isPublicHttpUrl } from "./data/evidencePromote";
+import { mergeEvidenceUrls, mergeSources } from "./data/sessionMultiFields";
 import { generateSessionNot } from "./components/sessionLogFormUtils";
 
 const MAX_HISTORY = 50;
@@ -112,6 +113,8 @@ function applyRetrievalReview(item: RetrievalItem, nowIso: string): RetrievalIte
 
 function formToLogRecord(form: SessionFormData): LogRecord {
   const not = form.not?.trim() || generateSessionNot(form);
+  const sources = mergeSources(form.kaynak, form.extraSources);
+  const evidenceUrls = mergeEvidenceUrls(form.kanit, form.evidenceUrls);
   return {
     t: new Date().toISOString(),
     type: "session",
@@ -119,8 +122,10 @@ function formToLogRecord(form: SessionFormData): LogRecord {
     mod: form.mod,
     dur_min: clamp(form.dakika, 1, 600),
     kalite: clamp(form.kalite, 0.3, 1),
-    kanit: form.kanit?.trim() || undefined,
-    kaynak: form.kaynak,
+    kanit: evidenceUrls[0],
+    evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
+    kaynak: sources[0] ?? form.kaynak,
+    sources: sources.length > 0 ? sources : undefined,
     konu: form.aktiviteCustom?.trim() || undefined,
     sonuc: form.tags?.length ? form.tags.join(", ") : undefined,
     tags: form.tags?.length ? form.tags : undefined,
@@ -133,18 +138,25 @@ function applyEvidenceFromSession(
   task: ScheduleTaskRef,
   form: SessionFormData,
 ): AppState {
-  const url = form.kanit?.trim();
-  if (!url) return s;
+  const urls = mergeEvidenceUrls(form.kanit, form.evidenceUrls);
+  if (urls.length === 0) return s;
   const promote = form.promoteEvidence !== false;
-  const { state } = applySessionEvidence(s, {
-    title: form.aktiviteCustom?.trim() || task.baslik || "Session evidence",
-    url,
-    kind: task.kind,
-    alan: form.alan || task.alan,
-    tags: form.tags,
-    promote,
-  });
-  return state;
+  const baseTitle = form.aktiviteCustom?.trim() || task.baslik || "Session evidence";
+  let next = s;
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    if (!isPublicHttpUrl(url)) continue;
+    const { state } = applySessionEvidence(next, {
+      title: urls.length > 1 ? `${baseTitle} (${i + 1})` : baseTitle,
+      url,
+      kind: task.kind,
+      alan: form.alan || task.alan,
+      tags: form.tags,
+      promote,
+    });
+    next = state;
+  }
+  return next;
 }
 
 function applyScheduleTaskCompletion(

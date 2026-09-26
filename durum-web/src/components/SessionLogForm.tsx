@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import type { Skill } from "../model";
 import type { SessionFormData } from "../model";
+import { LOG_SOURCES } from "../data/dayLog";
+import { isPublicHttpUrl } from "../data/evidencePromote";
 import {
   AKTIVITE_OPTIONS,
   KALITE_PRESETS,
@@ -20,6 +22,13 @@ type Props = {
   compact?: boolean;
 };
 
+function initialEvidenceRows(initial: SessionFormData): string[] {
+  const urls = (initial.evidenceUrls?.length ? initial.evidenceUrls : [initial.kanit ?? ""])
+    .map((u) => u.trim())
+    .filter(Boolean);
+  return urls.length > 0 ? urls : [""];
+}
+
 export function SessionLogForm({
   initial,
   skills,
@@ -31,24 +40,57 @@ export function SessionLogForm({
 }: Props) {
   const [form, setForm] = useState<SessionFormData>(initial);
   const [showCustomAktivite, setShowCustomAktivite] = useState(initial.aktivite === "diger");
+  const [extraSources, setExtraSources] = useState<string[]>(() => initial.extraSources ?? []);
+  const [evidenceRows, setEvidenceRows] = useState<string[]>(() => initialEvidenceRows(initial));
 
   const patch = (partial: Partial<SessionFormData>) => setForm((f) => ({ ...f, ...partial }));
 
   const activeStep = studySteps?.find((s) => s.order === (form.studyStep ?? 1));
 
+  const buildPayload = (): SessionFormData => {
+    const evidenceUrls = evidenceRows.map((r) => r.trim()).filter(Boolean);
+    const extras = extraSources.filter((s) => s !== form.kaynak);
+    const not =
+      form.not?.trim() ||
+      generateSessionNot({ ...form, extraSources: extras, evidenceUrls }, activeStep);
+    return {
+      ...form,
+      extraSources: extras.length > 0 ? extras : undefined,
+      kanit: evidenceUrls[0],
+      evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
+      not,
+    };
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const not = form.not?.trim() || generateSessionNot(form, activeStep);
-    onSubmit({ ...form, not });
+    onSubmit(buildPayload());
   };
 
   const handleQuickSave = () => {
-    const not = form.not?.trim() || generateSessionNot(form, activeStep);
-    onSubmit({ ...form, not });
+    onSubmit(buildPayload());
   };
 
+  const toggleExtraSource = (id: string) => {
+    if (id === form.kaynak) return;
+    setExtraSources((cur) => (cur.includes(id) ? cur.filter((s) => s !== id) : [...cur, id]));
+  };
+
+  const extraSourceOptions = [
+    ...KAYNAK_OPTIONS.map((o) => ({ id: o.value, label: o.label })),
+    ...LOG_SOURCES.filter((s) => !KAYNAK_OPTIONS.some((o) => o.value === s.id)).map((s) => ({
+      id: s.id,
+      label: s.label,
+    })),
+  ].filter((s) => s.id !== form.kaynak);
+
+  const evidenceLooksPublic = evidenceRows.some((r) => isPublicHttpUrl(r));
+
   return (
-    <form className={`session-log-form${compact ? " session-log-form--compact" : ""}`} onSubmit={handleSubmit}>
+    <form
+      className={`session-log-form${compact ? " session-log-form--compact" : ""}`}
+      onSubmit={handleSubmit}
+    >
       <div className="session-log-form__grid">
         {studySteps && studySteps.length > 0 && (
           <div className="field field--full">
@@ -89,7 +131,9 @@ export function SessionLogForm({
             }}
           >
             {AKTIVITE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </div>
@@ -107,10 +151,20 @@ export function SessionLogForm({
         )}
 
         <div className="field">
-          <label htmlFor="slf-kaynak">Source?</label>
-          <select id="slf-kaynak" value={form.kaynak} onChange={(e) => patch({ kaynak: e.target.value })}>
+          <label htmlFor="slf-kaynak">Primary source</label>
+          <select
+            id="slf-kaynak"
+            value={form.kaynak}
+            onChange={(e) => {
+              const next = e.target.value;
+              patch({ kaynak: next });
+              setExtraSources((cur) => cur.filter((s) => s !== next));
+            }}
+          >
             {KAYNAK_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </div>
@@ -131,7 +185,9 @@ export function SessionLogForm({
           <label htmlFor="slf-mod">Mode</label>
           <select id="slf-mod" value={form.mod} onChange={(e) => patch({ mod: e.target.value })}>
             {MOD_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
             ))}
           </select>
         </div>
@@ -140,7 +196,9 @@ export function SessionLogForm({
           <label htmlFor="slf-alan">Area</label>
           <select id="slf-alan" value={form.alan} onChange={(e) => patch({ alan: e.target.value })}>
             {skills.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
             <option value="dil-de">Language — German</option>
             <option value="dil-en">Language — English</option>
@@ -150,14 +208,70 @@ export function SessionLogForm({
 
       {!compact && (
         <>
-          <div className="field">
-            <label htmlFor="slf-kanit">Evidence / note (optional)</label>
-            <input
-              id="slf-kanit"
-              value={form.kanit ?? ""}
-              onChange={(e) => patch({ kanit: e.target.value })}
-              placeholder="URL, file, or short note"
-            />
+          {extraSourceOptions.length > 0 && (
+            <div className="field field--full">
+              <span className="session-log-form__sublabel">Also used (optional)</span>
+              <div className="day-log__chips" role="group" aria-label="Additional sources">
+                {extraSourceOptions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`day-log__chip${extraSources.includes(s.id) ? " is-on" : ""}`}
+                    aria-pressed={extraSources.includes(s.id)}
+                    onClick={() => toggleExtraSource(s.id)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="field field--full">
+            <span className="session-log-form__sublabel">Evidence (optional)</span>
+            {evidenceRows.map((row, index) => (
+              <div key={index} className="return-work__evidence-row" style={{ marginBottom: "0.4rem" }}>
+                <input
+                  id={`slf-kanit-${index}`}
+                  value={row}
+                  onChange={(e) =>
+                    setEvidenceRows((rows) => rows.map((r, i) => (i === index ? e.target.value : r)))
+                  }
+                  aria-label={`Evidence ${index + 1}`}
+                  placeholder="URL, file path, or short note"
+                />
+                {evidenceRows.length > 1 && (
+                  <button
+                    type="button"
+                    className="cta cta--ghost cta--sm"
+                    onClick={() =>
+                      setEvidenceRows((rows) =>
+                        rows.length <= 1 ? [""] : rows.filter((_, i) => i !== index),
+                      )
+                    }
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              className="cta cta--ghost cta--sm"
+              onClick={() => setEvidenceRows((rows) => [...rows, ""])}
+            >
+              Add evidence
+            </button>
+            {evidenceLooksPublic && (
+              <label className="return-work__promote" style={{ marginTop: "0.5rem" }}>
+                <input
+                  type="checkbox"
+                  checked={form.promoteEvidence !== false}
+                  onChange={(e) => patch({ promoteEvidence: e.target.checked })}
+                />
+                Add public http(s) evidence to portfolio
+              </label>
+            )}
           </div>
 
           <div className="field">
@@ -166,7 +280,7 @@ export function SessionLogForm({
               id="slf-not"
               value={form.not ?? ""}
               onChange={(e) => patch({ not: e.target.value })}
-              placeholder={generateSessionNot(form, activeStep)}
+              placeholder={generateSessionNot({ ...form, extraSources }, activeStep)}
               rows={2}
             />
           </div>
@@ -200,7 +314,9 @@ export function SessionLogForm({
       )}
 
       <div className="session-log-form__actions">
-        <button type="submit" className="cta cta--sm">{submitLabel}</button>
+        <button type="submit" className="cta cta--sm">
+          {submitLabel}
+        </button>
         {compact && (
           <button type="button" className="cta cta--ghost cta--sm" onClick={handleQuickSave}>
             Quick save

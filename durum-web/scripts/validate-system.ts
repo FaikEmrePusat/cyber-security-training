@@ -16,9 +16,11 @@ import {
   isRetrievalDue,
   nextStability,
   normalizeLoadedState,
+  normalizeLogRecord,
   rGiris,
   rHedef,
 } from "../src/model";
+import { mergeEvidenceUrls, mergeSources } from "../src/data/sessionMultiFields";
 import { OAK_COVERED, OAK_COURSE_FOCUS, OAK_UPCOMING, FOUNDATION_SPINE_REBUILD, topicKey } from "../src/data/oakCurriculum";
 import { sortByOakSpineOrder, spineModuleIndex } from "../src/data/oakSpineOrder";
 import { GERMAN_B2_PLAN, germanDailyMinutesTotal } from "../src/data/germanPlan";
@@ -494,6 +496,54 @@ console.log("\n=== 11. localStorage normalize / seed merge ===");
   assert("Normalize completed-today shape", Array.isArray(n.scheduleCompletedToday["2026-09-04"]));
   assert("Normalize rejects non-array completed ids", n.scheduleCompletedToday.bad === undefined);
   assert("Normalize empty skills → seed", normalizeLoadedState({ skills: [] }).skills.length === seed.skills.length);
+
+  const legacySession = normalizeLogRecord({
+    t: "2026-09-04T10:00:00.000Z",
+    type: "session",
+    kaynak: "mentor",
+    kanit: "D:/Oak/notes.pdf",
+    konu: "Linux bash",
+  });
+  assert("normalizeLogRecord migrates kaynak→sources", legacySession?.sources?.[0] === "mentor");
+  assert("normalizeLogRecord migrates kanit→evidenceUrls", legacySession?.evidenceUrls?.[0] === "D:/Oak/notes.pdf");
+
+  const multi = normalizeLogRecord({
+    t: "2026-09-04T11:00:00.000Z",
+    type: "session",
+    kaynak: "mentor",
+    sources: ["mentor", "docs"],
+    kanit: "https://gist.github.com/a",
+    evidenceUrls: ["https://gist.github.com/a", "D:/Oak/x.pdf"],
+  });
+  assert("normalizeLogRecord keeps multi sources", multi?.sources?.join(",") === "mentor,docs");
+  assert("normalizeLogRecord keeps multi evidence", multi?.evidenceUrls?.length === 2);
+
+  assert("mergeSources primary first", mergeSources("mentor", ["docs", "mentor"]).join(",") === "mentor,docs");
+  assert("mergeEvidenceUrls prefers list", mergeEvidenceUrls("a", ["b", "c"]).join(",") === "b,c");
+  assert("kaynakLabel docs", kaynakLabel("docs") === "Docs");
+
+  const multiJson = parseDayLogJson(
+    JSON.stringify({
+      entries: [
+        {
+          topic: "Linux kernel / distro / shell (bash)",
+          summary: "Mentor + Oak PDF",
+          source: "mentor",
+          sources: ["mentor", "docs"],
+          evidence: "D:/Oak/notes.pdf",
+          evidenceUrls: ["D:/Oak/notes.pdf", "https://gist.github.com/x"],
+          minutes: 45,
+        },
+      ],
+    }),
+  );
+  assert("parseDayLogJson multi sources", multiJson.ok === true);
+  if (multiJson.ok) {
+    const form = entryToForm(multiJson.log.entries[0]);
+    assert("entryToForm extraSources", form.extraSources?.includes("docs") === true);
+    assert("entryToForm evidenceUrls length", (form.evidenceUrls?.length ?? 0) >= 2);
+    assert("entryToForm primary kaynak mentor", form.kaynak === "mentor");
+  }
 }
 
 console.log(`\n=== RESULT: ${passed} passed, ${failures} failed ===\n`);

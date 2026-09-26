@@ -226,47 +226,77 @@ export function RecordPage() {
         ) : (
           <ul className="record-work">
             {workLog.map((r, i) => {
-              const url = r.kanit?.trim() ?? "";
-              const canPromote =
-                !readOnly && isPublicHttpUrl(url) && !artifactAlreadyHasUrl(artifacts, url);
+              const sources =
+                r.sources && r.sources.length > 0
+                  ? r.sources
+                  : r.kaynak
+                    ? [r.kaynak]
+                    : [];
+              const urls =
+                r.evidenceUrls && r.evidenceUrls.length > 0
+                  ? r.evidenceUrls
+                  : r.kanit?.trim()
+                    ? [r.kanit.trim()]
+                    : [];
+              const publicUrls = urls.filter((u) => isPublicHttpUrl(u));
               return (
                 <li key={`${r.t}-${i}`}>
                   <time dateTime={r.t}>{r.t.slice(0, 16).replace("T", " ")}</time>
                   {r.konu && <strong> {r.konu}</strong>}
                   {typeof r.dur_min === "number" && <span> · {r.dur_min} min</span>}
-                  {r.kaynak && <span className="note"> · {kaynakLabel(r.kaynak)}</span>}
+                  {sources.length > 0 && (
+                    <span className="note"> · {sources.map(kaynakLabel).join(" + ")}</span>
+                  )}
                   {(r.tags?.length || r.sonuc) && (
                     <p className="record-work__tags">
                       {(r.tags ?? r.sonuc?.split(",").map((s) => s.trim()) ?? []).join(" · ")}
                     </p>
                   )}
                   {r.not && <p>{r.not}</p>}
-                  {url && (
-                    <p className="record-work__evidence">
-                      <a href={url} target="_blank" rel="noopener noreferrer" title={url}>
-                        {shortUrlLabel(url)}
-                      </a>
-                      {canPromote && (
-                        <button
-                          type="button"
-                          className="cta cta--ghost cta--sm"
-                          onClick={() =>
-                            promoteLogEvidence({
-                              title: r.konu ?? "Session evidence",
-                              url,
-                              alan: r.alan,
-                              tags: r.tags,
-                              kind: r.mod === "lab" ? "lab" : undefined,
-                            })
-                          }
-                        >
-                          Add to portfolio
-                        </button>
-                      )}
-                      {!canPromote && !readOnly && isPublicHttpUrl(url) && (
-                        <span className="note"> · in portfolio</span>
-                      )}
-                    </p>
+                  {urls.length > 0 && (
+                    <ul className="record-work__evidence-list">
+                      {urls.map((url) => {
+                        const canPromote =
+                          !readOnly &&
+                          isPublicHttpUrl(url) &&
+                          !artifactAlreadyHasUrl(artifacts, url);
+                        const isHttp = isPublicHttpUrl(url);
+                        return (
+                          <li key={url} className="record-work__evidence">
+                            {isHttp ? (
+                              <a href={url} target="_blank" rel="noopener noreferrer" title={url}>
+                                {shortUrlLabel(url)}
+                              </a>
+                            ) : (
+                              <span title={url}>{shortUrlLabel(url)}</span>
+                            )}
+                            {canPromote && (
+                              <button
+                                type="button"
+                                className="cta cta--ghost cta--sm"
+                                onClick={() =>
+                                  promoteLogEvidence({
+                                    title: r.konu ?? "Session evidence",
+                                    url,
+                                    alan: r.alan,
+                                    tags: r.tags,
+                                    kind: r.mod === "lab" ? "lab" : undefined,
+                                  })
+                                }
+                              >
+                                Add to portfolio
+                              </button>
+                            )}
+                            {!canPromote && !readOnly && isHttp && (
+                              <span className="note"> · in portfolio</span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  {!readOnly && publicUrls.length === 0 && urls.length > 0 && (
+                    <p className="note">Local / non-http evidence is kept on the log only (not Gate C).</p>
                   )}
                 </li>
               );

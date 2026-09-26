@@ -1880,14 +1880,6 @@
   margin-top: 0.2rem;
 }
 
-.record-work__evidence {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  margin: 0.35rem 0 0;
-}
-
 .publish-panel {
   margin: 0;
   padding: 0;
@@ -2063,10 +2055,38 @@ button.day-log__chip.is-on {
   flex: 1 1 12rem;
 }
 
+.return-work__hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.75rem;
+}
+
+.return-work__evidence-list {
+  margin-top: 0.75rem;
+}
+
+.return-work__evidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.return-work__evidence-row input {
+  flex: 1 1 14rem;
+}
+
 .return-work__actions {
   display: flex;
   gap: 0.5rem;
   margin-top: 0.85rem;
+}
+
+.session-log-form__sublabel {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .record-work {
@@ -2089,6 +2109,21 @@ button.day-log__chip.is-on {
 .record-work p {
   margin: 0.35rem 0 0;
   font-size: 0.9rem;
+}
+
+.record-work__evidence-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+
+.record-work__evidence {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 .record-now {

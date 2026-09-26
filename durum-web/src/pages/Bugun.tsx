@@ -227,17 +227,34 @@ function ReturnWorkPanel({
   onCancel: () => void;
 }) {
   const [note, setNote] = useState("");
-  const [evidence, setEvidence] = useState("");
+  const [evidenceRows, setEvidenceRows] = useState<string[]>([""]);
   const [minutes, setMinutes] = useState(Math.max(15, Math.round(gorev.saat * 60)));
   const [tags, setTags] = useState<string[]>(() => suggestedTags(gorev));
   const [source, setSource] = useState("mentor");
+  const [extraSources, setExtraSources] = useState<string[]>([]);
   const [promote, setPromote] = useState(true);
 
   const toggleTag = (id: string) => {
     setTags((cur) => (cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id]));
   };
 
-  const evidenceLooksPublic = isPublicHttpUrl(evidence);
+  const toggleExtraSource = (id: string) => {
+    if (id === source) return;
+    setExtraSources((cur) => (cur.includes(id) ? cur.filter((s) => s !== id) : [...cur, id]));
+  };
+
+  const setEvidenceAt = (index: number, value: string) => {
+    setEvidenceRows((rows) => rows.map((r, i) => (i === index ? value : r)));
+  };
+
+  const addEvidenceRow = () => setEvidenceRows((rows) => [...rows, ""]);
+  const removeEvidenceRow = (index: number) => {
+    setEvidenceRows((rows) => (rows.length <= 1 ? [""] : rows.filter((_, i) => i !== index)));
+  };
+
+  const evidenceUrls = evidenceRows.map((r) => r.trim()).filter(Boolean);
+  const evidenceLooksPublic = evidenceUrls.some((u) => isPublicHttpUrl(u));
+  const extraSourceOptions = LOG_SOURCES.filter((s) => s.id !== source);
 
   return (
     <form
@@ -246,13 +263,16 @@ function ReturnWorkPanel({
       onSubmit={(e) => {
         e.preventDefault();
         const mapped = kindToForm(gorev);
+        const extras = extraSources.filter((s) => s !== source);
         onSave({
           ...mapped,
           aktiviteCustom: gorev.baslik,
           kaynak: source,
+          extraSources: extras.length > 0 ? extras : undefined,
           dakika: minutes,
           alan: gorev.alan && gorev.alan.length < 12 ? gorev.alan : "net",
-          kanit: evidence.trim() || undefined,
+          kanit: evidenceUrls[0],
+          evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
           kalite: 0.85,
           not: [note.trim(), tags.length ? `Tags: ${tags.join(", ")}` : ""].filter(Boolean).join("\n"),
           tags,
@@ -291,12 +311,16 @@ function ReturnWorkPanel({
       <div className="return-work__row">
         <div>
           <label className="return-work__label" htmlFor={`rw-src-${gorev.id}`}>
-            Source
+            Primary source
           </label>
           <select
             id={`rw-src-${gorev.id}`}
             value={source}
-            onChange={(e) => setSource(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              setSource(next);
+              setExtraSources((cur) => cur.filter((s) => s !== next));
+            }}
           >
             {LOG_SOURCES.map((s) => (
               <option key={s.id} value={s.id}>
@@ -318,23 +342,66 @@ function ReturnWorkPanel({
             onChange={(e) => setMinutes(Number(e.target.value) || 30)}
           />
         </div>
-        <div className="return-work__grow">
-          <label className="return-work__label" htmlFor={`rw-ev-${gorev.id}`}>
-            Evidence URL (optional)
-          </label>
-          <input
-            id={`rw-ev-${gorev.id}`}
-            type="text"
-            value={evidence}
-            onChange={(e) => setEvidence(e.target.value)}
-            placeholder="https://github.com/… or gist / Medium"
-          />
-        </div>
+      </div>
+      {extraSourceOptions.length > 0 && (
+        <>
+          <p className="return-work__label" style={{ marginTop: "0.65rem" }}>
+            Also used (optional)
+          </p>
+          <div className="day-log__chips" role="group" aria-label="Additional sources">
+            {extraSourceOptions.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`day-log__chip${extraSources.includes(s.id) ? " is-on" : ""}`}
+                aria-pressed={extraSources.includes(s.id)}
+                onClick={() => toggleExtraSource(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="return-work__evidence-list">
+        <p className="return-work__label">Evidence (optional)</p>
+        <p className="note return-work__hint">
+          Paths, PDF locations, or public http(s) URLs. Add one row per item.
+        </p>
+        {evidenceRows.map((row, index) => (
+          <div key={index} className="return-work__evidence-row">
+            <input
+              id={`rw-ev-${gorev.id}-${index}`}
+              type="text"
+              value={row}
+              onChange={(e) => setEvidenceAt(index, e.target.value)}
+              aria-label={`Evidence ${index + 1}`}
+              placeholder={
+                index === 0
+                  ? "https://… or path to Oak PDF / notes"
+                  : "Another URL or path"
+              }
+            />
+            {evidenceRows.length > 1 && (
+              <button
+                type="button"
+                className="cta cta--ghost cta--sm"
+                onClick={() => removeEvidenceRow(index)}
+                aria-label={`Remove evidence ${index + 1}`}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" className="cta cta--ghost cta--sm" onClick={addEvidenceRow}>
+          Add evidence
+        </button>
       </div>
       {evidenceLooksPublic && (
         <label className="return-work__promote">
           <input type="checkbox" checked={promote} onChange={(e) => setPromote(e.target.checked)} />
-          Add as public portfolio evidence (Gate C / readiness cap)
+          Add public http(s) evidence to portfolio (Gate C / readiness cap)
         </label>
       )}
       <div className="return-work__actions">

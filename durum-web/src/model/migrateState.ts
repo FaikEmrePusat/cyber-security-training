@@ -1,7 +1,13 @@
+import {
+  mergeEvidenceUrls,
+  mergeSources,
+  primaryFromList,
+  uniqueTrimmedStrings,
+} from "../data/sessionMultiFields";
 import { MODEL } from "./constants";
 import { createSeedState } from "./seed";
 import { daysSince } from "./compute";
-import type { AppState, ScheduleCarryItem, Skill } from "./types";
+import type { AppState, LogRecord, ScheduleCarryItem, Skill } from "./types";
 
 const MAX_CARRY = MODEL.carry.maxCarry;
 const MAX_CARRY_AGE_DAYS = MODEL.carry.maxAgeDays;
@@ -43,6 +49,40 @@ function normalizeCompletedToday(raw: unknown): Record<string, string[]> {
 }
 
 /**
+ * Expand legacy single kaynak/kanit into sources/evidenceUrls arrays (and mirror primary fields).
+ * Safe for old saves: missing arrays are derived; existing arrays are de-duplicated.
+ */
+export function normalizeLogRecord(raw: unknown): LogRecord | null {
+  if (!isPlainObject(raw) || typeof raw.t !== "string" || typeof raw.type !== "string") return null;
+  const r = raw as LogRecord;
+  const sources = mergeSources(
+    typeof r.kaynak === "string" ? r.kaynak : undefined,
+    uniqueTrimmedStrings(r.sources),
+  );
+  const evidenceUrls = mergeEvidenceUrls(
+    typeof r.kanit === "string" ? r.kanit : undefined,
+    uniqueTrimmedStrings(r.evidenceUrls),
+  );
+  return {
+    ...r,
+    kaynak: primaryFromList(sources, typeof r.kaynak === "string" ? r.kaynak : undefined),
+    sources: sources.length > 0 ? sources : undefined,
+    kanit: primaryFromList(evidenceUrls, typeof r.kanit === "string" ? r.kanit : undefined),
+    evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
+  };
+}
+
+function normalizeHistory(raw: unknown, fallback: LogRecord[]): LogRecord[] {
+  if (!Array.isArray(raw)) return fallback;
+  const out: LogRecord[] = [];
+  for (const item of raw) {
+    const n = normalizeLogRecord(item);
+    if (n) out.push(n);
+  }
+  return out;
+}
+
+/**
  * Merge a parsed localStorage / backup payload with seed defaults.
  * Keeps older saves usable when new seed fields or skills appear.
  */
@@ -61,7 +101,7 @@ export function normalizeLoadedState(parsed: unknown, nowMs = Date.now()): AppSt
     artifacts: asArray(p.artifacts, seed.artifacts),
     career: asArray(p.career, seed.career),
     retrieval: asArray(p.retrieval, seed.retrieval),
-    history: asArray(p.history, seed.history),
+    history: normalizeHistory(p.history, seed.history),
     pending: asArray(p.pending, []),
     lang: isPlainObject(p.lang) ? { ...seed.lang, ...p.lang } : seed.lang,
     tempo: isPlainObject(p.tempo) ? { ...seed.tempo, ...p.tempo } : seed.tempo,

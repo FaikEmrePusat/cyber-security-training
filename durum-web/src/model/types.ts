@@ -108,7 +108,10 @@ export type LogRecord = {
   dur_min?: number;
   kalite?: number;
   enerji?: number;
+  /** Primary evidence string (first of evidenceUrls when multi). */
   kanit?: string;
+  /** All evidence paths/URLs for this session (backward-compatible with kanit). */
+  evidenceUrls?: string[];
   konu?: string;
   sonuc?: string;
   tags?: string[];
@@ -119,7 +122,10 @@ export type LogRecord = {
   gecikme_gun?: number;
   yon?: string;
   kanit_seviyesi?: EvidenceTier;
+  /** Primary source (first of sources when multi). */
   kaynak?: string;
+  /** All sources for this session (backward-compatible with kaynak). */
+  sources?: string[];
   tur?: string;
   ad?: string;
   deger?: number;
@@ -160,11 +166,17 @@ export type SessionDraft = {
 export type SessionFormData = {
   aktivite: string;
   aktiviteCustom?: string;
+  /** Primary source (stored as LogRecord.kaynak). */
   kaynak: string;
+  /** Extra sources beyond primary (mentor + docs, etc.). */
+  extraSources?: string[];
   dakika: number;
   mod: string;
   alan: string;
+  /** Primary evidence (first URL/path); kept for older callers. */
   kanit?: string;
+  /** Full evidence list; when set, preferred over single kanit. */
+  evidenceUrls?: string[];
   kalite: number;
   not?: string;
   /** Study plan step (1-based) when logging from Today's task. */
