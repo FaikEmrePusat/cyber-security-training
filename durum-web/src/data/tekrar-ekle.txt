@@ -131,8 +131,6 @@ def|orta|Hardening basics (unnecessary services / RDP-SMB restriction)
 def|orta|False positive vs true positive (EDR/SOC)
 off|orta|Network Scanning (Nmap)
 off|orta|Vulnerability Scanning & Management (Nessus)
-off|orta|Project 2: Vulnerability Management
-off|orta|Exploitation
 off|orta|DoS / DDoS awareness
 off|orta|Spoofing / sniffing awareness
 off|orta|SQL Injection / XSS awareness
@@ -153,3 +151,6 @@ secfund|orta|IoT and mobile device basics / risks
 net|kolay|Network components (NIC / cabling / media)
 secfund|kolay|Operating system role (kernel / user space / OS types)
 secfund|orta|Application vs service vs process vs interface
+# Post-Nessus course modules — appended for stable earlier topic IDs; spine order via oakSpineOrder.ts
+off|orta|Project 2: Vulnerability Management
+off|orta|Exploitation

@@ -38,6 +38,14 @@ import {
   parseDayLogJson,
   suggestedTags,
 } from "../src/data/dayLog";
+import {
+  RECORD_TAGS,
+  RECORD_TAG_GROUPS,
+  RECORD_TAG_IDS,
+  formatTagLabels,
+  normalizeRecordTags,
+  resolveTagId,
+} from "../src/data/recordTags";
 import { buildMentorDayBriefing, buildMentorTaskBriefing } from "../src/data/mentorBriefing";
 import { buildLabWriteupMarkdown, slugifyTopic } from "../src/data/labWriteupTemplate";
 import { buildStudyGuide } from "../src/data/studyPlans";
@@ -313,6 +321,15 @@ console.log("\n=== 6. Day log JSON ===");
   assert("Day log template has entries", template.entries.length === 2);
   assert("Default source mentor", template.entries.every((e) => e.source === "mentor"));
   assert("suggestedTags linux", suggestedTags(fakeTasks[0]).includes("linux"));
+  assert("suggestedTags theory for foundation", suggestedTags(fakeTasks[0]).includes("theory"));
+  assert("suggestedTags lab for lab task", suggestedTags(fakeTasks[1]).includes("lab"));
+
+  assert("record tag catalog has 4 groups", RECORD_TAG_GROUPS.length === 4);
+  assert("record tag catalog covers legacy ids", ["linux", "thm", "mitre", "writeup", "vm"].every((id) => RECORD_TAG_IDS.has(id)));
+  assert("record tag modules from Oak spine", RECORD_TAGS.some((t) => t.id === "mod-net" && t.group === "module"));
+  assert("normalize aliases windows/ad", normalizeRecordTags(["Windows / AD", "soc"]).join(",") === "windows,detection");
+  assert("formatTagLabels uses English", formatTagLabels(["linux", "lab"]).includes("Linux"));
+  assert("resolveTagId drops unknown", resolveTagId("not-a-real-tag") === null);
 
   const prompt = dayLogChatPrompt(template);
   assert("Day log prompt has JSON", prompt.includes('"entries"'));

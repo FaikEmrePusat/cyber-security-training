@@ -1967,6 +1967,26 @@
   margin: 0 0 0.75rem;
 }
 
+.record-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.record-tags__group-label {
+  margin: 0 0 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.record-tags__group .day-log__chips {
+  margin: 0;
+}
+
 .day-log__chip {
   border: 1px solid var(--line);
   background: var(--paper-raised, var(--mist));

@@ -13,7 +13,8 @@ import { useRollingSchedule, type BugunGorev, type ScheduleDay } from "../useRol
 import { MentorBriefingPanel } from "../components/MentorBriefingPanel";
 import { DayLogJsonPanel } from "../components/DayLogJsonPanel";
 import { buildMentorTaskBriefing } from "../data/mentorBriefing";
-import { LOG_TAGS, LOG_SOURCES, suggestedTags } from "../data/dayLog";
+import { LOG_SOURCES, suggestedTags } from "../data/dayLog";
+import { RecordTagPicker } from "../components/RecordTagPicker";
 import { isPublicHttpUrl } from "../data/evidencePromote";
 import { downloadLabWriteup } from "../data/labWriteupTemplate";
 import { useDurum } from "../store";
@@ -283,19 +284,10 @@ function ReturnWorkPanel({
       <p className="return-work__title">Back from your mentor — what did you do?</p>
       <p className="return-work__topic">{gorev.baslik}</p>
       <p className="return-work__label">Tags</p>
-      <div className="day-log__chips" role="group" aria-label="Tags">
-        {LOG_TAGS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`day-log__chip${tags.includes(t.id) ? " is-on" : ""}`}
-            aria-pressed={tags.includes(t.id)}
-            onClick={() => toggleTag(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <p className="note return-work__hint">
+        Pick Area / Module / Activity / Platform — suggested from today’s topic.
+      </p>
+      <RecordTagPicker selected={tags} onToggle={toggleTag} idPrefix={`rw-${gorev.id}`} />
       <label className="return-work__label" htmlFor={`rw-note-${gorev.id}`}>
         What you did
       </label>

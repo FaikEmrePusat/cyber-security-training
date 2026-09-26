@@ -2,22 +2,14 @@ import type { BugunGorev } from "../useRollingSchedule";
 import type { SessionFormData } from "../model";
 import { APP_NAME } from "../model/brand";
 import { mergeEvidenceUrls, mergeSources, uniqueTrimmedStrings } from "./sessionMultiFields";
+import {
+  LOG_TAGS,
+  normalizeRecordTags,
+  suggestedRecordTags,
+} from "./recordTags";
 
-export const LOG_TAGS = [
-  { id: "linux", label: "Linux" },
-  { id: "networking", label: "Networking" },
-  { id: "windows", label: "Windows / AD" },
-  { id: "detection", label: "Detection / SOC" },
-  { id: "review", label: "Review" },
-  { id: "lab", label: "Lab" },
-  { id: "thm", label: "TryHackMe" },
-  { id: "htb", label: "Hack The Box" },
-  { id: "pwn", label: "pwn.college" },
-  { id: "vm", label: "Local VM" },
-  { id: "german", label: "German" },
-  { id: "mitre", label: "MITRE" },
-  { id: "writeup", label: "Write-up" },
-] as const;
+export { LOG_TAGS, RECORD_TAGS, RECORD_TAG_GROUPS, formatTagLabels, tagLabel } from "./recordTags";
+export type { RecordTag, RecordTagGroupId } from "./recordTags";
 
 export const LOG_SOURCES = [
   { id: "mentor", label: "Mentor session" },
@@ -64,7 +56,6 @@ export type DayLogJson = {
   entries: DayLogEntry[];
 };
 
-const TAG_IDS: Set<string> = new Set(LOG_TAGS.map((t) => t.id));
 const SOURCE_IDS: Set<string> = new Set(LOG_SOURCES.map((s) => s.id));
 const MODE_IDS: Set<string> = new Set(LOG_MODES.map((m) => m.id));
 
@@ -88,25 +79,8 @@ function qualityToKalite(q: number | undefined): number {
   return Math.min(1, Math.max(0.3, q));
 }
 
-function normalizeTags(tags: unknown): string[] {
-  if (!Array.isArray(tags)) return [];
-  return [...new Set(tags.map((t) => String(t).trim().toLowerCase()).filter((t) => TAG_IDS.has(t)))];
-}
-
 export function suggestedTags(g: BugunGorev): string[] {
-  const out = new Set<string>();
-  if (g.kind === "tekrar") out.add("review");
-  if (g.kind === "lab") out.add("lab");
-  if (g.kind === "dil") out.add("german");
-  const alan = g.alan ?? "";
-  if (alan === "linux") out.add("linux");
-  if (alan === "net" || alan === "netsec") out.add("networking");
-  if (alan === "win") out.add("windows");
-  if (alan === "def" || alan === "siem") out.add("detection");
-  if (/linux|bash|kernel/i.test(g.baslik)) out.add("linux");
-  if (/antivirus|edr|soc|siem/i.test(g.baslik)) out.add("detection");
-  if (/dns|tcp|wireshark|network/i.test(g.baslik)) out.add("networking");
-  return [...out];
+  return suggestedRecordTags(g);
 }
 
 export function buildDayLogTemplate(tasks: BugunGorev[]): DayLogJson {
@@ -161,7 +135,7 @@ function asEntry(raw: unknown): DayLogEntry | null {
     topic,
     kind: o.kind != null ? String(o.kind) : undefined,
     area: o.area != null ? String(o.area) : o.alan != null ? String(o.alan) : undefined,
-    tags: normalizeTags(o.tags),
+    tags: normalizeRecordTags(o.tags),
     mode: MODE_IDS.has(mode) ? mode : "lab",
     source: sources[0] ?? primarySource,
     sources: sources.length > 1 ? sources : undefined,

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import type { Skill } from "../model";
 import type { SessionFormData } from "../model";
 import { LOG_SOURCES } from "../data/dayLog";
+import { RecordTagPicker } from "./RecordTagPicker";
 import { isPublicHttpUrl } from "../data/evidencePromote";
 import {
   AKTIVITE_OPTIONS,
@@ -42,8 +43,13 @@ export function SessionLogForm({
   const [showCustomAktivite, setShowCustomAktivite] = useState(initial.aktivite === "diger");
   const [extraSources, setExtraSources] = useState<string[]>(() => initial.extraSources ?? []);
   const [evidenceRows, setEvidenceRows] = useState<string[]>(() => initialEvidenceRows(initial));
+  const [tags, setTags] = useState<string[]>(() => initial.tags ?? []);
 
   const patch = (partial: Partial<SessionFormData>) => setForm((f) => ({ ...f, ...partial }));
+
+  const toggleTag = (id: string) => {
+    setTags((cur) => (cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id]));
+  };
 
   const activeStep = studySteps?.find((s) => s.order === (form.studyStep ?? 1));
 
@@ -55,6 +61,7 @@ export function SessionLogForm({
       generateSessionNot({ ...form, extraSources: extras, evidenceUrls }, activeStep);
     return {
       ...form,
+      tags: tags.length > 0 ? tags : undefined,
       extraSources: extras.length > 0 ? extras : undefined,
       kanit: evidenceUrls[0],
       evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
@@ -208,6 +215,12 @@ export function SessionLogForm({
 
       {!compact && (
         <>
+          <div className="field field--full">
+            <span className="session-log-form__sublabel">Tags</span>
+            <p className="note return-work__hint">Area / Module / Activity / Platform</p>
+            <RecordTagPicker selected={tags} onToggle={toggleTag} idPrefix="slf-tags" />
+          </div>
+
           {extraSourceOptions.length > 0 && (
             <div className="field field--full">
               <span className="session-log-form__sublabel">Also used (optional)</span>

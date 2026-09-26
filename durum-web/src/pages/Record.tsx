@@ -10,6 +10,7 @@ import { GatePipeline } from "../components/GatePipeline";
 import { PublishPanel } from "../components/PublishPanel";
 import { Section } from "../components/Section";
 import { kaynakLabel } from "../components/sessionLogFormUtils";
+import { formatTagLabels } from "../data/recordTags";
 import { artifactAlreadyHasUrl, isPublicHttpUrl, shortUrlLabel } from "../data/evidencePromote";
 import {
   fetchPublicProgress,
@@ -249,7 +250,11 @@ export function RecordPage() {
                   )}
                   {(r.tags?.length || r.sonuc) && (
                     <p className="record-work__tags">
-                      {(r.tags ?? r.sonuc?.split(",").map((s) => s.trim()) ?? []).join(" · ")}
+                      {formatTagLabels(
+                        r.tags?.length
+                          ? r.tags
+                          : (r.sonuc?.split(",").map((s) => s.trim()).filter(Boolean) ?? []),
+                      )}
                     </p>
                   )}
                   {r.not && <p>{r.not}</p>}

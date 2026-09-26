@@ -9,6 +9,7 @@ import {
   matchLogEntry,
   parseDayLogJson,
 } from "../data/dayLog";
+import { RecordTagPicker } from "./RecordTagPicker";
 
 export function DayLogJsonPanel({
   tasks,
@@ -47,16 +48,10 @@ export function DayLogJsonPanel({
     <section className="day-log" aria-label="Day log JSON">
       <h3 className="day-log__title">Day log (JSON)</h3>
       <p className="day-log__lead">
-        Copy the prompt into your mentor chat after you finish. Paste the JSON it returns. Tags you can use:{" "}
-        {LOG_TAGS.map((t) => t.id).join(", ")}.
+        Copy the prompt into your mentor chat after you finish. Paste the JSON it returns. Use only catalog
+        tag ids ({LOG_TAGS.length} tags across Area / Module / Activity / Platform).
       </p>
-      <div className="day-log__chips" aria-label="Allowed tags">
-        {LOG_TAGS.map((t) => (
-          <span key={t.id} className="day-log__chip">
-            {t.label}
-          </span>
-        ))}
-      </div>
+      <RecordTagPicker selected={[]} onToggle={() => {}} readOnly idPrefix="day-log-tags" />
       <div className="day-log__actions">
         <button type="button" className="cta" onClick={() => copy("prompt", prompt)}>
           {copied === "prompt" ? "Copied prompt" : "Copy mentor prompt"}
