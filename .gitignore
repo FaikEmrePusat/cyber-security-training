@@ -22,9 +22,13 @@ durum-web/dist/
 *.png
 *.jpg
 *.jpeg
-# App icons required to build the Usta native shells
-!usta-web/android/app/src/main/res/**/*.png
-!usta-web/src-tauri/icons/*.png
+
+# Private local projects (not published)
+usta-web/
+usta-core/
+usta-desktop/
+docs/usta/
+docs/Personal-Time-Architecture.md
 
 # Personal strategy, notes and private planning documents
 /*.md

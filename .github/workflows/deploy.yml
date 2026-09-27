@@ -33,25 +33,6 @@ jobs:
           npm ci
           npm run test:all
 
-      - name: Test usta-core
-        working-directory: ./usta-core
-        run: |
-          npm ci
-          npm test
-
-      - name: Build Usta under /usta/
-        working-directory: ./usta-web
-        env:
-          USTA_BASE: /cyber-security-training/usta/
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: |
-          npm ci
-          npm run build
-          rm -rf ../durum-web/dist/usta
-          cp -r dist ../durum-web/dist/usta
-          cp pages-404.html ../durum-web/dist/404.html
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
