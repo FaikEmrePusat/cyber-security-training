@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { computeNextAction, isQueueItemDone } from './nowEngine.js'
 import { createEmptyState, type UstaState } from './types.js'
 import { migrateState } from './migrate.js'
-import { markQueueDone, mergeStates, setLifeDone, unmarkFloorDone } from './merge.js'
+import {
+  clearFloorDay,
+  markQueueDone,
+  mergeStates,
+  setLifeDone,
+  unmarkFloorDone,
+} from './merge.js'
 import {
   addDaysToDateKey,
   applySundayClose,
@@ -120,6 +126,97 @@ describe('content factory', () => {
 
     const other = markQueueDone(s, MON, 'books_pages', 'd1')
     expect(other.week.contentPosts).toEqual(s.week.contentPosts)
+  })
+
+  it('Share Done records the share day on the post', () => {
+    const s = base()
+    s.week.contentPosts = [{ id: 'b', title: 'SIEM notes', status: 'ready' }]
+    const next = markQueueDone(s, MON, 'content_publish', 'd1')
+    expect(next.week.contentPosts[0]).toEqual({
+      id: 'b',
+      title: 'SIEM notes',
+      status: 'published',
+      sharedOn: MON,
+    })
+  })
+
+  it('undoing Share Done restores that post to Ready', () => {
+    const s = base()
+    s.week.contentPosts = [
+      { id: 'a', title: 'Old post', status: 'published' },
+      { id: 'b', title: 'SIEM notes', status: 'ready' },
+      { id: 'c', title: 'KQL tips', status: 'ready' },
+    ]
+    const shared = markQueueDone(s, MON, 'content_publish', 'd1')
+    const undone = unmarkFloorDone(shared, MON, 'content_publish', 'd1')
+    expect(undone.floor[MON]?.content_publish).toBeUndefined()
+    expect(undone.week.contentPosts.map((p) => p.status)).toEqual(['published', 'ready', 'ready'])
+    expect(undone.week.contentPosts[1]!.sharedOn).toBeUndefined()
+    expect(undone.rev).toBe(shared.rev + 1)
+    const a = computeNextAction(ist(2026, 9, 28, 16, 0), undone, undone.config, null)
+    expect(a.id).not.toBe('content_publish')
+  })
+
+  it('undoing another item leaves the shared post Published', () => {
+    const s = base()
+    s.week.contentPosts = [{ id: 'b', title: 'SIEM notes', status: 'ready' }]
+    let next = markQueueDone(s, MON, 'content_publish', 'd1')
+    next = markQueueDone(next, MON, 'books_pages', 'd1')
+    next = unmarkFloorDone(next, MON, 'books_pages', 'd1')
+    expect(next.week.contentPosts[0]!.status).toBe('published')
+  })
+
+  it('Reset today restores the post shared today, not other days', () => {
+    const s = base()
+    s.week.contentPosts = [
+      { id: 'x', title: 'Friday post', status: 'published', sharedOn: '2026-09-25' },
+      { id: 'b', title: 'SIEM notes', status: 'ready' },
+    ]
+    const shared = markQueueDone(s, MON, 'content_publish', 'd1')
+    const reset = clearFloorDay(shared, MON, 'd1')
+    expect(reset.week.contentPosts.map((p) => p.status)).toEqual(['published', 'ready'])
+  })
+
+  it('legacy Share (no sharedOn) is restored by the history title', () => {
+    const s = base()
+    s.week.contentPosts = [
+      { id: 'a', title: 'Other', status: 'published' },
+      { id: 'b', title: 'SIEM notes', status: 'published' },
+    ]
+    s.floor[MON] = { content_publish: true }
+    s.actionHistory = [
+      { at: '2026-09-28T13:00:00.000Z', actionId: 'content_publish', title: 'Published: SIEM notes' },
+    ]
+    const undone = unmarkFloorDone(s, MON, 'content_publish', 'd1')
+    expect(undone.week.contentPosts.map((p) => p.status)).toEqual(['published', 'ready'])
+  })
+
+  it('Undo on one device wins over the stale Share on another after sync', () => {
+    const s = base()
+    s.week.contentPosts = [{ id: 'b', title: 'SIEM notes', status: 'ready' }]
+    const shared = markQueueDone(s, MON, 'content_publish', 'pc')
+    const phone = structuredClone(shared)
+    const undone = unmarkFloorDone(shared, MON, 'content_publish', 'pc')
+    for (const merged of [mergeStates(phone, undone), mergeStates(undone, phone)]) {
+      expect(merged.floor[MON]?.content_publish).toBeUndefined()
+      expect(merged.week.contentPosts[0]!.status).toBe('ready')
+    }
+  })
+
+  it('migrate keeps sharedOn only on published posts with a valid day', () => {
+    const m = migrateState(
+      {
+        week: {
+          contentPosts: [
+            { id: 'a', title: 'A', status: 'published', sharedOn: MON },
+            { id: 'b', title: 'B', status: 'ready', sharedOn: MON },
+            { id: 'c', title: 'C', status: 'published', sharedOn: 'monday' },
+          ],
+        },
+      },
+      'd1',
+    )
+    expect(m.week.contentPosts.map((p) => p.sharedOn)).toEqual([MON, undefined, undefined])
   })
 
   it('weekend content_batch names the first draft', () => {

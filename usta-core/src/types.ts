@@ -97,6 +97,8 @@ export type ContentPost = {
   id: string
   title: string
   status: ContentPostStatus
+  /** Day (YYYY-MM-DD) weekday Share on Now published this post; Undo of that Done restores Ready. */
+  sharedOn?: string
 }
 
 export type WeekendLifeTick = 'faith' | 'books' | 'music'

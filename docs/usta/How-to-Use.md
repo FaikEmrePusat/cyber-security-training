@@ -48,7 +48,7 @@ On Now the command reads like *“Weekend project (10:00–14:00): AI SIEM lab �
 A list of next week’s posts. Add a row, then set each post to **Draft**, **Ready**, or **Published**.
 
 - Weekend **content batch** on Now names the first Draft: *“Content batch: finish ‘Log triage story’ (+1 more draft).”*
-- Weekday **Share** on Now names the first Ready post: *“Content: publish ‘SIEM notes’ (Ready).”* Pressing **Done — next** marks that post **Published** automatically.
+- Weekday **Share** on Now names the first Ready post: *“Content: publish ‘SIEM notes’ (Ready).”* Pressing **Done — next** marks that post **Published** automatically. Undoing that Share (Undo last Done, Today’s Dones → Clear, or Reset today) puts the same post back to **Ready**.
 - **Clear N published** tidies the list; press **Save posts** afterwards.
 
 ### 3. Weekend life checklist

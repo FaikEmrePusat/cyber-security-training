@@ -69,16 +69,45 @@ export function draftPosts(week: WeekPlan): ContentPost[] {
   return week.contentPosts.filter((p) => p.status === 'draft' && p.title.trim() !== '')
 }
 
-/** Flip the first Ready post to Published (used when weekday Share is Done). */
-export function publishFirstReady(week: WeekPlan): WeekPlan {
+/**
+ * Flip the first Ready post to Published (used when weekday Share is Done).
+ * With `dateKey`, the post remembers the share day so Undo can restore it.
+ */
+export function publishFirstReady(week: WeekPlan, dateKey?: string): WeekPlan {
   const ready = firstReadyPost(week)
   if (!ready) return week
   return {
     ...week,
     contentPosts: week.contentPosts.map((p) =>
-      p.id === ready.id ? { ...p, status: 'published' } : p,
+      p.id === ready.id
+        ? { ...p, status: 'published', ...(dateKey ? { sharedOn: dateKey } : {}) }
+        : p,
     ),
   }
+}
+
+/**
+ * Reverse weekday Share for one day: posts shared that day go back to Ready.
+ * `legacyTitle` covers posts published before `sharedOn` existed (matched by title, once).
+ */
+export function unpublishSharedOn(week: WeekPlan, dateKey: string, legacyTitle?: string): WeekPlan {
+  let hit = false
+  let posts = week.contentPosts.map((p) => {
+    if (p.status !== 'published' || p.sharedOn !== dateKey) return p
+    hit = true
+    const { sharedOn: _drop, ...rest } = p
+    return { ...rest, status: 'ready' as const }
+  })
+  if (!hit && legacyTitle) {
+    const idx = posts.findIndex(
+      (p) => p.status === 'published' && !p.sharedOn && p.title.trim() === legacyTitle,
+    )
+    if (idx >= 0) {
+      hit = true
+      posts = posts.map((p, i) => (i === idx ? { ...p, status: 'ready' as const } : p))
+    }
+  }
+  return hit ? { ...week, contentPosts: posts } : week
 }
 
 /** A weekend life row is done when every floor item it stands for is Done that day. */

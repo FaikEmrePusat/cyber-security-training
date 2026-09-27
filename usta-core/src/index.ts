@@ -75,6 +75,7 @@ export {
   publishFirstReady,
   setLifeTick,
   uncheckedLifeTicks,
+  unpublishSharedOn,
   weekendDateKeys,
 } from './weekend.js'
 

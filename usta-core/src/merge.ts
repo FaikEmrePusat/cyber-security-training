@@ -1,6 +1,12 @@
 import type { FloorDay, FloorItemId, UstaState, WeekendLifeTick } from './types.js'
 import { ACTION_HISTORY_CAP } from './types.js'
-import { LIFE_TICK_FLOOR, firstReadyPost, publishFirstReady, setLifeTick } from './weekend.js'
+import {
+  LIFE_TICK_FLOOR,
+  firstReadyPost,
+  publishFirstReady,
+  setLifeTick,
+  unpublishSharedOn,
+} from './weekend.js'
 
 function floorLwwMerge(
   winnerDay: FloorDay = {},
@@ -138,6 +144,8 @@ export function markFloorDone(
   return bumpRev(next, deviceId, now)
 }
 
+const PUBLISHED_PREFIX = 'Published: '
+
 /** Now's Done: floor mark, plus content_publish flips the first Ready post to Published. */
 export function markQueueDone(
   state: UstaState,
@@ -153,9 +161,20 @@ export function markQueueDone(
   const [head, ...rest] = next.actionHistory
   return {
     ...next,
-    week: publishFirstReady(next.week),
-    actionHistory: [{ ...head!, title: `Published: ${ready.title.trim()}` }, ...rest],
+    week: publishFirstReady(next.week, dateKey),
+    actionHistory: [{ ...head!, title: `${PUBLISHED_PREFIX}${ready.title.trim()}` }, ...rest],
   }
+}
+
+/** Newest Share title from history, for posts published before `sharedOn` was recorded. */
+function lastSharedTitle(history: UstaState['actionHistory']): string | undefined {
+  const h = history.find((x) => x.actionId === 'content_publish' && x.title.startsWith(PUBLISHED_PREFIX))
+  return h ? h.title.slice(PUBLISHED_PREFIX.length).trim() : undefined
+}
+
+function restoreSharedPost(state: UstaState, dateKey: string): UstaState['week'] {
+  if (!state.floor[dateKey]?.content_publish) return state.week
+  return unpublishSharedOn(state.week, dateKey, lastSharedTitle(state.actionHistory))
 }
 
 /**
@@ -209,6 +228,7 @@ export function unmarkFloorDone(
   delete day[item]
   const next: UstaState = {
     ...state,
+    week: item === 'content_publish' ? restoreSharedPost(state, dateKey) : state.week,
     floor: { ...state.floor, [dateKey]: day },
     snoozeUntil: null,
     actionHistory: [
@@ -236,6 +256,7 @@ export function clearFloorDay(
   const { [dateKey]: _removed, ...rest } = state.floor
   const next: UstaState = {
     ...state,
+    week: restoreSharedPost(state, dateKey),
     floor: rest,
     snoozeUntil: null,
     energyLow: state.energyLowDate === dateKey ? false : state.energyLow,

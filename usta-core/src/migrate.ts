@@ -150,7 +150,12 @@ function migratePosts(v: unknown): ContentPost[] {
     if (seen.has(id)) id = `${id}-${i}`
     seen.add(id)
     const title = optStr(p.title) ?? optStr(p.label) ?? optStr(p.name) ?? ''
-    out.push({ id, title, status: migratePostStatus(p) })
+    const status = migratePostStatus(p)
+    const post: ContentPost = { id, title, status }
+    if (status === 'published' && typeof p.sharedOn === 'string' && DATE_KEY.test(p.sharedOn)) {
+      post.sharedOn = p.sharedOn
+    }
+    out.push(post)
   }
   return out.slice(0, MAX_CONTENT_POSTS)
 }

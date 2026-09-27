@@ -343,7 +343,14 @@ function ContentSection({ week, commitWeek }: { week: WeekPlan; commitWeek: Comm
   }
 
   const update = (id: string, patch: Partial<ContentPost>) =>
-    setPosts(posts.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+    setPosts(
+      posts.map((p) => {
+        if (p.id !== id) return p
+        const next = { ...p, ...patch }
+        if (patch.status && patch.status !== p.status) delete next.sharedOn
+        return next
+      }),
+    )
 
   const save = () => {
     const clean = posts
