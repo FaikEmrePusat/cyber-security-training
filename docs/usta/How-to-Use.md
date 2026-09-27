@@ -1,0 +1,121 @@
+# How to use Usta (plain language)
+
+Usta is a **coach screen**, not a hobby dashboard. It names **one** job. You do it, press **Done — next**, and get the next job.
+
+Open the app → start on **Now**. Prefer the in-app **How to use** page (`/guide`) while learning.
+
+---
+
+## Pages
+
+| Page | When you open it | What you do |
+|------|------------------|-------------|
+| **Now** | Almost every time | Read the command → work → **Done — next** |
+| **How to use** | First days / when confused | Read the steps; jump to other pages from the cards |
+| **Weekend** | Friday/Saturday plan, Sunday close | Project day, content factory, life checklist, Sunday close |
+| **Review** | Sunday | Check how many days kept the five domains |
+| **Settings** | Setup / each morning for Ledger | Day start/end, Refresh from Ledger, faith cues, location, block length |
+| **Sign in** | Once per device | Magic link so phone and PC share progress |
+
+---
+
+## Weekday (Istanbul)
+
+1. **10:00–14:00** — Oak only. Usta will say so.  
+2. Short transition after Oak.  
+3. Then the queue, one block at a time (~45–50 min max each):  
+   Cyber (Ledger) → German → Qur’an page → Cevşen bab → other faith page → ~10 book pages → music piece → share a prepared post if any.
+
+Chips under the tip on **Now** show what is done (green) and what is current (brass).
+
+---
+
+## Weekend
+
+**Now** still gives one command at a time. The **Weekend** page is where you plan what those commands say. It has four cards; each card has its own Save button (the life checklist saves as soon as you tick).
+
+### 1. Project day (10:00–14:00)
+
+- **Project title**: what you are building.
+- **When the weekend ends, what will be true?**: one outcome sentence, e.g. “Sigma rules fire on the lab VM and the README explains how.”
+- **Block plan**: chips such as `50 min` `50 min`. Add blocks with **+ 25 min** / **+ 50 min**, remove one with **×**. The line below shows the total against the 4-hour window.
+- **Saturday / Sunday / Both**: which day(s) the 10:00–14:00 window is a project window. On a non-project weekend day that window runs the normal weekend queue (content batch first).
+
+On Now the command reads like *“Weekend project (10:00–14:00): AI SIEM lab — 2 × 50 min.”* and the reason line shows your outcome sentence.
+
+### 2. Content factory
+
+A list of next week’s posts. Add a row, then set each post to **Draft**, **Ready**, or **Published**.
+
+- Weekend **content batch** on Now names the first Draft: *“Content batch: finish ‘Log triage story’ (+1 more draft).”*
+- Weekday **Share** on Now names the first Ready post: *“Content: publish ‘SIEM notes’ (Ready).”* Pressing **Done — next** marks that post **Published** automatically.
+- **Clear N published** tidies the list; press **Save posts** afterwards.
+
+### 3. Weekend life checklist
+
+Faith, Books, and Music for Saturday and Sunday. These use the **same Done marks as Now**: ticking Faith marks Qur’an, Cevşen, and Faith+ Done for that day, and clearing one of those on Now unticks it here. A later day stays locked until it arrives. While a row is open, the project and batch commands mention it lightly (*“Later today, lightly: faith, music.”*). Weekday queues are unaffected.
+
+### 4. Sunday close (5 min)
+
+On Sunday evening, after the project window:
+
+- **What went well?**: one or two lines.
+- **Next weekend project title**: on save, this **replaces the project title** in card 1 and clears the old outcome, so next weekend starts with the right name. Leave it empty to keep the current project.
+
+Until you save the close, Sunday’s rest message on Now reminds you that it is waiting.
+
+---
+
+## Buttons on Now
+
+| Button | Meaning |
+|--------|---------|
+| **Done — next** | This block is finished; show the next command |
+| **Undo last Done** | Quick undo of the most recent Done (if available) |
+| **Today’s Dones → Clear** | Remove **any** Done you choose (Batch, Cyber, …) |
+| **Reset today** | Wipe every Done mark for today and restart the queue |
+| **Snooze 15m** | Pause (max 2/day; not during Oak) |
+| **Energy low** | Today only cyber + German are required |
+| **Open Ledger** | Opens Cyber Ledger (cyber/German blocks) |
+
+---
+
+## Cyber Ledger
+
+Ledger remains the cyber + German craft bench. Usta does not put music, books, or faith texts into Ledger’s Map.
+
+### Refresh from Ledger (use Usta daily, Ledger only for deep work)
+
+1. Run **both** apps on the PC: Cyber Ledger (`durum-web`, usually `http://localhost:5173/`) and Usta (`usta-web`, `http://localhost:5174/`). GitHub Pages Ledger also works if that is the URL in Settings.
+2. Usta → **Settings** → check **Ledger base URL** → press **Refresh from Ledger**.
+3. A small popup opens Ledger’s `/#/usta-bridge` page, sends Today’s tasks to Usta, and closes. Allow popups for Usta if the browser blocks it.
+4. On **Now**, the Cyber and German commands show the real Ledger titles, for example “Cyber (from Ledger): Windows event logs (+2 more in Ledger)”.
+
+The pull is valid for **that calendar day only**. Refresh again each morning (or after you change the plan in Ledger). Open Ledger itself only for Map, Record, or deep study.
+
+---
+
+## Day start / day end
+
+- **Day start** — the earliest time the queue may begin (Fajr is used instead when prayer times are available).
+- **Day end** — after this time Now shows “Rest or light living” and stops giving blocks. Default **23:00**. A day end after midnight (e.g. 01:00) keeps the evening open until then.
+
+---
+
+## Settings help
+
+**Latitude / longitude** — your map position, used only to calculate prayer times offline. Istanbul defaults: **41.0082** (north) / **28.9784** (east). Decimals are normal; comma or dot both work. Change them only if you move to another city; empty = Istanbul.
+
+**Faith cues (three boxes)** — short reminders you write yourself; Usta never ships scripture. The matching box appears under the Qur’an, Cevşen, or “other source” command on Now. Examples:
+
+- Qur’an: “Mushaf on desk — next page after bookmark, then the meal on the facing page.”
+- Cevşen: “Next bab from the red ribbon; read the Turkish meaning after each bab.”
+- Other: “Risale-i Nur, Sözler — one page from the pencil mark.”
+
+---
+
+## Sync and phone
+
+Top-right pill: **Synced** means cloud is connected. Sign in on each device once. Without sign-in, Usta still works on that browser alone. Weekend plans (project, posts, Sunday close) sync as one unit: the most recent save wins.
+
+Phone today = **the web app in the phone browser**, signed in with the same account (Supabase keeps phone and PC in sync). Usta is not hosted online yet, so the phone needs either a deployed copy or the PC dev server on the same Wi-Fi (`npm run dev -- --host`, then open `http://<PC-IP>:5174`; add that URL to Supabase redirect URLs). There is no Android app (Capacitor) yet, so no native notifications. **Refresh from Ledger** needs Ledger reachable from the same browser, so run it on the PC; the pulled tasks then sync to the phone.
