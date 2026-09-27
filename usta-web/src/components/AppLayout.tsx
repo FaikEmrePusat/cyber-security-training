@@ -39,6 +39,7 @@ export function AppLayout() {
             Now
           </NavLink>
           <NavLink to="/week">Weekend</NavLink>
+          <NavLink to="/month">Month</NavLink>
           <NavLink to="/review">Review</NavLink>
           <NavLink to="/guide">How to use</NavLink>
           <NavLink to="/settings">Settings</NavLink>

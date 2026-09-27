@@ -57,6 +57,12 @@ User templates only (`faithTemplates.quran` / `cevsen` / `other`). Nothing bundl
 
 ---
 
+## Month layer (context only)
+
+`state.months["YYYY-MM"]` holds a theme, up to 3 goals, and up to 5 weekend project ideas (Month page). It **never changes which action is picked**. After the pick, `withMonthContext` appends `Month focus: <theme> (<goals>).` to the `why` of `project_deep` and `content_batch` only. Weekday queue commands are untouched. Weekend ideas feed the Weekend page (“Use as project” copies one into the project title).
+
+---
+
 ## What NowEngine does **not** do
 
 - No LLM planning

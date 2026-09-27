@@ -16,6 +16,7 @@ import {
   zonedParts,
 } from './time.js'
 import { isAfterPrayer } from './prayer.js'
+import { withMonthContext } from './month.js'
 import {
   draftPosts,
   firstReadyPost,
@@ -413,6 +414,16 @@ export function computeNextAction(
   state: UstaState,
   config: UstaConfig = state.config,
   prayerTimes?: PrayerTimesOfDay | null,
+): NextAction {
+  const dateKey = calendarDateKey(now, getTimeZone(config.timezone))
+  return withMonthContext(pickNextAction(now, state, config, prayerTimes), state, dateKey)
+}
+
+function pickNextAction(
+  now: Date,
+  state: UstaState,
+  config: UstaConfig,
+  prayerTimes: PrayerTimesOfDay | null | undefined,
 ): NextAction {
   const timeZone = getTimeZone(config.timezone)
   const dateKey = calendarDateKey(now, timeZone)

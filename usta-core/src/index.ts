@@ -9,6 +9,7 @@ export type {
   LedgerBridge,
   LedgerBridgeTask,
   LedgerUrlMode,
+  MonthPlan,
   NextAction,
   PrayerName,
   PrayerTimesOfDay,
@@ -91,5 +92,15 @@ export {
   statesEquivalent,
   unmarkFloorDone,
 } from './merge.js'
+
+export {
+  MAX_MONTH_GOALS,
+  MAX_WEEKEND_IDEAS,
+  addMonthsToKey,
+  monthContextLine,
+  monthKeyOf,
+  monthPlanFor,
+  setMonthPlan,
+} from './month.js'
 
 export { migrateState } from './migrate.js'

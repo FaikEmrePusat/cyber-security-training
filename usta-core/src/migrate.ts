@@ -21,6 +21,7 @@ import {
   createEmptyState,
 } from './types.js'
 import { WEEKEND_LIFE_TICKS, foldLifeTicksIntoFloor, normalizeBlocks } from './weekend.js'
+import { MONTH_KEY, normalizeMonthPlan } from './month.js'
 
 type Obj = Record<string, unknown>
 
@@ -265,6 +266,26 @@ function migrateHistory(v: unknown): UstaState['actionHistory'] {
     .slice(0, ACTION_HISTORY_CAP)
 }
 
+function strList(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+}
+
+function migrateMonths(v: unknown): UstaState['months'] {
+  if (!isObj(v)) return {}
+  const out: UstaState['months'] = {}
+  for (const [key, m] of Object.entries(v)) {
+    if (!MONTH_KEY.test(key) || !isObj(m)) continue
+    const plan = normalizeMonthPlan({
+      theme: str(m.theme, ''),
+      goals: strList(m.goals),
+      weekendIdeas: strList(m.weekendIdeas),
+      updatedAt: str(m.updatedAt, ''),
+    })
+    if (plan.theme || plan.goals.length > 0 || plan.weekendIdeas.length > 0) out[key] = plan
+  }
+  return out
+}
+
 function migrateLedgerBridge(v: unknown): LedgerBridge | null {
   if (!isObj(v)) return null
   const dateKey = str(v.dateKey, '')
@@ -304,6 +325,7 @@ export function migrateState(raw: unknown, deviceId: string): UstaState {
     deviceId: str(raw.deviceId, deviceId) || deviceId,
     config: migrateConfig(raw.config),
     week: { ...week, lifeTicks: {} },
+    months: migrateMonths(raw.months),
     floor,
     ledgerBridge: migrateLedgerBridge(raw.ledgerBridge),
     energyLow: raw.energyLow === true,

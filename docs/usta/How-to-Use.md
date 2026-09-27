@@ -13,6 +13,7 @@ Open the app → start on **Now**. Prefer the in-app **How to use** page (`/guid
 | **Now** | Almost every time | Read the command → work → **Done — next** |
 | **How to use** | First days / when confused | Read the steps; jump to other pages from the cards |
 | **Weekend** | Friday/Saturday plan, Sunday close | Project day, content factory, life checklist, Sunday close |
+| **Month** | Start of the month (5 min) | One theme, up to 3 goals, weekend project ideas |
 | **Review** | Sunday | Check how many days kept the five domains |
 | **Settings** | Setup / each morning for Ledger | Day start/end, Refresh from Ledger, faith cues, location, block length |
 | **Sign in** | Once per device | Magic link so phone and PC share progress |
@@ -63,6 +64,16 @@ On Sunday evening, after the project window:
 - **Next weekend project title**: on save, this **replaces the project title** in card 1 and clears the old outcome, so next weekend starts with the right name. Leave it empty to keep the current project.
 
 Until you save the close, Sunday’s rest message on Now reminds you that it is waiting.
+
+---
+
+## Month (light layer)
+
+At the start of a month, open **Month** and write one **theme** (e.g. “Detection engineering”), up to three **goals** (what is true at month end), and a few **weekend project ideas**. **Next month** lets you plan ahead.
+
+- The Weekend page shows the month line at the top, with a **Use as project** button per idea (it copies the idea into the project title and clears the old outcome).
+- On Now, the weekend project and content batch commands add a short “Month focus: …” to their reason line.
+- The month never changes *which* command Now gives. Weekdays run the normal queue.
 
 ---
 
@@ -126,4 +137,6 @@ On **Now**, the Cyber and German commands show the real Ledger titles, for examp
 
 Top-right pill: **Synced** means cloud is connected. Sign in on each device once. Without sign-in, Usta still works on that browser alone. Weekend plans (project, posts, Sunday close) sync as one unit: the most recent save wins.
 
-Phone today = **the web app in the phone browser**, signed in with the same account (Supabase keeps phone and PC in sync). Usta is not hosted online yet, so the phone needs either a deployed copy or the PC dev server on the same Wi-Fi (`npm run dev -- --host`, then open `http://<PC-IP>:5174`; add that URL to Supabase redirect URLs). There is no Android app (Capacitor) yet, so no native notifications. **Refresh from Ledger** needs Ledger reachable from the same browser, so run it on the PC; the pulled tasks then sync to the phone.
+Phone today = **the online Usta in the phone browser**: [faikemrepusat.github.io/cyber-security-training/usta/](https://faikemrepusat.github.io/cyber-security-training/usta/), signed in with the same account (Supabase keeps phone and PC in sync). Add it to the home screen from the browser menu for an app-like icon. The Android app (Capacitor) and the Windows tray app (Tauri) are scaffolded; see [Native-Apps.md](./Native-Apps.md). Ledger Today titles are pulled on the PC and reach the phone through sync.
+
+**Notifications:** Settings → Notifications → **Notify me** (per device). In a browser tab or the Windows app, Usta notifies when the next action changes while it is in the background (e.g. Oak ends). The Android app schedules a weekday Oak-end reminder.

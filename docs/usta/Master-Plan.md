@@ -95,7 +95,9 @@ After Oak (and the short transition), every weekday you still do **all five** ar
 | Weekday five-domain queue + faith sub-steps | **Done (this update)** |
 | Weekend project 10–14 + content batch | **Done (this update)** |
 | ~45–50 min block cap | **Done** (`blockCapMinutes`) |
-| Android + Windows tray | Not yet |
+| Web app online (GitHub Pages) | Done |
+| Month layer informing weekend planning | Done |
+| Android + Windows tray | Scaffolded (Capacitor / Tauri); first device builds pending |
 | Auto-publish to LinkedIn/Medium | Out of scope |
 
 ---

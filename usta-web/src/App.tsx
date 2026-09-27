@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { NowPage } from './pages/NowPage'
 import { WeekPage } from './pages/WeekPage'
+import { MonthPage } from './pages/MonthPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { LoginPage } from './pages/LoginPage'
@@ -16,6 +17,7 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<NowPage />} />
             <Route path="week" element={<WeekPage />} />
+            <Route path="month" element={<MonthPage />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="guide" element={<GuidePage />} />
             <Route path="settings" element={<SettingsPage />} />

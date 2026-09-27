@@ -11,6 +11,7 @@ import {
   hmToMinutes,
   lifeTickDone,
   lifeTickProgress,
+  monthPlanFor,
   normalizeBlocks,
   setLifeDone,
   weekendDateKeys,
@@ -18,6 +19,7 @@ import {
   type ContentPost,
   type ContentPostStatus,
   type FloorDay,
+  type MonthPlan,
   type WeekPlan,
   type WeekendLifeTick,
   type WeekendProjectDays,
@@ -601,6 +603,49 @@ function SundayCloseSection({
   )
 }
 
+function MonthStrip({
+  plan,
+  currentProject,
+  onUseIdea,
+}: {
+  plan: MonthPlan | undefined
+  currentProject: string | undefined
+  onUseIdea: (idea: string) => void
+}) {
+  if (!plan) {
+    return (
+      <p className="hint">
+        <strong>This month:</strong> no theme yet. <Link to="/month">Set a month focus</Link> to guide
+        which weekend project to pick.
+      </p>
+    )
+  }
+  return (
+    <div className="hint">
+      <p>
+        <strong>This month:</strong> {plan.theme || 'no theme'}
+        {plan.goals.length > 0 ? ` — goals: ${plan.goals.join('; ')}` : ''}.{' '}
+        <Link to="/month">Edit month</Link>
+      </p>
+      {plan.weekendIdeas.length > 0 ? (
+        <div className="actions">
+          {plan.weekendIdeas.map((idea) => (
+            <button
+              key={idea}
+              type="button"
+              disabled={idea === currentProject}
+              onClick={() => onUseIdea(idea)}
+              title="Copy into the project title (clears the old outcome)"
+            >
+              {idea === currentProject ? `Current: ${idea}` : `Use as project: ${idea}`}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function WeekPage() {
   const { state, setState } = useUsta()
   const [projectEpoch, setProjectEpoch] = useState(0)
@@ -618,6 +663,7 @@ export function WeekPage() {
   const commitWeek: CommitWeek = (update) => {
     setState(bumpRev({ ...state, week: update(state.week) }, getDeviceId()))
   }
+  const monthPlan = monthPlanFor(state, sat)
 
   return (
     <section className="wk">
@@ -633,6 +679,15 @@ export function WeekPage() {
         <strong>This weekend:</strong> {formatDateKey(sat)} · {formatDateKey(sun)}. Plan on Friday or
         Saturday morning, tick life items as you go, close on Sunday evening.
       </p>
+
+      <MonthStrip
+        plan={monthPlan}
+        currentProject={week.weekendProjectLabel}
+        onUseIdea={(idea) => {
+          commitWeek((w) => ({ ...w, weekendProjectLabel: idea, projectOutcome: undefined }))
+          setProjectEpoch((e) => e + 1)
+        }}
+      />
 
       <ProjectSection
         key={projectEpoch}

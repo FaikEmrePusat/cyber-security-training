@@ -152,6 +152,16 @@ export type SpotlightSlot = {
   primary: boolean
 }
 
+/** Light monthly layer: themes/goals that inform weekend planning (not a daily queue). */
+export type MonthPlan = {
+  theme: string
+  /** Up to 3 outcomes for the month */
+  goals: string[]
+  /** Candidate weekend project titles (up to 5) */
+  weekendIdeas: string[]
+  updatedAt: string
+}
+
 export type FloorDay = Partial<Record<FloorItemId, boolean>>
 
 export type UstaState = {
@@ -160,6 +170,8 @@ export type UstaState = {
   deviceId: string
   config: UstaConfig
   week: WeekPlan
+  /** `YYYY-MM` → month plan */
+  months: Record<string, MonthPlan>
   floor: Record<string, FloorDay>
   /** Latest pull from Cyber Ledger Today (optional). */
   ledgerBridge: LedgerBridge | null
@@ -229,6 +241,7 @@ export function createEmptyState(deviceId: string, nowIso = new Date().toISOStri
       hibernate: [],
       slots: [],
     },
+    months: {},
     floor: {},
     ledgerBridge: null,
     energyLow: false,

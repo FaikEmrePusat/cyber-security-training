@@ -25,6 +25,8 @@ Synced fields (high level):
 - `deviceId` — last writer device id
 - `config` — Oak clocks, timezone, ledger base URL preference, coords for prayer calc, faith templates (user text)
 - `week` — 2 primary + 1 optional spotlights, hibernate list, spotlight time windows
+- `week.contentPosts[].sharedOn` — day a weekday Share published the post (Undo restores it to Ready)
+- `months` — `YYYY-MM` → `{ theme, goals[≤3], weekendIdeas[≤5], updatedAt }` (last 12 months kept; whole field follows the winning rev)
 - `floor` — map of `YYYY-MM-DD` → per-item done flags
 - `energyLow` / `snoozesToday` / `snoozeUntil` — day-scoped controls
 - `onRampDay` — optional 1–14
