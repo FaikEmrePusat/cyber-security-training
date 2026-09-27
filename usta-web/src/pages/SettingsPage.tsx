@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bumpRev, DEFAULT_CONFIG, calendarDateKey } from 'usta-core'
 import { getDeviceId } from '../lib/deviceId'
+import { canEmbedLedger } from '../lib/ledgerBridge'
 import type { SyncStatus } from '../lib/storage'
 import { useUsta } from '../state/UstaProvider'
 
@@ -138,8 +139,9 @@ export function SettingsPage() {
 
       <h2 className="done-panel-title">Cyber Ledger link</h2>
       <p className="done-panel-lead">
-        Stay in Usta for the daily list. Pull Today’s titles from Ledger, then open Ledger only when you
-        need deep study / Record. Both apps must be running on this PC for the refresh popup.
+        Stay in Usta for the daily list. Usta pulls Today’s titles from Ledger; open Ledger only when you
+        need deep study / Record. When Usta and Ledger share a host (both on localhost, or both on
+        GitHub Pages) the pull is silent and automatic. Otherwise press Refresh (opens a popup).
       </p>
 
       <label className="field" htmlFor="ledger-mode">
@@ -167,6 +169,26 @@ export function SettingsPage() {
           onChange={(e) => setCfg({ ...cfg, ledgerBaseUrl: e.target.value })}
         />
       </label>
+
+      <label className="field" htmlFor="ledger-auto">
+        <span>
+          <input
+            id="ledger-auto"
+            name="ledgerAutoPull"
+            type="checkbox"
+            checked={cfg.ledgerAutoPull}
+            onChange={(e) => setCfg({ ...cfg, ledgerAutoPull: e.target.checked })}
+          />{' '}
+          Auto-refresh from Ledger (on open, on focus, every 20 min)
+        </span>
+      </label>
+      <p className="meta">
+        {canEmbedLedger(cfg.ledgerBaseUrl)
+          ? cfg.ledgerAutoPull
+            ? 'Auto-refresh: active for this URL (silent, no popup).'
+            : 'Auto-refresh: off.'
+          : `Auto-refresh: not possible here — Ledger is on a different host than this Usta (${window.location.host}). Use Refresh from Ledger.`}
+      </p>
 
       <div className="actions" style={{ marginBottom: '1rem' }}>
         <button type="button" className="primary" disabled={bridgeBusy} onClick={() => void onRefreshLedger()}>

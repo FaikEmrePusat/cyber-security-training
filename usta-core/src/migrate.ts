@@ -90,6 +90,7 @@ function migrateConfig(v: unknown): UstaConfig {
     blockCapMinutes: num(c.blockCapMinutes, d.blockCapMinutes),
     ledgerBaseUrl: str(c.ledgerBaseUrl, d.ledgerBaseUrl),
     ledgerUrlMode: c.ledgerUrlMode === 'pages' ? 'pages' : 'local',
+    ledgerAutoPull: c.ledgerAutoPull !== false,
     latitude: 'latitude' in c ? optNum(c.latitude) : d.latitude,
     longitude: 'longitude' in c ? optNum(c.longitude) : d.longitude,
     prayerMethod: optStr(c.prayerMethod) ?? d.prayerMethod,

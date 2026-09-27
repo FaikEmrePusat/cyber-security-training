@@ -32,6 +32,7 @@ import {
   syncNow,
   type SyncStatus,
 } from '../lib/storage'
+import { canEmbedLedger, pullViaIframe, pullViaPopup, sameBridge } from '../lib/ledgerBridge'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
@@ -55,6 +56,10 @@ type UstaContextValue = {
 }
 
 const UstaContext = createContext<UstaContextValue | null>(null)
+
+const BRIDGE_INTERVAL_MS = 20 * 60_000
+/** Focus events fire often; skip a silent pull if one ran this recently. */
+const BRIDGE_MIN_GAP_MS = 2 * 60_000
 
 const FLOOR_IDS: FloorItemId[] = [
   'ledger_touch',
@@ -83,6 +88,8 @@ export function UstaProvider({ children }: { children: ReactNode }) {
   const [canUndoDone, setCanUndoDone] = useState(false)
   const stateRef = useRef(state)
   stateRef.current = state
+  const lastBridgePull = useRef(0)
+  const bridgeBusy = useRef(false)
 
   const runSync = useCallback(async () => {
     if (!supabaseConfigured) return
@@ -272,66 +279,74 @@ export function UstaProvider({ children }: { children: ReactNode }) {
 
   const refreshCloud = useCallback(() => runSync(), [runSync])
 
-  const refreshLedgerBridge = useCallback((ledgerBaseUrl?: string): Promise<{ ok: boolean; message: string }> => {
-    return new Promise((resolve) => {
-      const base = (ledgerBaseUrl ?? stateRef.current.config.ledgerBaseUrl).replace(/\/$/, '')
-      const url = `${base}/#/usta-bridge`
-      const popup = window.open(url, 'usta-ledger-bridge', 'width=480,height=640')
-      if (!popup) {
-        resolve({
+  /**
+   * Store a pulled bridge. Writes only when tasks changed, so auto-pulls on several
+   * devices do not bump rev forever. A Ledger with no logged sessions (e.g. the phone's
+   * Pages copy) never overwrites; a manual pull may fill an empty day.
+   */
+  const applyBridge = useCallback(
+    (bridge: LedgerBridge, hasData: boolean, manual: boolean): { ok: boolean; message: string } => {
+      const current = stateRef.current
+      const todayKey = calendarDateKey(new Date(), current.config.timezone)
+      const hasToday = current.ledgerBridge?.dateKey === todayKey
+      if (!hasData && (!manual || hasToday)) {
+        return {
           ok: false,
-          message: 'Popup blocked. Allow popups for this site, then try again. Ledger must be running (e.g. localhost:5173).',
-        })
-        return
+          message:
+            'Ledger on this browser has no logged sessions yet, so Usta kept its current tasks. Refresh on the PC where you use Ledger.',
+        }
       }
-
-      let settled = false
-      const finish = (ok: boolean, message: string) => {
-        if (settled) return
-        settled = true
-        window.clearTimeout(timer)
-        window.removeEventListener('message', onMessage)
-        try {
-          popup.close()
-        } catch {
-          /* ignore */
-        }
-        resolve({ ok, message })
+      if (!sameBridge(current.ledgerBridge, bridge)) {
+        setState(bumpRev({ ...current, ledgerBridge: bridge }, getDeviceId()))
       }
-
-      const onMessage = (event: MessageEvent) => {
-        const data = event.data as {
-          type?: string
-          dateKey?: string
-          updatedAt?: string
-          tasks?: LedgerBridge['tasks']
-        }
-        if (!data || data.type !== 'usta-ledger-bridge-v1') return
-        if (!data.dateKey || !Array.isArray(data.tasks)) {
-          finish(false, 'Ledger sent an empty bridge payload.')
-          return
-        }
-        const bridge: LedgerBridge = {
-          dateKey: data.dateKey,
-          updatedAt: data.updatedAt ?? new Date().toISOString(),
-          tasks: data.tasks,
-        }
-        setState(bumpRev({ ...stateRef.current, ledgerBridge: bridge }, getDeviceId()))
-        finish(
-          true,
-          `Pulled ${bridge.tasks.length} Today task(s) from Ledger. Cyber/German commands on Now will show those titles.`,
-        )
+      lastBridgePull.current = Date.now()
+      return {
+        ok: true,
+        message: `Pulled ${bridge.tasks.length} Today task(s) from Ledger. Cyber/German commands on Now will show those titles.`,
       }
+    },
+    [setState],
+  )
 
-      window.addEventListener('message', onMessage)
-      const timer = window.setTimeout(() => {
-        finish(
-          false,
-          'Timed out waiting for Ledger. Is Cyber Ledger running at the URL in Settings?',
-        )
-      }, 12_000)
-    })
-  }, [setState])
+  const refreshLedgerBridge = useCallback(
+    async (ledgerBaseUrl?: string): Promise<{ ok: boolean; message: string }> => {
+      const base = ledgerBaseUrl ?? stateRef.current.config.ledgerBaseUrl
+      // Same-site: silent iframe (a failure means Ledger is not running, so a popup would not help).
+      const result = canEmbedLedger(base) ? await pullViaIframe(base) : await pullViaPopup(base)
+      if (!result.ok) return result
+      return applyBridge(result.bridge, result.hasData, true)
+    },
+    [applyBridge],
+  )
+
+  const autoPull = state.config.ledgerAutoPull
+  const autoBase = state.config.ledgerBaseUrl
+
+  useEffect(() => {
+    if (!autoPull || !canEmbedLedger(autoBase)) return
+    const pull = async () => {
+      if (document.visibilityState !== 'visible' || bridgeBusy.current) return
+      if (Date.now() - lastBridgePull.current < BRIDGE_MIN_GAP_MS) return
+      bridgeBusy.current = true
+      try {
+        const r = await pullViaIframe(autoBase)
+        lastBridgePull.current = Date.now()
+        if (r.ok && r.hasData) applyBridge(r.bridge, true, false)
+      } finally {
+        bridgeBusy.current = false
+      }
+    }
+    void pull()
+    const id = window.setInterval(() => void pull(), BRIDGE_INTERVAL_MS)
+    const onVisible = () => void pull()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [autoPull, autoBase, applyBridge])
 
   const value: UstaContextValue = {
     state,

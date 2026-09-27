@@ -83,6 +83,8 @@ export type UstaConfig = {
   blockCapMinutes: number
   ledgerBaseUrl: string
   ledgerUrlMode: LedgerUrlMode
+  /** Silently pull Ledger Today on open / focus / every 20 min when Ledger is same-site. */
+  ledgerAutoPull: boolean
   latitude?: number
   longitude?: number
   prayerMethod?: string
@@ -203,6 +205,7 @@ export const DEFAULT_CONFIG: UstaConfig = {
   blockCapMinutes: DEFAULT_BLOCK_CAP,
   ledgerBaseUrl: 'http://localhost:5173/',
   ledgerUrlMode: 'local',
+  ledgerAutoPull: true,
   latitude: 41.0082,
   longitude: 28.9784,
   prayerMethod: 'Turkey',

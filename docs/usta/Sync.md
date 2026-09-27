@@ -84,11 +84,20 @@ Wired in the web client (see Sync loop above). Active only when env vars are set
 
 ---
 
-## Ledger bridge (URL only)
+## Ledger bridge (read-only)
 
-Usta Settings stores preferred Ledger **base URL**:
+Usta Settings stores the preferred Ledger **base URL**:
 
 - Local Vite (e.g. `http://localhost:5173/`)
-- GitHub Pages path for the existing Ledger deploy
+- GitHub Pages: `https://faikemrepusat.github.io/cyber-security-training/`
 
-Usta does **not** publish progress.json. “Open Ledger” navigates to `{baseUrl}` (Today is Ledger’s routing).
+Usta does **not** publish progress.json and never writes Ledger storage (`durum-v22`, FSRS, Map). “Open Ledger” navigates to `{baseUrl}`.
+
+**Protocol (`usta-ledger-bridge-v1`):** Usta loads `{baseUrl}/#/usta-bridge?origin=<usta origin>`. Ledger posts `{ type, dateKey, updatedAt, hasData, tasks[] }` to that origin only if it is trusted (localhost / 127.0.0.1 / tauri.localhost / Capacitor, Ledger’s own origin, or `faikemrepusat.github.io`); otherwise it sends nothing. Usta accepts the message only when `event.origin` equals the Ledger URL’s origin **and** `event.source` is the frame or popup it opened. Tasks are capped (30) and titles truncated.
+
+| Transport | When | Trigger |
+|-----------|------|---------|
+| Hidden iframe | Same scheme + hostname (ports ignored), so the frame sees Ledger’s real storage | Auto: app open, tab focus/visible (≥ 2 min apart), every 20 min; also the manual button |
+| Popup | Different hosts (storage would be partitioned in an iframe) | Manual **Refresh from Ledger** only |
+
+`hasData` is false when Ledger has no sessions beyond its seed history. Such a payload is never applied automatically, and a manual pull only fills a day that has no bridge yet. Identical task lists are not rewritten, so auto-pulls do not bump `rev`. `config.ledgerAutoPull` (default on) is the user toggle.

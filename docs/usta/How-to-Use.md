@@ -84,14 +84,22 @@ Until you save the close, Sunday’s rest message on Now reminds you that it is 
 
 Ledger remains the cyber + German craft bench. Usta does not put music, books, or faith texts into Ledger’s Map.
 
-### Refresh from Ledger (use Usta daily, Ledger only for deep work)
+### Ledger Today in Usta (automatic when possible)
 
-1. Run **both** apps on the PC: Cyber Ledger (`durum-web`, usually `http://localhost:5173/`) and Usta (`usta-web`, `http://localhost:5174/`). GitHub Pages Ledger also works if that is the URL in Settings.
-2. Usta → **Settings** → check **Ledger base URL** → press **Refresh from Ledger**.
-3. A small popup opens Ledger’s `/#/usta-bridge` page, sends Today’s tasks to Usta, and closes. Allow popups for Usta if the browser blocks it.
-4. On **Now**, the Cyber and German commands show the real Ledger titles, for example “Cyber (from Ledger): Windows event logs (+2 more in Ledger)”.
+Usta reads Ledger’s Today list through Ledger’s `/#/usta-bridge` page. Nothing from Usta is written into Ledger.
 
-The pull is valid for **that calendar day only**. Refresh again each morning (or after you change the plan in Ledger). Open Ledger itself only for Map, Record, or deep study.
+**Automatic (no popup):** when Usta and Ledger run on the **same host**, Usta pulls silently in a hidden frame when it opens, when you come back to the tab, and every 20 minutes. The two setups that qualify:
+
+- Both local on the PC: Ledger `http://localhost:5173/`, Usta `http://localhost:5174/`.
+- Both online: Ledger `https://faikemrepusat.github.io/cyber-security-training/`, Usta `…/cyber-security-training/usta/`. Only useful in the browser where you actually use Ledger, since Ledger data is per browser.
+
+Settings shows whether auto-refresh is active for the current Ledger URL; there is a checkbox to turn it off. Usta only writes when the task list actually changed.
+
+**Manual (popup):** in any other setup (for example Usta online and Ledger on localhost), press **Settings → Refresh from Ledger**. A small popup sends Today’s tasks and closes. Allow popups for Usta if the browser blocks it.
+
+**Phone safety:** a Ledger with no logged sessions (for example the Pages Ledger in the phone browser) never overwrites the task list automatically. Pull on the PC; Supabase sync carries the titles to the phone.
+
+On **Now**, the Cyber and German commands show the real Ledger titles, for example “Cyber (from Ledger): Windows event logs (+2 more in Ledger)”. A pull is valid for **that calendar day only**. Open Ledger itself only for Map, Record, or deep study.
 
 ---
 
