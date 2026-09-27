@@ -33,7 +33,17 @@ Magic link means: Usta emails a login link to **faikemrep@gmail.com**. You open 
 | Site URL | `http://localhost:5174` |
 | Redirect URLs | `http://localhost:5174/**` |
 
-Use the port your `usta-web` Vite app actually runs on (see `usta-web` README / Vite output). Add Capacitor / production URLs later when those clients exist.
+Use the port your `usta-web` Vite app actually runs on (see `usta-web` README / Vite output).
+
+Also add the **GitHub Pages** Usta (deployed, see README):
+
+| Setting | Value |
+|---------|-------|
+| Redirect URLs | `https://faikemrepusat.github.io/cyber-security-training/usta/**` |
+
+Without it, a magic link requested from the online Usta falls back to the Site URL (localhost). Keep Site URL on localhost or switch it to the Pages URL — both work once each is listed under Redirect URLs.
+
+**6-digit code (Android / Windows apps):** Authentication → Email Templates → **Magic Link**: include `{{ .Token }}` in the body, e.g. `Your Usta code: {{ .Token }}`. The apps sign in with that code because the link would open a browser instead of the app.
 
 ---
 

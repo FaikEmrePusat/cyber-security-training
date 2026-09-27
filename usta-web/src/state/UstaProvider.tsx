@@ -33,6 +33,7 @@ import {
   type SyncStatus,
 } from '../lib/storage'
 import { canEmbedLedger, pullViaIframe, pullViaPopup, sameBridge } from '../lib/ledgerBridge'
+import { notifyNow, syncScheduledReminders, updateTrayTooltip } from '../lib/notify'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
@@ -183,6 +184,24 @@ export function UstaProvider({ children }: { children: ReactNode }) {
     () => computeNextAction(now, state, state.config, prayers),
     [now, state, prayers],
   )
+
+  useEffect(() => {
+    void updateTrayTooltip(action.title)
+  }, [action.title])
+
+  const lastActionId = useRef(action.id)
+  useEffect(() => {
+    if (lastActionId.current === action.id) return
+    lastActionId.current = action.id
+    if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+      void notifyNow('Usta — next action', action.title)
+    }
+  }, [action.id, action.title])
+
+  const { oakEndHour, oakEndMinute } = state.config
+  useEffect(() => {
+    void syncScheduledReminders(stateRef.current.config).catch(() => {})
+  }, [oakEndHour, oakEndMinute])
 
   const markDone = useCallback(() => {
     const deviceId = getDeviceId()

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { bumpRev, DEFAULT_CONFIG, calendarDateKey } from 'usta-core'
 import { getDeviceId } from '../lib/deviceId'
 import { canEmbedLedger } from '../lib/ledgerBridge'
+import { notificationsEnabled, setNotificationsEnabled } from '../lib/notify'
+import { currentPlatform } from '../lib/platform'
 import type { SyncStatus } from '../lib/storage'
 import { useUsta } from '../state/UstaProvider'
 
@@ -32,6 +34,9 @@ export function SettingsPage() {
   const [lonText, setLonText] = useState(state.config.longitude?.toString() ?? '')
   const [bridgeMsg, setBridgeMsg] = useState<{ ok: boolean; message: string } | null>(null)
   const [bridgeBusy, setBridgeBusy] = useState(false)
+  const [notifyOn, setNotifyOn] = useState(notificationsEnabled)
+  const [notifyMsg, setNotifyMsg] = useState<string | null>(null)
+  const platform = currentPlatform()
 
   const latInvalid = latText.trim() !== '' && parseCoord(latText, -90, 90) === undefined
   const lonInvalid = lonText.trim() !== '' && parseCoord(lonText, -180, 180) === undefined
@@ -209,6 +214,32 @@ export function SettingsPage() {
           {bridgeMsg.message}
         </p>
       ) : null}
+
+      <h2 className="done-panel-title">Notifications (this device only)</h2>
+      <p className="done-panel-lead">
+        {platform === 'android'
+          ? 'Android app: a reminder when Oak ends on weekdays (uses the phone clock).'
+          : 'While Usta is open in the background (tray on Windows, or another tab), you get a notification when the next action changes — for example when Oak ends.'}
+      </p>
+      <label className="field" htmlFor="notify-on">
+        <span>
+          <input
+            id="notify-on"
+            name="notify"
+            type="checkbox"
+            checked={notifyOn}
+            onChange={(e) => {
+              const on = e.target.checked
+              void setNotificationsEnabled(on, state.config).then((ok) => {
+                setNotifyOn(ok)
+                setNotifyMsg(on && !ok ? 'Permission was not granted, so notifications stay off.' : null)
+              })
+            }}
+          />{' '}
+          Notify me
+        </span>
+      </label>
+      {notifyMsg ? <p className="msg err">{notifyMsg}</p> : null}
 
       <h2 className="done-panel-title">Prayer location</h2>
       <p className="done-panel-lead">

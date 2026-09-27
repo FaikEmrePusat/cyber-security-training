@@ -1,0 +1,11 @@
+{
+  "identifier": "default",
+  "description": "Main Usta window: tray tooltip + notifications.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:tray:allow-get-by-id",
+    "core:tray:allow-set-tooltip",
+    "notification:default"
+  ]
+}
