@@ -11,7 +11,7 @@ import { UstaProvider } from './state/UstaProvider'
 export default function App() {
   return (
     <UstaProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || '/'}>
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<NowPage />} />

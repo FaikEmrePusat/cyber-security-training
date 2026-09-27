@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Redirecting…</title>
+    <script>
+      // Site-wide GitHub Pages 404. Usta (BrowserRouter) deep links go back to the Usta shell;
+      // anything else goes to Cyber Ledger (HashRouter, no deep paths).
+      ;(function () {
+        var site = '/cyber-security-training'
+        var usta = site + '/usta'
+        var path = window.location.pathname
+        if (path.indexOf(usta + '/') === 0) {
+          var rest = path.slice(usta.length)
+          window.location.replace(
+            usta + '/?redirect=' + encodeURIComponent(rest + window.location.search) + window.location.hash,
+          )
+        } else {
+          window.location.replace(site + '/')
+        }
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>

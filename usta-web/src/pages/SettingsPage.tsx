@@ -5,7 +5,7 @@ import { getDeviceId } from '../lib/deviceId'
 import type { SyncStatus } from '../lib/storage'
 import { useUsta } from '../state/UstaProvider'
 
-const PAGES_DEFAULT = 'https://faikemrep.github.io/Cyber-Security-Training/'
+const PAGES_DEFAULT = 'https://faikemrepusat.github.io/cyber-security-training/'
 
 const SYNC_LABELS: Record<SyncStatus, string> = {
   'local-only': 'Local only — cloud env not set',

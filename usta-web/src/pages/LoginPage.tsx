@@ -10,6 +10,7 @@ export function LoginPage() {
   const [email, setEmail] = useState(DEFAULT_EMAIL)
   const [msg, setMsg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [code, setCode] = useState('')
 
   const sendLink = async (e: FormEvent) => {
     e.preventDefault()
@@ -22,7 +23,7 @@ export function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
       },
     })
     setBusy(false)
@@ -30,7 +31,19 @@ export function LoginPage() {
       setMsg(error.message)
       return
     }
-    setMsg(`Check ${email} for the login link, then return here. Your phone and PC will share the same queue.`)
+    setMsg(
+      `Check ${email} for the login email. Open the link on this browser, or type the 6-digit code below (use the code in the Android / Windows app).`,
+    )
+  }
+
+  const verifyCode = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!supabase) return
+    setBusy(true)
+    setMsg(null)
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'email' })
+    setBusy(false)
+    setMsg(error ? error.message : 'Signed in.')
   }
 
   const signOut = async () => {
@@ -103,6 +116,23 @@ export function LoginPage() {
         </label>
         <button type="submit" className="primary" disabled={busy}>
           {busy ? 'Sending…' : 'Send login link'}
+        </button>
+      </form>
+      <form onSubmit={(e) => void verifyCode(e)}>
+        <label className="field" htmlFor="otp-code">
+          Or enter the 6-digit code from the email
+          <input
+            id="otp-code"
+            name="otp"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6,10}"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+        </label>
+        <button type="submit" disabled={busy || code.trim().length < 6}>
+          Sign in with code
         </button>
       </form>
       {msg ? (
