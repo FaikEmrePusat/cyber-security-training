@@ -18,6 +18,7 @@ const MORE = [
   { to: "/kapilar", label: "Gates" },
   { to: "/hiz", label: "Pace" },
   { to: "/formuller", label: "Formulas" },
+  { to: "/self-check", label: "Self-check notes" },
   { to: "/data", label: "Data" },
 ];
 

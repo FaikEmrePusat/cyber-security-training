@@ -33,7 +33,7 @@ import {
   type Tempo,
 } from "./model";
 import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
-import { applySessionEvidence, isPublicHttpUrl } from "./data/evidencePromote";
+import { applySessionEvidence, applyKayitNoteEvidence, isPublicHttpUrl } from "./data/evidencePromote";
 import { mergeEvidenceUrls, mergeSources } from "./data/sessionMultiFields";
 import { generateSessionNot } from "./components/sessionLogFormUtils";
 
@@ -73,6 +73,8 @@ type StoreApi = {
     alan?: string;
     tags?: string[];
   }) => void;
+  /** Self-check written notes → kayit (record) evidence on skill + portfolio artifact. */
+  registerSelfCheckEvidence: (topic: string, alan?: string) => void;
   /** State + log in one undo step (e.g. marking a review). */
   commitWithLog: (updater: (s: AppState) => AppState, rec: LogRecord) => void;
   resetSeed: () => void;
@@ -142,17 +144,31 @@ function applyEvidenceFromSession(
   if (urls.length === 0) return s;
   const promote = form.promoteEvidence !== false;
   const baseTitle = form.aktiviteCustom?.trim() || task.baslik || "Session evidence";
+  const alan = form.alan || task.alan;
   let next = s;
   for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    if (!isPublicHttpUrl(url)) continue;
-    const { state } = applySessionEvidence(next, {
-      title: urls.length > 1 ? `${baseTitle} (${i + 1})` : baseTitle,
-      url,
-      kind: task.kind,
-      alan: form.alan || task.alan,
-      tags: form.tags,
-      promote,
+    const url = urls[i]!;
+    if (isPublicHttpUrl(url)) {
+      const { state } = applySessionEvidence(next, {
+        title: urls.length > 1 ? `${baseTitle} (${i + 1})` : baseTitle,
+        url,
+        kind: task.kind,
+        alan,
+        tags: form.tags,
+        promote,
+      });
+      next = state;
+      continue;
+    }
+    // Local paths and self-check:… refs count as kayit (record) evidence.
+    const { state } = applyKayitNoteEvidence(next, {
+      title: url.startsWith("self-check:")
+        ? `Self-check: ${url.slice("self-check:".length)}`.slice(0, 100)
+        : urls.length > 1
+          ? `${baseTitle} (${i + 1})`
+          : baseTitle,
+      ref: url,
+      alan,
     });
     next = state;
   }
@@ -484,6 +500,20 @@ export function DurumProvider({ children }: { children: ReactNode }) {
       promoteLogEvidence: (input) => {
         commit(
           (s) => applySessionEvidence(s, { ...input, promote: true }).state,
+          { forceHistory: true },
+        );
+      },
+      registerSelfCheckEvidence: (topic, alan) => {
+        const t = topic.trim();
+        if (!t) return;
+        const ref = `self-check:${t}`;
+        commit(
+          (s) =>
+            applyKayitNoteEvidence(s, {
+              title: `Self-check: ${t}`.slice(0, 100),
+              ref,
+              alan,
+            }).state,
           { forceHistory: true },
         );
       },

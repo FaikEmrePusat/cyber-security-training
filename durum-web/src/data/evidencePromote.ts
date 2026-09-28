@@ -41,6 +41,18 @@ function bumpSkillEvidence(skills: Skill[], alan: string | undefined, url: strin
   });
 }
 
+/** Raise skill evidence at most to kayit (never public) when local notes / paths exist. */
+function bumpSkillEvidenceKayit(skills: Skill[], alan: string | undefined, ref: string): Skill[] {
+  if (!alan || alan.startsWith("dil-")) return skills;
+  return skills.map((s) => {
+    if (s.id !== alan) return s;
+    if (TIER_RANK[s.evidence] >= TIER_RANK.kayit) {
+      return { ...s, ref: s.ref.trim() || ref };
+    }
+    return { ...s, evidence: "kayit", ref: s.ref.trim() || ref };
+  });
+}
+
 export type EvidencePromoteInput = {
   title: string;
   url?: string;
@@ -117,6 +129,73 @@ export function applySessionEvidence(state: AppState, input: EvidencePromoteInpu
       ...state,
       artifacts,
       skills: bumpSkillEvidence(state.skills, input.alan, url),
+    },
+    promoted: true,
+    artifactId,
+  };
+}
+
+export type KayitNoteEvidenceInput = {
+  title: string;
+  /** Stable local ref, e.g. self-check:TopicName or a file path. */
+  ref: string;
+  alan?: string;
+};
+
+/**
+ * Local notes / self-check answers count as kayit (record) evidence — not Gate C public.
+ * Does not lower an existing public skill or public artifact.
+ */
+export function applyKayitNoteEvidence(
+  state: AppState,
+  input: KayitNoteEvidenceInput,
+): EvidencePromoteResult {
+  const ref = input.ref.trim();
+  if (!ref) return { state, promoted: false };
+
+  const title = (input.title.trim() || "Self-check notes").slice(0, 100);
+  const key = ref.toLowerCase();
+  const existing = state.artifacts.find((a) => a.ref.trim().toLowerCase() === key);
+
+  let artifactId: string;
+  let artifacts: Artifact[];
+
+  if (existing) {
+    artifactId = existing.id;
+    artifacts = state.artifacts.map((a) => {
+      if (a.id !== existing.id) return a;
+      if (a.evidence === "public") {
+        return { ...a, ad: a.ad.trim() || title };
+      }
+      return {
+        ...a,
+        ad: title,
+        ref,
+        evidence: "kayit",
+        sahiplik: Math.max(a.sahiplik, 0.8),
+        tur: a.tur === "writeup" ? a.tur : "lab-egzersizi",
+      };
+    });
+  } else {
+    artifactId = `art-sc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    artifacts = [
+      ...state.artifacts,
+      {
+        id: artifactId,
+        ad: title,
+        tur: "lab-egzersizi",
+        sahiplik: 0.8,
+        evidence: "kayit",
+        ref,
+      },
+    ];
+  }
+
+  return {
+    state: {
+      ...state,
+      artifacts,
+      skills: bumpSkillEvidenceKayit(state.skills, input.alan, ref),
     },
     promoted: true,
     artifactId,

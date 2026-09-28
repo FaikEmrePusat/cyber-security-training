@@ -11,6 +11,7 @@ import { DataPage } from "./pages/Data";
 import { RecordPage } from "./pages/Record";
 import { HaritaPage } from "./pages/Harita";
 import { TekrarPage } from "./pages/Tekrar";
+import { SelfCheckNotesPage } from "./pages/SelfCheckNotes";
 import { UstaBridgePage } from "./pages/UstaBridge";
 import { DurumProvider } from "./store";
 
@@ -32,6 +33,7 @@ function AppShell() {
         <Route path="/tekrar" element={<TekrarPage />} />
         <Route path="/record" element={<RecordPage />} />
         <Route path="/data" element={<DataPage />} />
+        <Route path="/self-check" element={<SelfCheckNotesPage />} />
         <Route path="/log" element={<Navigate to="/record" replace />} />
         <Route path="/formuller" element={<FormullerPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
