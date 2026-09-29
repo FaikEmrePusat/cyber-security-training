@@ -55,27 +55,61 @@ export function SyncPanel() {
     setMsg(null);
     const input = code.trim();
     let errorMsg: string | null = null;
-    try {
-      const url = new URL(input);
-      const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
-      const type = (url.searchParams.get("type") ?? "magiclink") as "magiclink" | "email" | "signup";
-      if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-        errorMsg = error?.message ?? null;
-      } else if (/^\d{6,10}$/.test(input)) {
-        const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: input, type: "email" });
-        errorMsg = error?.message ?? null;
-      } else {
-        errorMsg = "Paste the whole login link from the email, or a 6-digit code.";
+
+    const trySessionFromUrl = async (raw: string): Promise<boolean> => {
+      let url: URL;
+      try {
+        url = new URL(raw);
+      } catch {
+        return false;
       }
-    } catch {
-      if (/^\d{6,10}$/.test(input)) {
-        const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: input, type: "email" });
-        errorMsg = error?.message ?? null;
-      } else {
-        errorMsg = "Paste the whole login link from the email, or a 6-digit code.";
+      const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+      const accessToken = hashParams.get("access_token") ?? url.searchParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token") ?? url.searchParams.get("refresh_token");
+      if (!accessToken || !refreshToken) return false;
+      const { error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      errorMsg = error?.message ?? null;
+      return true;
+    };
+
+    const handledSession = await trySessionFromUrl(input);
+    if (!handledSession) {
+      try {
+        const url = new URL(input);
+        const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
+        const type = (url.searchParams.get("type") ?? "magiclink") as "magiclink" | "email" | "signup";
+        if (tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+          errorMsg = error?.message ?? null;
+        } else if (/^\d{6,10}$/.test(input)) {
+          const { error } = await supabase.auth.verifyOtp({
+            email: email.trim(),
+            token: input,
+            type: "email",
+          });
+          errorMsg = error?.message ?? null;
+        } else {
+          errorMsg =
+            "Paste (1) the redirect URL that has #access_token=…, (2) the email verify link, or (3) a 6-digit code.";
+        }
+      } catch {
+        if (/^\d{6,10}$/.test(input)) {
+          const { error } = await supabase.auth.verifyOtp({
+            email: email.trim(),
+            token: input,
+            type: "email",
+          });
+          errorMsg = error?.message ?? null;
+        } else {
+          errorMsg =
+            "Paste (1) the redirect URL that has #access_token=…, (2) the email verify link, or (3) a 6-digit code.";
+        }
       }
     }
+
     setBusy(false);
     if (errorMsg) {
       setMsg(`Sign-in failed: ${errorMsg}`);
@@ -135,12 +169,12 @@ export function SyncPanel() {
             </button>
           </form>
           <form onSubmit={(e) => void verifyPaste(e)} className="field" style={{ marginTop: "0.75rem" }}>
-            <label htmlFor="ledger-sync-code">Or paste login link / code</label>
+            <label htmlFor="ledger-sync-code">Or paste redirect URL / email link / code</label>
             <input
               id="ledger-sync-code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Paste magic link or 6-digit code"
+              placeholder="Paste localhost…#access_token=… or email link or code"
               autoComplete="one-time-code"
             />
             <button type="submit" className="cta cta--ghost" disabled={busy} style={{ marginTop: "0.5rem" }}>
