@@ -36,8 +36,18 @@ import { OAK_BY_ID, topicKey } from "./data/oakCurriculum";
 import { applySessionEvidence, applyKayitNoteEvidence, isPublicHttpUrl } from "./data/evidencePromote";
 import { mergeEvidenceUrls, mergeSources } from "./data/sessionMultiFields";
 import { generateSessionNot } from "./components/sessionLogFormUtils";
+import { bumpSyncMeta, buildCloudDoc, importSelfChecks } from "./lib/cloudDoc";
+import {
+  applyCloudExtras,
+  markPending,
+  subscribeRemote,
+  syncNow,
+  type SyncStatus,
+} from "./lib/cloudSync";
+import { supabase, supabaseConfigured } from "./lib/supabase";
 
 const MAX_HISTORY = 50;
+const CLOUD_DEBOUNCE_MS = 900;
 /** Coalesce consecutive keystrokes into one undo step (ms). */
 const COALESCE_MS = 800;
 
@@ -82,6 +92,10 @@ type StoreApi = {
   clearPending: () => void;
   exportFullBackup: () => string;
   importFullBackup: (jsonText: string) => boolean;
+  /** Cloud sync (Supabase). Offline / signed-out still keep localStorage. */
+  syncStatus: SyncStatus;
+  syncEmail: string | null;
+  refreshCloud: () => Promise<void>;
 };
 
 const StoreContext = createContext<StoreApi | null>(null);
@@ -249,20 +263,120 @@ export function DurumProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(loadState);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(() =>
+    supabaseConfigured ? "signed-out" : "local-only",
+  );
+  const [syncEmail, setSyncEmail] = useState<string | null>(null);
 
   const pastRef = useRef<AppState[]>([]);
   const futureRef = useRef<AppState[]>([]);
   const coalesceUntilRef = useRef(0);
   const applyingHistoryRef = useRef(false);
+  const applyingRemoteRef = useRef(false);
+  const syncTimerRef = useRef(0);
+  const syncingRef = useRef(false);
+  const syncAgainRef = useRef(false);
   /** Current state ref so stack is not corrupted during Strict Mode double-invoke. */
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  // Persist locally only — personal tracker, no account / cloud sync.
+  const runCloudSync = useCallback(async () => {
+    if (!supabaseConfigured) {
+      setSyncStatus("local-only");
+      return;
+    }
+    if (syncingRef.current) {
+      syncAgainRef.current = true;
+      return;
+    }
+    syncingRef.current = true;
+    try {
+      do {
+        syncAgainRef.current = false;
+        const result = await syncNow(stateRef.current);
+        setSyncStatus(result.status);
+        if (result.replacedLocal) {
+          applyingRemoteRef.current = true;
+          stateRef.current = result.state;
+          setState(result.state);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(result.state));
+        }
+      } while (syncAgainRef.current);
+    } catch {
+      setSyncStatus("error");
+    } finally {
+      syncingRef.current = false;
+    }
+  }, []);
+
+  const scheduleCloudSync = useCallback(() => {
+    if (!supabaseConfigured || applyingRemoteRef.current) return;
+    bumpSyncMeta();
+    markPending();
+    setSyncStatus((s) => (s === "local-only" || s === "signed-out" ? s : "pending"));
+    window.clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = window.setTimeout(() => {
+      void runCloudSync();
+    }, CLOUD_DEBOUNCE_MS);
+  }, [runCloudSync]);
+
+  // Persist locally; signed-in sessions also push to Supabase (debounced).
   useEffect(() => {
     if (applyingHistoryRef.current) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+    if (applyingRemoteRef.current) {
+      applyingRemoteRef.current = false;
+      return;
+    }
+    scheduleCloudSync();
+  }, [state, scheduleCloudSync]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let unsubRealtime: (() => void) | undefined;
+
+    const bindUser = (userId: string | null, email: string | null) => {
+      unsubRealtime?.();
+      unsubRealtime = undefined;
+      setSyncEmail(email);
+      if (!userId) {
+        setSyncStatus(supabaseConfigured ? "signed-out" : "local-only");
+        return;
+      }
+      void runCloudSync();
+      unsubRealtime = subscribeRemote(userId, (doc) => {
+        applyCloudExtras(doc);
+        applyingRemoteRef.current = true;
+        stateRef.current = doc.state;
+        setState(doc.state);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(doc.state));
+        setSyncStatus("synced");
+      });
+    };
+
+    void supabase.auth.getSession().then(({ data }) => {
+      bindUser(data.session?.user.id ?? null, data.session?.user.email ?? null);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      bindUser(session?.user.id ?? null, session?.user.email ?? null);
+    });
+
+    const onFocus = () => {
+      if (document.visibilityState === "visible") void runCloudSync();
+    };
+    document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+
+    return () => {
+      unsubRealtime?.();
+      sub.subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      window.clearTimeout(syncTimerRef.current);
+    };
+  }, [runCloudSync]);
 
   const syncFlags = useCallback(() => {
     setCanUndo(pastRef.current.length > 0);
@@ -561,18 +675,14 @@ export function DurumProvider({ children }: { children: ReactNode }) {
         return recs.length;
       },
       exportFullBackup: () => {
-        let curriculumMap: Record<string, string> = {};
-        try {
-          const raw = localStorage.getItem("durum-curriculum-v1");
-          if (raw) curriculumMap = JSON.parse(raw);
-        } catch {
-          /* skip */
-        }
+        const doc = buildCloudDoc(state);
         const payload = {
           version: "durum-v22",
           exportedAt: new Date().toISOString(),
-          state,
-          curriculum: curriculumMap,
+          state: doc.state,
+          curriculum: doc.curriculum,
+          selfChecks: doc.selfChecks,
+          sync: { rev: doc.rev, updatedAt: doc.updatedAt },
         };
         return JSON.stringify(payload, null, 2);
       },
@@ -591,6 +701,9 @@ export function DurumProvider({ children }: { children: ReactNode }) {
               /* skip */
             }
           }
+          if (parsed.selfChecks && typeof parsed.selfChecks === "object") {
+            importSelfChecks(parsed.selfChecks);
+          }
           commit(() => normalizeLoadedState(nextState), { forceHistory: true });
           coalesceUntilRef.current = 0;
           return true;
@@ -598,8 +711,11 @@ export function DurumProvider({ children }: { children: ReactNode }) {
           return false;
         }
       },
+      syncStatus,
+      syncEmail,
+      refreshCloud: () => runCloudSync(),
     }),
-    [state, canUndo, canRedo, undo, redo, patch, commit],
+    [state, canUndo, canRedo, undo, redo, patch, commit, syncStatus, syncEmail, runCloudSync],
   );
 
   return <StoreContext.Provider value={api}>{children}</StoreContext.Provider>;

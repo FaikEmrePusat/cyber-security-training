@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PublishPanel } from "../components/PublishPanel";
 import { Section } from "../components/Section";
+import { SyncPanel } from "../components/SyncPanel";
 import { useDurum } from "../store";
 
 export function DataPage() {
@@ -54,13 +55,20 @@ export function DataPage() {
       <Section
         as="h1"
         title="Data"
-        lead="This browser keeps your private working copy. Publish shares a read-only snapshot on GitHub for followers."
+        lead="Sign in once to sync your private Ledger across devices. Publish is optional and only for public Record followers."
+      >
+        <SyncPanel />
+      </Section>
+
+      <Section
+        title="Local backup"
+        lead="Emergency copy on this browser. Prefer cloud sync for day-to-day PC ↔ phone."
       >
         <div className="actions" style={{ marginBottom: "1rem" }}>
           <button type="button" className="cta" onClick={handleDownloadFullBackup}>
             Download backup (.json)
           </button>
-          <button type="button" className="cta cta--ghost" onClick={handleCopyFullBackup}>
+          <button type="button" className="cta cta--ghost" onClick={() => void handleCopyFullBackup()}>
             Copy backup
           </button>
         </div>
@@ -80,7 +88,7 @@ export function DataPage() {
 
       <Section
         title="Publish to GitHub"
-        lead="Followers open Record and load your published snapshot. Without your token they cannot overwrite it."
+        lead="Followers open Record and load your published snapshot. Without your token they cannot overwrite it. This is not private sync."
       >
         <PublishPanel />
       </Section>
@@ -98,10 +106,10 @@ export function DataPage() {
               onClick={() => {
                 resetSeed();
                 setConfirmReset(false);
-                flash("Diagnostic seed loaded");
+                flash("Seed restored");
               }}
             >
-              Yes, reset
+              Confirm reset
             </button>
             <button type="button" className="cta cta--ghost" onClick={() => setConfirmReset(false)}>
               Cancel
@@ -110,7 +118,11 @@ export function DataPage() {
         )}
       </Section>
 
-      {toast && <div className="toast">{toast}</div>}
+      {toast ? (
+        <p className="msg ok" role="status">
+          {toast}
+        </p>
+      ) : null}
     </div>
   );
 }
