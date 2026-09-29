@@ -46,7 +46,8 @@ export function SyncPanel() {
 
   const verifyPaste = async (e: FormEvent) => {
     e.preventDefault();
-    if (!supabase) return;
+    const client = supabase;
+    if (!client) return;
     setBusy(true);
     setMsg(null);
     const input = code.trim();
@@ -63,7 +64,7 @@ export function SyncPanel() {
       const accessToken = hashParams.get("access_token") ?? url.searchParams.get("access_token");
       const refreshToken = hashParams.get("refresh_token") ?? url.searchParams.get("refresh_token");
       if (!accessToken || !refreshToken) return false;
-      const { error } = await supabase.auth.setSession({
+      const { error } = await client.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
       });
@@ -78,10 +79,10 @@ export function SyncPanel() {
         const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
         const type = (url.searchParams.get("type") ?? "magiclink") as "magiclink" | "email" | "signup";
         if (tokenHash) {
-          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+          const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
           errorMsg = error?.message ?? null;
         } else if (/^\d{6,10}$/.test(input)) {
-          const { error } = await supabase.auth.verifyOtp({
+          const { error } = await client.auth.verifyOtp({
             email: email.trim(),
             token: input,
             type: "email",
@@ -93,7 +94,7 @@ export function SyncPanel() {
         }
       } catch {
         if (/^\d{6,10}$/.test(input)) {
-          const { error } = await supabase.auth.verifyOtp({
+          const { error } = await client.auth.verifyOtp({
             email: email.trim(),
             token: input,
             type: "email",
