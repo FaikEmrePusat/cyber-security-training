@@ -11,7 +11,6 @@ export function SyncPanel() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -38,7 +37,6 @@ export function SyncPanel() {
       setMsg(result.message);
       return;
     }
-    setSent(true);
     setMsg(
       result.ntfy
         ? `${result.message} Tip: open the ntfy link if Gmail is empty.`
@@ -81,7 +79,6 @@ export function SyncPanel() {
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-    setSent(false);
     setCode("");
     setMsg("Signed out. Data on this browser stays until you clear site data.");
   };
