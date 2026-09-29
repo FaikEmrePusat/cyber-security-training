@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { requestLedgerOtp, verifyLedgerOtp } from "../lib/ledgerOtp";
 import { ledgerAuthRedirectTo, supabase, supabaseConfigured } from "../lib/supabase";
 import { useDurum } from "../store";
 
@@ -10,6 +11,7 @@ export function SyncPanel() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -26,8 +28,36 @@ export function SyncPanel() {
     );
   }
 
-  const sendLink = async (e: FormEvent) => {
+  const sendCode = async (e: FormEvent) => {
     e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    const result = await requestLedgerOtp(email);
+    setBusy(false);
+    if (!result.ok) {
+      setMsg(result.message);
+      return;
+    }
+    setSent(true);
+    setMsg(result.message);
+  };
+
+  const verifyCode = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    const result = await verifyLedgerOtp(email, code);
+    setBusy(false);
+    if (!result.ok) {
+      setMsg(`Sign-in failed: ${result.message}`);
+      return;
+    }
+    setMsg("Signed in. Syncing…");
+    await refreshCloud();
+    setMsg("Signed in and synced.");
+  };
+
+  const sendMagicLinkFallback = async () => {
     if (!supabase) return;
     setBusy(true);
     setMsg(null);
@@ -40,86 +70,15 @@ export function SyncPanel() {
     setMsg(
       error
         ? error.message
-        : `Check ${email}. Open the Sign in link in the email — it should return to ${redirectTo}`,
+        : `Magic link sent (fallback). It should open ${redirectTo}. Prefer the 6-digit code above.`,
     );
-  };
-
-  const verifyPaste = async (e: FormEvent) => {
-    e.preventDefault();
-    const client = supabase;
-    if (!client) return;
-    setBusy(true);
-    setMsg(null);
-    const input = code.trim();
-    let errorMsg: string | null = null;
-
-    const trySessionFromUrl = async (raw: string): Promise<boolean> => {
-      let url: URL;
-      try {
-        url = new URL(raw);
-      } catch {
-        return false;
-      }
-      const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
-      const accessToken = hashParams.get("access_token") ?? url.searchParams.get("access_token");
-      const refreshToken = hashParams.get("refresh_token") ?? url.searchParams.get("refresh_token");
-      if (!accessToken || !refreshToken) return false;
-      const { error } = await client.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      errorMsg = error?.message ?? null;
-      return true;
-    };
-
-    const handledSession = await trySessionFromUrl(input);
-    if (!handledSession) {
-      try {
-        const url = new URL(input);
-        const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
-        const type = (url.searchParams.get("type") ?? "magiclink") as "magiclink" | "email" | "signup";
-        if (tokenHash) {
-          const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
-          errorMsg = error?.message ?? null;
-        } else if (/^\d{6,10}$/.test(input)) {
-          const { error } = await client.auth.verifyOtp({
-            email: email.trim(),
-            token: input,
-            type: "email",
-          });
-          errorMsg = error?.message ?? null;
-        } else {
-          errorMsg =
-            "Paste (1) the redirect URL that has #access_token=…, (2) the email verify link, or (3) a 6-digit code.";
-        }
-      } catch {
-        if (/^\d{6,10}$/.test(input)) {
-          const { error } = await client.auth.verifyOtp({
-            email: email.trim(),
-            token: input,
-            type: "email",
-          });
-          errorMsg = error?.message ?? null;
-        } else {
-          errorMsg =
-            "Paste (1) the redirect URL that has #access_token=…, (2) the email verify link, or (3) a 6-digit code.";
-        }
-      }
-    }
-
-    setBusy(false);
-    if (errorMsg) {
-      setMsg(`Sign-in failed: ${errorMsg}`);
-      return;
-    }
-    setMsg("Signed in. Syncing…");
-    await refreshCloud();
-    setMsg("Signed in and synced.");
   };
 
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    setSent(false);
+    setCode("");
     setMsg("Signed out. Data on this browser stays until you clear site data.");
   };
 
@@ -151,7 +110,7 @@ export function SyncPanel() {
         </div>
       ) : (
         <>
-          <form onSubmit={(e) => void sendLink(e)} className="field" style={{ marginTop: "0.75rem" }}>
+          <form onSubmit={(e) => void sendCode(e)} className="field" style={{ marginTop: "0.75rem" }}>
             <label htmlFor="ledger-sync-email">Email</label>
             <input
               id="ledger-sync-email"
@@ -162,32 +121,42 @@ export function SyncPanel() {
               required
             />
             <button type="submit" className="cta" disabled={busy} style={{ marginTop: "0.5rem" }}>
-              Send login link
+              Send 6-digit code
             </button>
           </form>
-          <form onSubmit={(e) => void verifyPaste(e)} className="field" style={{ marginTop: "0.75rem" }}>
-            <label htmlFor="ledger-sync-code">Or paste redirect URL / email link / code</label>
+          <form onSubmit={(e) => void verifyCode(e)} className="field" style={{ marginTop: "0.75rem" }}>
+            <label htmlFor="ledger-sync-code">6-digit code from email</label>
             <input
               id="ledger-sync-code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Paste localhost…#access_token=… or email link or code"
+              placeholder="123456"
+              inputMode="numeric"
               autoComplete="one-time-code"
+              disabled={!sent && !code}
             />
-            <button type="submit" className="cta cta--ghost" disabled={busy} style={{ marginTop: "0.5rem" }}>
-              Sign in
+            <button type="submit" className="cta" disabled={busy || code.trim().length < 6} style={{ marginTop: "0.5rem" }}>
+              Sign in with code
             </button>
           </form>
+          <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
+            <button type="button" className="cta cta--ghost" disabled={busy} onClick={() => void sendMagicLinkFallback()}>
+              Send magic link instead
+            </button>
+          </p>
         </>
       )}
       {msg ? (
-        <p className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") ? "err" : "ok"}`} role="status">
+        <p
+          className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("wrong") || msg.toLowerCase().includes("could not") ? "err" : "ok"}`}
+          role="status"
+        >
           {msg}
         </p>
       ) : null}
       <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-        Same email as Usta. Click the email Sign in link — it must open this Ledger site (not Usta :5174). After
-        sign-in, Today / Record / self-check sync across devices.
+        Uses a 6-digit code emailed to you (no redirect to Usta :5174). First time may require confirming FormSubmit
+        in your inbox once.
       </p>
     </div>
   );

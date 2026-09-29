@@ -1,0 +1,5 @@
+# Minimal config for Edge Function deploy (project already exists on hosted Supabase).
+project_id = "tjbebwdefmxqnbetmsve"
+
+[functions.ledger-otp]
+verify_jwt = false
