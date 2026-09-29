@@ -1,13 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { supabase, supabaseConfigured } from "../lib/supabase";
+import { ledgerAuthRedirectTo, supabase, supabaseConfigured } from "../lib/supabase";
 import { useDurum } from "../store";
 
 const DEFAULT_EMAIL = "faikemrep@gmail.com";
-
-function authRedirectTo(): string {
-  const base = `${window.location.origin}${import.meta.env.BASE_URL}`;
-  return base.endsWith("/") ? base : `${base}/`;
-}
 
 export function SyncPanel() {
   const { syncStatus, syncEmail, refreshCloud } = useDurum();
@@ -36,15 +31,16 @@ export function SyncPanel() {
     if (!supabase) return;
     setBusy(true);
     setMsg(null);
+    const redirectTo = ledgerAuthRedirectTo();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: authRedirectTo() },
+      options: { emailRedirectTo: redirectTo },
     });
     setBusy(false);
     setMsg(
       error
         ? error.message
-        : `Check ${email} for the login email. Open the link in this browser (same device you want to sync).`,
+        : `Check ${email}. Open the Sign in link in the email — it should return to ${redirectTo}`,
     );
   };
 
@@ -189,7 +185,8 @@ export function SyncPanel() {
         </p>
       ) : null}
       <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-        Same email as Usta. After sign-in, Today / Record / self-check notes sync across PC and phone — no git push.
+        Same email as Usta. Click the email Sign in link — it must open this Ledger site (not Usta :5174). After
+        sign-in, Today / Record / self-check sync across devices.
       </p>
     </div>
   );

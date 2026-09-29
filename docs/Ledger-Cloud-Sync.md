@@ -36,12 +36,16 @@ If realtime add fails because it is already published, ignore that error.
 
 ## 2. Redirect URLs
 
-Authentication → URL configuration → Redirect URLs, add:
+Authentication → URL configuration → Redirect URLs, add (exact):
 
-- `http://localhost:5173/**`
+- `https://faikemrepusat.github.io/cyber-security-training`
 - `https://faikemrepusat.github.io/cyber-security-training/**`
+- `http://localhost:5173`
+- `http://localhost:5173/**`
 
-(Keep existing Usta entries.)
+Keep existing Usta entries (`http://localhost:5174/**`, `usta://auth/callback`, …).
+
+Magic links use **PKCE** and return to the Ledger Pages URL above (not Usta). If the Redirect list is missing that URL, Supabase falls back to Site URL (often Usta on :5174).
 
 ## 3. Env
 
