@@ -43,3 +43,5 @@ durum-web/SYSTEM-AUDIT-AND-TEST-REPORT.md
 durum-web/SITE-DENETIMI.md
 durum-web/haftalik_kullanici_testi.py
 durum-web/simulate_and_audit.py
+
+supabase/.temp/
