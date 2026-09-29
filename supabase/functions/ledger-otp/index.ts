@@ -1,13 +1,14 @@
 /**
- * Ledger 6-digit email OTP (bypasses locked Magic Link templates).
+ * Ledger 6-digit email OTP (bypasses locked Magic Link templates / Auth email rate limits).
  *
- * Deploy: npx supabase functions deploy ledger-otp --project-ref tjbebwdefmxqnbetmsve
- *
- * First FormSubmit use sends a confirmation mail — click once to activate.
+ * Delivery: ntfy.sh topic (instant) + optional FormSubmit email (5s timeout).
+ * Session: after correct code, set a one-time password and return it for signInWithPassword
+ * (avoids generateLink Auth email rate limits).
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_EMAIL = (Deno.env.get("LEDGER_OTP_EMAIL") ?? "faikemrep@gmail.com").toLowerCase();
+const NTFY_TOPIC = Deno.env.get("LEDGER_NTFY_TOPIC") ?? "cyber-ledger-faik-otp";
 const FORMSUBMIT = `https://formsubmit.co/ajax/${ALLOWED_EMAIL}`;
 
 const cors = {
@@ -32,6 +33,22 @@ function sha256Hex(text: string): Promise<string> {
 function randomCode(): string {
   const n = crypto.getRandomValues(new Uint32Array(1))[0]! % 1_000_000;
   return String(n).padStart(6, "0");
+}
+
+function randomPassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const b64 = btoa(String.fromCharCode(...bytes)).replace(/[^a-zA-Z0-9]/g, "");
+  return `${b64}Aa1!`;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -59,7 +76,6 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === "request") {
-    // Do NOT call generateLink here — it hits Supabase Auth email rate limits.
     const code = randomCode();
     const codeHash = await sha256Hex(`${email}:${code}`);
 
@@ -73,26 +89,54 @@ Deno.serve(async (req) => {
     });
     if (upErr) return json({ error: upErr.message }, 500);
 
-    const mailRes = await fetch(FORMSUBMIT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        _subject: "Cyber Ledger login code",
-        message: `Your Cyber Ledger 6-digit code is: ${code}\n\nIt expires in 10 minutes. If you did not request this, ignore the email.`,
-        _template: "table",
-      }),
-    });
-    if (!mailRes.ok) {
-      const t = await mailRes.text();
-      return json(
+    const text = `Cyber Ledger code: ${code} (expires in 10 minutes)`;
+    const ntfyUrl = `https://ntfy.sh/${NTFY_TOPIC}`;
+    let ntfyOk = false;
+    try {
+      const ntfyRes = await fetchWithTimeout(
+        ntfyUrl,
         {
-          error: `Could not send email (${mailRes.status}). If this is the first time, check inbox for a FormSubmit confirmation link, click it, then try again. ${t.slice(0, 200)}`,
+          method: "POST",
+          headers: { Title: "Cyber Ledger login code", Priority: "high" },
+          body: text,
         },
-        502,
+        8000,
       );
+      ntfyOk = ntfyRes.ok;
+    } catch {
+      ntfyOk = false;
     }
 
-    return json({ ok: true, message: `Code sent to ${email}` });
+    let mailOk = false;
+    try {
+      const mailRes = await fetchWithTimeout(
+        FORMSUBMIT,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            _subject: "Cyber Ledger login code",
+            message: `Your Cyber Ledger 6-digit code is: ${code}\n\nIt expires in 10 minutes.`,
+          }),
+        },
+        5000,
+      );
+      mailOk = mailRes.ok;
+    } catch {
+      mailOk = false;
+    }
+
+    if (!ntfyOk && !mailOk) {
+      return json({ error: "Could not deliver the code (ntfy and email both failed). Try again." }, 502);
+    }
+
+    return json({
+      ok: true,
+      message: ntfyOk
+        ? `Code sent. Open https://ntfy.sh/${NTFY_TOPIC} (and check Gmail).`
+        : `Code emailed to ${email}.`,
+      ntfy: ntfyOk ? `https://ntfy.sh/${NTFY_TOPIC}` : null,
+    });
   }
 
   if (body.action === "verify") {
@@ -120,28 +164,36 @@ Deno.serve(async (req) => {
       return json({ error: "Wrong code." }, 401);
     }
 
-    // Create Auth challenge only after the code is correct (1 Auth call per login).
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    if (linkErr || !linkData?.properties?.hashed_token) {
-      return json(
-        {
-          error:
-            linkErr?.message ??
-            "Could not create session. If you see rate limit, wait ~30–60 minutes and try again.",
-        },
-        400,
-      );
+    // Prefer password handshake over generateLink (avoids Auth email rate limit).
+    const { data: listed, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    if (listErr) return json({ error: listErr.message }, 500);
+    let user = listed.users.find((u) => (u.email ?? "").toLowerCase() === email);
+    if (!user) {
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        password: randomPassword(),
+      });
+      if (createErr || !created.user) {
+        return json({ error: createErr?.message ?? "Could not create user" }, 400);
+      }
+      user = created.user;
     }
+
+    const tempPassword = randomPassword();
+    const { error: passErr } = await admin.auth.admin.updateUserById(user.id, {
+      password: tempPassword,
+      email_confirm: true,
+    });
+    if (passErr) return json({ error: passErr.message }, 400);
 
     await admin.from("ledger_otp").delete().eq("email", email);
 
     return json({
       ok: true,
-      token_hash: linkData.properties.hashed_token,
-      type: "magiclink",
+      mode: "password",
+      email,
+      password: tempPassword,
     });
   }
 

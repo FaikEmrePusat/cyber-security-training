@@ -39,7 +39,11 @@ export function SyncPanel() {
       return;
     }
     setSent(true);
-    setMsg(result.message);
+    setMsg(
+      result.ntfy
+        ? `${result.message} Tip: open the ntfy link if Gmail is empty.`
+        : result.message,
+    );
   };
 
   const verifyCode = async (e: FormEvent) => {
