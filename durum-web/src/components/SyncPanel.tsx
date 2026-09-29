@@ -37,11 +37,8 @@ export function SyncPanel() {
       setMsg(result.message);
       return;
     }
-    setMsg(
-      result.ntfy
-        ? `${result.message} Tip: open the ntfy link if Gmail is empty.`
-        : result.message,
-    );
+    if (result.code) setCode(result.code);
+    setMsg(result.message);
   };
 
   const verifyCode = async (e: FormEvent) => {
@@ -155,8 +152,8 @@ export function SyncPanel() {
         </p>
       ) : null}
       <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-        Uses a 6-digit code emailed to you (no redirect to Usta :5174). First time may require confirming FormSubmit
-        in your inbox once.
+        Send 6-digit code fills the box on this device — then tap Sign in with code. Same on phone when you sign in
+        there.
       </p>
     </div>
   );

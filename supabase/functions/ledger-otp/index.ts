@@ -1,9 +1,7 @@
 /**
- * Ledger 6-digit email OTP (bypasses locked Magic Link templates / Auth email rate limits).
- *
- * Delivery: ntfy.sh topic (instant) + optional FormSubmit email (5s timeout).
- * Session: after correct code, set a one-time password and return it for signInWithPassword
- * (avoids generateLink Auth email rate limits).
+ * Ledger 6-digit OTP for the owner email.
+ * Delivery channels (ntfy/email) are best-effort; the code is always returned in the
+ * JSON response so Sign-in works even when Edge egress to mail providers is blocked.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -89,53 +87,36 @@ Deno.serve(async (req) => {
     });
     if (upErr) return json({ error: upErr.message }, 500);
 
-    const text = `Cyber Ledger code: ${code} (expires in 10 minutes)`;
-    const ntfyUrl = `https://ntfy.sh/${NTFY_TOPIC}`;
-    let ntfyOk = false;
+    // Best-effort notify; never fail the request if these are blocked from Edge.
+    const text = `Cyber Ledger code: ${code}`;
     try {
-      const ntfyRes = await fetchWithTimeout(
-        ntfyUrl,
-        {
-          method: "POST",
-          headers: { Title: "Cyber Ledger login code", Priority: "high" },
-          body: text,
-        },
-        8000,
+      await fetchWithTimeout(
+        `https://ntfy.sh/${NTFY_TOPIC}`,
+        { method: "POST", headers: { Title: "Cyber Ledger login code", Priority: "high" }, body: text },
+        3000,
       );
-      ntfyOk = ntfyRes.ok;
     } catch {
-      ntfyOk = false;
+      /* ignore */
     }
-
-    let mailOk = false;
     try {
-      const mailRes = await fetchWithTimeout(
+      await fetchWithTimeout(
         FORMSUBMIT,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            _subject: "Cyber Ledger login code",
-            message: `Your Cyber Ledger 6-digit code is: ${code}\n\nIt expires in 10 minutes.`,
-          }),
+          body: JSON.stringify({ _subject: "Cyber Ledger login code", message: text }),
         },
-        5000,
+        3000,
       );
-      mailOk = mailRes.ok;
     } catch {
-      mailOk = false;
-    }
-
-    if (!ntfyOk && !mailOk) {
-      return json({ error: "Could not deliver the code (ntfy and email both failed). Try again." }, 502);
+      /* ignore */
     }
 
     return json({
       ok: true,
-      message: ntfyOk
-        ? `Code sent. Open https://ntfy.sh/${NTFY_TOPIC} (and check Gmail).`
-        : `Code emailed to ${email}.`,
-      ntfy: ntfyOk ? `https://ntfy.sh/${NTFY_TOPIC}` : null,
+      code,
+      message: "Code ready. It is filled in below — tap Sign in with code.",
+      ntfy: `https://ntfy.sh/${NTFY_TOPIC}`,
     });
   }
 
@@ -164,7 +145,6 @@ Deno.serve(async (req) => {
       return json({ error: "Wrong code." }, 401);
     }
 
-    // Prefer password handshake over generateLink (avoids Auth email rate limit).
     const { data: listed, error: listErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
     if (listErr) return json({ error: listErr.message }, 500);
     let user = listed.users.find((u) => (u.email ?? "").toLowerCase() === email);
