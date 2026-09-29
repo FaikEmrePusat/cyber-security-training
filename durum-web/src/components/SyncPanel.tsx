@@ -133,7 +133,6 @@ export function SyncPanel() {
               placeholder="123456"
               inputMode="numeric"
               autoComplete="one-time-code"
-              disabled={!sent && !code}
             />
             <button type="submit" className="cta" disabled={busy || code.trim().length < 6} style={{ marginTop: "0.5rem" }}>
               Sign in with code

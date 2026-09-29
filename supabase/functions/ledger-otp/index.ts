@@ -1,10 +1,9 @@
 /**
  * Ledger 6-digit email OTP (bypasses locked Magic Link templates).
  *
- * Deploy: Supabase Dashboard → Edge Functions → Create function `ledger-otp`
- * Secrets: SUPABASE_SERVICE_ROLE_KEY (auto) + optional FORMSUBMIT_EMAIL (default below)
+ * Deploy: npx supabase functions deploy ledger-otp --project-ref tjbebwdefmxqnbetmsve
  *
- * First FormSubmit use sends a confirmation mail to that inbox — click once to activate.
+ * First FormSubmit use sends a confirmation mail — click once to activate.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -28,6 +27,11 @@ function sha256Hex(text: string): Promise<string> {
   return crypto.subtle.digest("SHA-256", data).then((buf) =>
     [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join(""),
   );
+}
+
+function randomCode(): string {
+  const n = crypto.getRandomValues(new Uint32Array(1))[0]! % 1_000_000;
+  return String(n).padStart(6, "0");
 }
 
 Deno.serve(async (req) => {
@@ -55,24 +59,14 @@ Deno.serve(async (req) => {
   }
 
   if (body.action === "request") {
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    if (linkErr || !linkData?.properties) {
-      return json({ error: linkErr?.message ?? "Could not create login challenge" }, 400);
-    }
-
-    const code =
-      linkData.properties.email_otp ||
-      String(Math.floor(100000 + Math.random() * 900000));
-    const tokenHash = linkData.properties.hashed_token;
+    // Do NOT call generateLink here — it hits Supabase Auth email rate limits.
+    const code = randomCode();
     const codeHash = await sha256Hex(`${email}:${code}`);
 
     const { error: upErr } = await admin.from("ledger_otp").upsert({
       email,
       code_hash: codeHash,
-      token_hash: tokenHash,
+      token_hash: null,
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       attempts: 0,
       updated_at: new Date().toISOString(),
@@ -90,9 +84,12 @@ Deno.serve(async (req) => {
     });
     if (!mailRes.ok) {
       const t = await mailRes.text();
-      return json({
-        error: `Could not send email (${mailRes.status}). If this is the first time, check inbox for a FormSubmit confirmation link, click it, then try again. ${t.slice(0, 200)}`,
-      }, 502);
+      return json(
+        {
+          error: `Could not send email (${mailRes.status}). If this is the first time, check inbox for a FormSubmit confirmation link, click it, then try again. ${t.slice(0, 200)}`,
+        },
+        502,
+      );
     }
 
     return json({ ok: true, message: `Code sent to ${email}` });
@@ -104,11 +101,11 @@ Deno.serve(async (req) => {
 
     const { data: row, error: selErr } = await admin
       .from("ledger_otp")
-      .select("code_hash, token_hash, expires_at, attempts")
+      .select("code_hash, expires_at, attempts")
       .eq("email", email)
       .maybeSingle();
     if (selErr) return json({ error: selErr.message }, 500);
-    if (!row?.token_hash) return json({ error: "No code requested. Send a code first." }, 400);
+    if (!row?.code_hash) return json({ error: "No code requested. Send a code first." }, 400);
     if (new Date(row.expires_at).getTime() < Date.now()) {
       return json({ error: "Code expired. Request a new one." }, 400);
     }
@@ -123,11 +120,27 @@ Deno.serve(async (req) => {
       return json({ error: "Wrong code." }, 401);
     }
 
+    // Create Auth challenge only after the code is correct (1 Auth call per login).
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    if (linkErr || !linkData?.properties?.hashed_token) {
+      return json(
+        {
+          error:
+            linkErr?.message ??
+            "Could not create session. If you see rate limit, wait ~30–60 minutes and try again.",
+        },
+        400,
+      );
+    }
+
     await admin.from("ledger_otp").delete().eq("email", email);
 
     return json({
       ok: true,
-      token_hash: row.token_hash,
+      token_hash: linkData.properties.hashed_token,
       type: "magiclink",
     });
   }
