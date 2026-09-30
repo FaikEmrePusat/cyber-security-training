@@ -12,6 +12,7 @@ import {
 import { ROADMAP_SUGGESTIONS } from "../data/roadmapTopics";
 import { DIFF_LABEL } from "../data/oakCurriculum";
 import { Section } from "../components/Section";
+import { ReviewCard } from "../components/ReviewCard";
 import { useDurum } from "../store";
 import { useDerived } from "../useDerived";
 
@@ -73,7 +74,7 @@ function parseBulkLine(
 }
 
 export function TekrarPage() {
-  const { state, setRetrieval, commitWithLog } = useDurum();
+  const { state, setRetrieval, commitWithLog, registerSelfCheckEvidence } = useDurum();
   const d = useDerived();
 
   const [topic, setTopic] = useState("");
@@ -83,6 +84,7 @@ export function TekrarPage() {
   const [picked, setPicked] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const [showLater, setShowLater] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const flash = (t: string) => {
     setToast(t);
@@ -127,6 +129,9 @@ export function TekrarPage() {
         gecikme_gun: round2(daysSince(item.lastIso, d.nowMs)),
       },
     );
+    const label =
+      sonuc === "basarili" ? "Success" : sonuc === "zorlandim" ? "Struggled" : "Failed";
+    flash(`${label} — next due updated`);
   };
 
   const addOne = () => {
@@ -167,6 +172,7 @@ export function TekrarPage() {
 
   const removeItem = (id: string) => {
     setRetrieval((all) => all.filter((r) => r.id !== id));
+    if (openId === id) setOpenId(null);
     flash("Deleted — undo with Ctrl+Z");
   };
 
@@ -201,90 +207,26 @@ export function TekrarPage() {
   const laterOverdue = d.overdue.filter((x) => !todayIds.has(x.item.id));
   const notDue = state.retrieval.filter((item) => {
     const days = daysSince(item.lastIso, d.nowMs);
-    return retrievability(days, item.stability) >= 0.85;
+    return retrievability(days, item.stability) >= MODEL.tekrar.rHedef;
   });
   const laterCount = laterOverdue.length + notDue.length;
+  const emptyQueue = state.retrieval.length === 0;
 
-  const renderRow = (item: RetrievalItem, opts?: { showActions?: boolean }) => {
-    const days = daysSince(item.lastIso, d.nowMs);
-    const r = retrievability(days, item.stability);
-    const due = r < 0.85;
-    const showActions = opts?.showActions !== false;
-    return (
-      <tr key={item.id} style={{ background: due ? "rgba(138,90,43,0.08)" : undefined }}>
-        <td>
-          {item.topic}
-          {due && (
-            <span className="badge badge--warn" style={{ marginLeft: 6 }}>
-              due
-            </span>
-          )}
-        </td>
-        <td>{skillName(item.alan)}</td>
-        <td>{DIFF_LABEL[item.difficulty] ?? item.difficulty}</td>
-        <td title="R(t) — recall probability">{round2(r)}</td>
-        <td title="S — stability (days)">{round2(item.stability)}</td>
-        <td>
-          {showActions ? (
-            <div className="actions" style={{ margin: 0 }}>
-              <button
-                type="button"
-                className="cta"
-                style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
-                onClick={() => mark(item, "basarili")}
-              >
-                Success
-              </button>
-              <button
-                type="button"
-                className="cta cta--ghost"
-                style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
-                onClick={() => mark(item, "zorlandim")}
-              >
-                Struggled
-              </button>
-              <button
-                type="button"
-                className="cta cta--ghost"
-                style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
-                onClick={() => mark(item, "basarisiz")}
-              >
-                Failed
-              </button>
-            </div>
-          ) : (
-            <span className="note" style={{ margin: 0 }}>
-              —
-            </span>
-          )}
-        </td>
-        <td>
-          <button
-            type="button"
-            className="cta cta--ghost"
-            style={{ minHeight: 40, padding: "0.4rem 0.7rem" }}
-            onClick={() => removeItem(item.id)}
-            title="Delete (undo with Ctrl+Z)"
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
-    );
-  };
+  const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id));
 
-  const tableHead = (
-    <thead>
-      <tr>
-        <th>Topic</th>
-        <th>Area</th>
-        <th>D</th>
-        <th title="R(t) — recall">Ready</th>
-        <th title="S — stability">S</th>
-        <th>Result</th>
-        <th />
-      </tr>
-    </thead>
+  const renderCard = (item: RetrievalItem, opts?: { showActions?: boolean }) => (
+    <ReviewCard
+      key={item.id}
+      item={item}
+      skillName={skillName(item.alan)}
+      nowMs={d.nowMs}
+      open={openId === item.id}
+      showActions={opts?.showActions !== false}
+      onToggle={() => toggle(item.id)}
+      onMark={mark}
+      onRemove={removeItem}
+      registerEvidence={registerSelfCheckEvidence}
+    />
   );
 
   return (
@@ -292,14 +234,20 @@ export function TekrarPage() {
       <Section
         as="h1"
         title="Review"
-        lead={`Today max ${MODEL.tekrar.kuyrukTavani} items. Mark due ones — engine runs in the background.`}
+        lead="Per topic: what to remember, where you are on the forgetting curve, and when to study again."
       >
-        <p className="note" style={{ marginTop: 0 }} title="FSRS — spaced repetition engine">
-          Full curriculum (141+ upcoming) → <Link to="/harita">Map</Link> — do not dump here.
+        <p className="note" style={{ marginTop: 0 }}>
+          Today max {MODEL.tekrar.kuyrukTavani} items. Full curriculum →{" "}
+          <Link to="/harita">Map</Link> — cards appear when you complete Today topics (or add below).
         </p>
         {toast && <p className="note">{toast}</p>}
 
-        {d.overdue.length === 0 ? (
+        {emptyQueue ? (
+          <p className="review-empty">
+            No review cards yet. Finish a topic on <Link to="/">Today</Link> — it enqueues here for
+            spaced review. You can also add a topic you already studied below.
+          </p>
+        ) : d.overdue.length === 0 ? (
           <p className="note">No overdue items — good.</p>
         ) : (
           <p className="note">
@@ -309,18 +257,15 @@ export function TekrarPage() {
           </p>
         )}
 
-        <h2 style={{ fontFamily: "var(--font-display)", margin: "0 0 0.75rem", fontSize: "1.15rem" }}>
-          Suggested today ({d.kuyruk.length})
-        </h2>
+        <h2 className="review-section-title">Suggested today ({d.kuyruk.length})</h2>
         {d.kuyruk.length === 0 ? (
-          <p className="note">No priority due items for today.</p>
+          <p className="note">
+            {emptyQueue
+              ? "Queue is empty — complete Today topics or add one below."
+              : "No priority due items for today. Open Later for upcoming reviews."}
+          </p>
         ) : (
-          <div className="table-wrap">
-            <table className="data">
-              {tableHead}
-              <tbody>{d.kuyruk.map((x) => renderRow(x.item))}</tbody>
-            </table>
-          </div>
+          <div className="review-list">{d.kuyruk.map((x) => renderCard(x.item))}</div>
         )}
 
         {laterCount > 0 && (
@@ -329,153 +274,156 @@ export function TekrarPage() {
               Later ({laterCount}
               {laterOverdue.length ? ` · ${laterOverdue.length} due` : ""})
             </summary>
-            <div className="table-wrap" style={{ marginTop: "0.75rem" }}>
-              <table className="data">
-                {tableHead}
-                <tbody>
-                  {laterOverdue.map((x) => renderRow(x.item))}
-                  {notDue.map((item) => renderRow(item))}
-                </tbody>
-              </table>
+            <div className="review-list" style={{ marginTop: "0.75rem" }}>
+              {laterOverdue.map((x) => renderCard(x.item))}
+              {notDue.map((item) => renderCard(item))}
             </div>
           </details>
         )}
-
-        <h3 style={{ fontFamily: "var(--font-display)", margin: "1.5rem 0 0.75rem", fontSize: "1.05rem" }}>
-          Add topic
-        </h3>
-        <div className="field-row">
-          <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label htmlFor="tekrar-konu">Topic</label>
-            <input
-              id="tekrar-konu"
-              value={topic}
-              placeholder="e.g. DNS query/response (Wireshark)"
-              onChange={(e) => setTopic(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addOne();
-                }
-              }}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="tekrar-alan">Area</label>
-            <select id="tekrar-alan" value={alan} onChange={(e) => setAlan(e.target.value)}>
-              {state.skills.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="tekrar-zorluk">Difficulty</label>
-            <select
-              id="tekrar-zorluk"
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-            >
-              {DIFFS.map((x) => (
-                <option key={x} value={x}>
-                  {DIFF_LABEL[x]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="actions" style={{ marginTop: 0 }}>
-          <button type="button" className="cta" onClick={addOne}>
-            Add topic
-          </button>
-        </div>
-
-        <h3 style={{ fontFamily: "var(--font-display)", margin: "1.5rem 0 0.5rem", fontSize: "1.05rem" }}>
-          Bulk add
-        </h3>
-        <p className="note" style={{ marginTop: 0 }}>
-          One topic per line. Format: <code>topic</code> or <code>area|difficulty|topic</code> (default: net · medium).
-        </p>
-        <div className="field">
-          <label htmlFor="tekrar-bulk">Topic list</label>
-          <textarea
-            id="tekrar-bulk"
-            value={bulk}
-            rows={4}
-            placeholder={"TCP 3-way handshake\nlinux|orta|chmod / sticky bit\ndef|zor|SOC triage chain"}
-            onChange={(e) => setBulk(e.target.value)}
-          />
-        </div>
-        <div className="actions" style={{ marginTop: 0 }}>
-          <button type="button" className="cta cta--ghost" onClick={addBulk}>
-            Bulk add
-          </button>
-        </div>
       </Section>
 
       <Section
-        title="Add from suggestions"
-        lead="Core cyber foundation selection for Germany multi-role readiness. Only add topics you have studied — do not fill the entire roadmap here."
+        title="Manage queue"
+        lead="Add topics you have already studied. Do not dump the full roadmap here."
       >
-        <label className="note" style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-          <input
-            type="checkbox"
-            checked={showLater}
-            onChange={(e) => setShowLater(e.target.checked)}
-          />
-          Also show advanced / later-path topics
-        </label>
+        <details className="roi-alts">
+          <summary className="roi-alts__summary">Add topic / bulk / suggestions</summary>
+          <div style={{ marginTop: "0.85rem" }}>
+            <h3 className="review-section-title" style={{ marginTop: 0 }}>
+              Add topic
+            </h3>
+            <div className="field-row">
+              <div className="field" style={{ gridColumn: "1 / -1" }}>
+                <label htmlFor="tekrar-konu">Topic</label>
+                <input
+                  id="tekrar-konu"
+                  value={topic}
+                  placeholder="e.g. Introduction to Cybersecurity"
+                  onChange={(e) => setTopic(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addOne();
+                    }
+                  }}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="tekrar-alan">Area</label>
+                <select id="tekrar-alan" value={alan} onChange={(e) => setAlan(e.target.value)}>
+                  {state.skills.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="tekrar-zorluk">Difficulty</label>
+                <select
+                  id="tekrar-zorluk"
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                >
+                  {DIFFS.map((x) => (
+                    <option key={x} value={x}>
+                      {DIFF_LABEL[x]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="actions" style={{ marginTop: 0 }}>
+              <button type="button" className="cta" onClick={addOne}>
+                Add topic
+              </button>
+            </div>
 
-        {suggestions.length === 0 ? (
-          <p className="note">No suggestions left to show (all in queue or filter off).</p>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              gap: "0.45rem",
-              marginTop: "0.75rem",
-            }}
-          >
-            {suggestions.map((s) => (
-              <label
-                key={s.id}
+            <h3 className="review-section-title">Bulk add</h3>
+            <p className="note" style={{ marginTop: 0 }}>
+              One topic per line. Format: <code>topic</code> or <code>area|difficulty|topic</code>{" "}
+              (default: net · medium).
+            </p>
+            <div className="field">
+              <label htmlFor="tekrar-bulk">Topic list</label>
+              <textarea
+                id="tekrar-bulk"
+                value={bulk}
+                rows={4}
+                placeholder={"TCP 3-way handshake\nlinux|orta|chmod / sticky bit\ndef|zor|SOC triage chain"}
+                onChange={(e) => setBulk(e.target.value)}
+              />
+            </div>
+            <div className="actions" style={{ marginTop: 0 }}>
+              <button type="button" className="cta cta--ghost" onClick={addBulk}>
+                Bulk add
+              </button>
+            </div>
+
+            <h3 className="review-section-title">Add from suggestions</h3>
+            <label
+              className="note"
+              style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+            >
+              <input
+                type="checkbox"
+                checked={showLater}
+                onChange={(e) => setShowLater(e.target.checked)}
+              />
+              Also show advanced / later-path topics
+            </label>
+
+            {suggestions.length === 0 ? (
+              <p className="note">No suggestions left to show (all in queue or filter off).</p>
+            ) : (
+              <div
                 style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "flex-start",
-                  padding: "0.45rem 0.55rem",
-                  border: "1px solid var(--line)",
-                  borderRadius: 8,
-                  background: picked[s.id] ? "rgba(138,90,43,0.08)" : "var(--paper-raised)",
-                  cursor: "pointer",
-                  fontSize: "0.85rem",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                  gap: "0.45rem",
+                  marginTop: "0.75rem",
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={!!picked[s.id]}
-                  onChange={(e) => setPicked((p) => ({ ...p, [s.id]: e.target.checked }))}
-                  style={{ marginTop: 3, minHeight: 18 }}
-                />
-                <span>
-                  <strong>{s.topic}</strong>
-                  <span className="note" style={{ display: "block", margin: 0, fontSize: "0.75rem" }}>
-                    {skillName(s.alan)} · {DIFF_LABEL[s.difficulty] ?? s.difficulty}
-                    {s.later ? " · later" : ""}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
+                {suggestions.map((s) => (
+                  <label
+                    key={s.id}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "flex-start",
+                      padding: "0.45rem 0.55rem",
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      background: picked[s.id] ? "rgba(138,90,43,0.08)" : "var(--paper-raised)",
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!picked[s.id]}
+                      onChange={(e) => setPicked((p) => ({ ...p, [s.id]: e.target.checked }))}
+                      style={{ marginTop: 3, minHeight: 18 }}
+                    />
+                    <span>
+                      <strong>{s.topic}</strong>
+                      <span className="note" style={{ display: "block", margin: 0, fontSize: "0.75rem" }}>
+                        {skillName(s.alan)} · {DIFF_LABEL[s.difficulty] ?? s.difficulty}
+                        {s.later ? " · later" : ""}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
 
-        <div className="actions">
-          <button type="button" className="cta" onClick={addPickedSuggestions}>
-            Add selected
-          </button>
-        </div>
+            <div className="actions">
+              <button type="button" className="cta" onClick={addPickedSuggestions}>
+                Add selected
+              </button>
+            </div>
+          </div>
+        </details>
       </Section>
     </div>
   );
