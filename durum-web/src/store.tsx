@@ -74,6 +74,8 @@ type StoreApi = {
   setDraft: (fn: (d: SessionDraft) => SessionDraft) => void;
   appendLog: (rec: LogRecord) => void;
   appendSessionFromForm: (form: SessionFormData) => void;
+  /** Update an existing session log in place; preserves original `t` and `type`. */
+  updateSessionFromForm: (originalT: string, form: SessionFormData) => void;
   completeScheduleTaskWithLog: (task: ScheduleTaskRef, form: SessionFormData) => void;
   completeScheduleTasksWithLogs: (items: Array<{ task: ScheduleTaskRef; form: SessionFormData }>) => void;
   promoteLogEvidence: (input: {
@@ -127,12 +129,12 @@ function applyRetrievalReview(item: RetrievalItem, nowIso: string): RetrievalIte
   return { ...item, stability: next.s, ef: next.ef, n: next.n, lastIso: nowIso };
 }
 
-function formToLogRecord(form: SessionFormData): LogRecord {
+function formToLogRecord(form: SessionFormData, originalT?: string): LogRecord {
   const not = form.not?.trim() || generateSessionNot(form);
   const sources = mergeSources(form.kaynak, form.extraSources);
   const evidenceUrls = mergeEvidenceUrls(form.kanit, form.evidenceUrls);
   return {
-    t: new Date().toISOString(),
+    t: originalT ?? new Date().toISOString(),
     type: "session",
     alan: form.alan,
     mod: form.mod,
@@ -567,6 +569,43 @@ export function DurumProvider({ children }: { children: ReactNode }) {
             history: s.history.concat([rec]),
             pending: s.pending.concat([JSON.stringify(rec)]),
           }),
+          { forceHistory: true },
+        );
+      },
+      updateSessionFromForm: (originalT, form) => {
+        const patch = formToLogRecord(form, originalT);
+        commit(
+          (s) => {
+            let found = false;
+            const history = s.history.map((r) => {
+              if (r.t !== originalT || r.type !== "session") return r;
+              found = true;
+              return {
+                ...r,
+                ...patch,
+                t: originalT,
+                type: "session" as const,
+                seed: r.seed,
+              };
+            });
+            if (!found) return s;
+            const pending = s.pending.map((line) => {
+              try {
+                const parsed = JSON.parse(line) as LogRecord;
+                if (parsed.t !== originalT || parsed.type !== "session") return line;
+                return JSON.stringify({
+                  ...parsed,
+                  ...patch,
+                  t: originalT,
+                  type: "session",
+                  seed: parsed.seed,
+                });
+              } catch {
+                return line;
+              }
+            });
+            return { ...s, history, pending };
+          },
           { forceHistory: true },
         );
       },

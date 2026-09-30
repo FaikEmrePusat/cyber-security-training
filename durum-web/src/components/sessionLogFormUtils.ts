@@ -1,8 +1,8 @@
 import type { BugunGorev } from "../useRollingSchedule";
-import type { SessionFormData } from "../model";
+import type { LogRecord, SessionFormData } from "../model";
 import { LOG_SOURCES } from "../data/dayLog";
 import type { StudyPlanStep } from "../data/studyPlans";
-import { mergeSources } from "../data/sessionMultiFields";
+import { mergeEvidenceUrls, mergeSources } from "../data/sessionMultiFields";
 
 export const AKTIVITE_OPTIONS = [
   { value: "konu-tekrar", label: "Topic review" },
@@ -131,5 +131,35 @@ export function defaultManualForm(defaultKalite = 0.85): SessionFormData {
     kanit: "",
     kalite: defaultKalite,
     not: "",
+  };
+}
+
+/** Prefill SessionLogForm from an existing session log (edit path). */
+export function logRecordToForm(rec: LogRecord): SessionFormData {
+  const sources = mergeSources(rec.kaynak, rec.sources);
+  const evidenceUrls = mergeEvidenceUrls(rec.kanit, rec.evidenceUrls);
+  const primary = sources[0] ?? rec.kaynak ?? "oak";
+  const extras = sources.slice(1);
+  // Activity kind is not persisted on LogRecord; topic title lives in konu.
+  const tagsFromSonuc =
+    rec.sonuc
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean) ?? [];
+  const tags = rec.tags?.length ? rec.tags : tagsFromSonuc.length > 0 ? tagsFromSonuc : undefined;
+  return {
+    aktivite: "diger",
+    aktiviteCustom: rec.konu?.trim() || undefined,
+    kaynak: primary,
+    extraSources: extras.length > 0 ? extras : undefined,
+    dakika: Math.max(1, Math.min(600, Math.round(rec.dur_min ?? 60))),
+    mod: rec.mod ?? "teori",
+    alan: rec.alan ?? "net",
+    kanit: evidenceUrls[0],
+    evidenceUrls: evidenceUrls.length > 0 ? evidenceUrls : undefined,
+    kalite: typeof rec.kalite === "number" ? Math.max(0.3, Math.min(1, rec.kalite)) : 0.85,
+    not: rec.not,
+    tags,
+    promoteEvidence: true,
   };
 }

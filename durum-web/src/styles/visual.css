@@ -2257,10 +2257,42 @@ button.day-log__chip.is-on {
   padding: 0;
 }
 
-.record-work li {
+.record-work__item {
   margin: 0 0 1rem;
   padding-bottom: 0.85rem;
   border-bottom: 1px solid var(--line);
+}
+
+.record-work__item.is-editing {
+  padding: 0.75rem 0.85rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.record-work__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.record-work__meta {
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.record-work__edit {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.record-work__editor {
+  margin-top: 0.75rem;
 }
 
 .record-work time {

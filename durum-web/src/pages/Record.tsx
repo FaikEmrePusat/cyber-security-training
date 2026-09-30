@@ -9,7 +9,8 @@ import {
 import { GatePipeline } from "../components/GatePipeline";
 import { PublishPanel } from "../components/PublishPanel";
 import { Section } from "../components/Section";
-import { kaynakLabel } from "../components/sessionLogFormUtils";
+import { SessionLogForm } from "../components/SessionLogForm";
+import { kaynakLabel, logRecordToForm } from "../components/sessionLogFormUtils";
 import { formatTagLabels } from "../data/recordTags";
 import { artifactAlreadyHasUrl, isPublicHttpUrl, shortUrlLabel } from "../data/evidencePromote";
 import {
@@ -66,7 +67,7 @@ function curriculumCounts(map: Record<string, CurriculumStatus>, queueKeys: Set<
 }
 
 export function RecordPage() {
-  const { state, promoteLogEvidence } = useDurum();
+  const { state, promoteLogEvidence, updateSessionFromForm } = useDurum();
   const d = useDerived();
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
   const { getStatus, counts } = useCurriculumStatuses(queueKeys);
@@ -74,6 +75,7 @@ export function RecordPage() {
 
   const [published, setPublished] = useState<PublicProgress | null>(null);
   const [pubStatus, setPubStatus] = useState<"loading" | "ok" | "missing">("loading");
+  const [editingT, setEditingT] = useState<string | null>(null);
   const ownerHere = isOwnerWorkspace(state);
   const isPublisher = Boolean(getPublishToken());
 
@@ -141,7 +143,7 @@ export function RecordPage() {
   const workLog = [...historySrc]
     .reverse()
     .filter((r) => r.type === "session" && !r.seed)
-    .slice(0, 12);
+    .slice(0, 30);
   const gateC = gates.find((g) => g.id === "C");
   const readOnly = usePublishedView;
 
@@ -170,54 +172,12 @@ export function RecordPage() {
         )}
       </header>
 
-      {ownerHere && (
-        <Section title="Publish" lead="Push this browser’s progress to GitHub for followers.">
-          <PublishPanel compact />
-        </Section>
-      )}
-
-      <Section title="Now" lead="What is next on the Oak path — not a complete résumé.">
-        {nextTask ? (
-          <p className="record-now">
-            <strong>{nextTask.kindLabel}:</strong> {nextTask.baslik}
-            {nextTask.alan && ALAN_LABEL[nextTask.alan] ? ` · ${ALAN_LABEL[nextTask.alan]}` : ""}
-          </p>
-        ) : readOnly ? (
-          <p className="note">
-            Oak path · {oakDone}/{oakTotal} topics reinforced · readiness {round1(liveR)} /{" "}
-            {round1(rHedef())}
-          </p>
-        ) : (
-          <p className="note">No open task for today.</p>
-        )}
-        {!readOnly && (
-          <p className="note" style={{ marginTop: "0.5rem" }}>
-            Oak path · {oakDone}/{oakTotal} topics · {band} · readiness {round1(liveR)}{" "}
-            (evidence-capped)
-          </p>
-        )}
-        <p className="note">
-          Reinforced {countsView.pekiştirildi} · Learning{" "}
-          {countsView.ogreniyorum + countsView.kuyrukta} · Later {countsView.sonra}
-        </p>
-        {!readOnly && (
-          <div className="actions" style={{ marginTop: "0.75rem" }}>
-            <Link className="cta" to="/">
-              Today’s topics
-            </Link>
-            <Link className="cta cta--ghost" to="/harita">
-              Curriculum map
-            </Link>
-          </div>
-        )}
-      </Section>
-
       <Section
         title="Recorded work"
         lead={
           readOnly
             ? "Published session trail."
-            : "Session trail. Public http(s) evidence can be promoted into Gate C portfolio artifacts."
+            : "Your session trail — use Edit on each row to change it. Public http(s) links can be promoted into Gate C portfolio artifacts."
         }
       >
         {workLog.length === 0 ? (
@@ -240,14 +200,38 @@ export function RecordPage() {
                     ? [r.kanit.trim()]
                     : [];
               const publicUrls = urls.filter((u) => isPublicHttpUrl(u));
+              const isEditing = !readOnly && editingT === r.t;
               return (
-                <li key={`${r.t}-${i}`}>
-                  <time dateTime={r.t}>{r.t.slice(0, 16).replace("T", " ")}</time>
-                  {r.konu && <strong> {r.konu}</strong>}
-                  {typeof r.dur_min === "number" && <span> · {r.dur_min} min</span>}
-                  {sources.length > 0 && (
-                    <span className="note"> · {sources.map(kaynakLabel).join(" + ")}</span>
-                  )}
+                <li key={`${r.t}-${i}`} className={isEditing ? "record-work__item is-editing" : "record-work__item"}>
+                  <div className="record-work__head">
+                    <div className="record-work__meta">
+                      <time dateTime={r.t}>{r.t.slice(0, 16).replace("T", " ")}</time>
+                      {r.konu && <strong> {r.konu}</strong>}
+                      {typeof r.dur_min === "number" && <span> · {r.dur_min} min</span>}
+                      {sources.length > 0 && (
+                        <span className="note"> · {sources.map(kaynakLabel).join(" + ")}</span>
+                      )}
+                    </div>
+                    {!readOnly && !isEditing && (
+                      <button
+                        type="button"
+                        className="cta cta--sm record-work__edit"
+                        onClick={() => setEditingT(r.t)}
+                        aria-label={`Edit session${r.konu ? `: ${r.konu}` : ""}`}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        className="cta cta--ghost cta--sm record-work__edit"
+                        onClick={() => setEditingT(null)}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
                   {(r.tags?.length || r.sonuc) && (
                     <p className="record-work__tags">
                       {formatTagLabels(
@@ -303,10 +287,67 @@ export function RecordPage() {
                   {!readOnly && publicUrls.length === 0 && urls.length > 0 && (
                     <p className="note">Local / non-http evidence is kept on the log only (not Gate C).</p>
                   )}
+                  {isEditing && (
+                    <div className="record-work__editor">
+                      <SessionLogForm
+                        key={editingT}
+                        initial={logRecordToForm(r)}
+                        skills={skills}
+                        submitLabel="Save changes"
+                        onCancel={() => setEditingT(null)}
+                        onSubmit={(form) => {
+                          updateSessionFromForm(r.t, form);
+                          setEditingT(null);
+                        }}
+                      />
+                    </div>
+                  )}
                 </li>
               );
             })}
           </ul>
+        )}
+      </Section>
+
+      {ownerHere && (
+        <Section title="Publish" lead="Push this browser’s progress to GitHub for followers.">
+          <PublishPanel compact />
+        </Section>
+      )}
+
+      <Section title="Now" lead="What is next on the Oak path — not a complete résumé.">
+        {nextTask ? (
+          <p className="record-now">
+            <strong>{nextTask.kindLabel}:</strong> {nextTask.baslik}
+            {nextTask.alan && ALAN_LABEL[nextTask.alan] ? ` · ${ALAN_LABEL[nextTask.alan]}` : ""}
+          </p>
+        ) : readOnly ? (
+          <p className="note">
+            Oak path · {oakDone}/{oakTotal} topics reinforced · readiness {round1(liveR)} /{" "}
+            {round1(rHedef())}
+          </p>
+        ) : (
+          <p className="note">No open task for today.</p>
+        )}
+        {!readOnly && (
+          <p className="note" style={{ marginTop: "0.5rem" }}>
+            Oak path · {oakDone}/{oakTotal} topics · {band} · readiness {round1(liveR)}{" "}
+            (evidence-capped)
+          </p>
+        )}
+        <p className="note">
+          Reinforced {countsView.pekiştirildi} · Learning{" "}
+          {countsView.ogreniyorum + countsView.kuyrukta} · Later {countsView.sonra}
+        </p>
+        {!readOnly && (
+          <div className="actions" style={{ marginTop: "0.75rem" }}>
+            <Link className="cta" to="/">
+              Today’s topics
+            </Link>
+            <Link className="cta cta--ghost" to="/harita">
+              Curriculum map
+            </Link>
+          </div>
         )}
       </Section>
 
