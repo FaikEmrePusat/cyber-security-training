@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useDurum } from "../store";
+import { useTheme } from "../useTheme";
 
 import { APP_NAME } from "../model/brand";
 
@@ -24,12 +25,15 @@ const MORE = [
 
 export function Nav() {
   const { canUndo, canRedo, undo, redo } = useDurum();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   const moreActive = MORE.some((l) => location.pathname === l.to);
+  const themeLabel = theme === "dark" ? "Light" : "Dark";
+  const themeTitle = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
 
   useEffect(() => {
     setMoreOpen(false);
@@ -92,7 +96,16 @@ export function Nav() {
           )}
         </div>
       </div>
-      <div className="site-nav__history" role="group" aria-label="Undo">
+      <div className="site-nav__history" role="group" aria-label="Theme and undo">
+        <button
+          type="button"
+          className="history-btn"
+          onClick={toggleTheme}
+          title={themeTitle}
+          aria-label={themeTitle}
+        >
+          {themeLabel}
+        </button>
         <button
           type="button"
           className="history-btn"

@@ -5,9 +5,11 @@
   --ink: #14212b;
   --ink-soft: #3d4f5c;
   --ink-mute: #6a7d8a;
+  --muted: #6a7d8a;
   --paper: #eef2f4;
   --paper-raised: #f7f9fa;
   --mist: #d5e0e6;
+  --surface: #f4faf8;
   --accent: #1a6b5c;
   --accent-deep: #0f4a3f;
   --accent-soft: #c5ddd6;
@@ -20,7 +22,63 @@
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "Figtree", system-ui, sans-serif;
   --nav-h: 56px;
+  --body-wash-1: rgba(26, 107, 92, 0.12);
+  --body-wash-2: rgba(61, 79, 92, 0.1);
+  --body-gradient-top: #e8eef1;
+  --body-gradient-bottom: #e6ecef;
+  --nav-bg: rgba(247, 249, 250, 0.88);
+  --panel-glass: rgba(247, 249, 250, 0.55);
+  --panel-glass-strong: rgba(247, 249, 250, 0.94);
+  --tint-ink: rgba(20, 33, 43, 0.04);
+  --tint-accent: rgba(26, 107, 92, 0.08);
+  --tint-accent-soft: rgba(26, 107, 92, 0.05);
+  --table-head-bg: rgba(213, 224, 230, 0.35);
+  --badge-warn-bg: #f0e0d0;
+  --badge-ok-bg: #d4e8dc;
+  --cta-fg: #f4faf8;
+  --auth-hover-bg: #ffffff;
+  --menu-shadow: 0 8px 24px rgba(20, 33, 43, 0.12);
+  --hero-stripe: rgba(20, 33, 43, 0.03);
+  --hero-glow: rgba(26, 107, 92, 0.22);
   color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --ink: #e6edf2;
+  --ink-soft: #b0bfc9;
+  --ink-mute: #8494a0;
+  --muted: #8494a0;
+  --paper: #121a20;
+  --paper-raised: #1a242d;
+  --mist: #2c3a45;
+  --surface: #1a242d;
+  --accent: #3d9a86;
+  --accent-deep: #7ebfaf;
+  --accent-soft: #1e3d36;
+  --warn: #c4894a;
+  --danger: #c56b6b;
+  --ok: #5a9e7a;
+  --line: rgba(230, 237, 242, 0.12);
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  --body-wash-1: rgba(61, 154, 134, 0.1);
+  --body-wash-2: rgba(100, 120, 140, 0.08);
+  --body-gradient-top: #0e1419;
+  --body-gradient-bottom: #101820;
+  --nav-bg: rgba(18, 26, 32, 0.92);
+  --panel-glass: rgba(26, 36, 45, 0.55);
+  --panel-glass-strong: rgba(18, 26, 32, 0.94);
+  --tint-ink: rgba(230, 237, 242, 0.06);
+  --tint-accent: rgba(61, 154, 134, 0.14);
+  --tint-accent-soft: rgba(61, 154, 134, 0.1);
+  --table-head-bg: rgba(44, 58, 69, 0.55);
+  --badge-warn-bg: #3d2e1f;
+  --badge-ok-bg: #1e3328;
+  --cta-fg: #f4faf8;
+  --auth-hover-bg: #24303a;
+  --menu-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --hero-stripe: rgba(230, 237, 242, 0.04);
+  --hero-glow: rgba(61, 154, 134, 0.18);
+  color-scheme: dark;
 }
 
 *,
@@ -39,9 +97,9 @@ body {
   font-family: var(--font-body);
   color: var(--ink);
   background:
-    radial-gradient(ellipse 120% 80% at 10% -10%, rgba(26, 107, 92, 0.12), transparent 50%),
-    radial-gradient(ellipse 90% 60% at 100% 0%, rgba(61, 79, 92, 0.1), transparent 45%),
-    linear-gradient(180deg, #e8eef1 0%, var(--paper) 40%, #e6ecef 100%);
+    radial-gradient(ellipse 120% 80% at 10% -10%, var(--body-wash-1), transparent 50%),
+    radial-gradient(ellipse 90% 60% at 100% 0%, var(--body-wash-2), transparent 45%),
+    linear-gradient(180deg, var(--body-gradient-top) 0%, var(--paper) 40%, var(--body-gradient-bottom) 100%);
   background-attachment: fixed;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -78,7 +136,7 @@ button {
   align-items: center;
   gap: 0.5rem;
   padding: 0 1rem;
-  background: rgba(247, 249, 250, 0.88);
+  background: var(--nav-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
@@ -173,7 +231,7 @@ button {
   background: var(--paper-raised);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(20, 33, 43, 0.12), var(--shadow);
+  box-shadow: var(--menu-shadow), var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -253,8 +311,8 @@ button {
 
 .auth-btn--login:hover {
   border-color: var(--accent);
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  background: var(--auth-hover-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .auth-btn--logout {
@@ -276,8 +334,8 @@ button {
   align-items: center;
   gap: 0.4rem;
   padding: 0.2rem 0.5rem;
-  background: rgba(26, 107, 92, 0.08);
-  border: 1px solid rgba(26, 107, 92, 0.2);
+  background: var(--tint-accent);
+  border: 1px solid var(--line);
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 600;
@@ -384,13 +442,13 @@ button {
   z-index: -1;
   opacity: 0.55;
   background:
-    radial-gradient(circle at 78% 30%, rgba(26, 107, 92, 0.22), transparent 42%),
+    radial-gradient(circle at 78% 30%, var(--hero-glow), transparent 42%),
     repeating-linear-gradient(
       -12deg,
       transparent,
       transparent 11px,
-      rgba(20, 33, 43, 0.03) 11px,
-      rgba(20, 33, 43, 0.03) 12px
+      var(--hero-stripe) 11px,
+      var(--hero-stripe) 12px
     );
   animation: drift 18s ease-in-out infinite alternate;
 }
@@ -454,7 +512,7 @@ button {
   border: none;
   border-radius: var(--radius);
   background: var(--accent);
-  color: #f4faf8;
+  color: var(--cta-fg);
   font-weight: 600;
   font-size: 1rem;
   transition: transform 0.2s ease, background 0.2s ease;
@@ -662,7 +720,7 @@ table.data th {
   letter-spacing: 0.05em;
   color: var(--ink-mute);
   font-weight: 600;
-  background: rgba(213, 224, 230, 0.35);
+  background: var(--table-head-bg);
 }
 
 table.data tr:last-child td {
@@ -852,12 +910,12 @@ table.data tr:last-child td {
 }
 
 .badge--warn {
-  background: #f0e0d0;
+  background: var(--badge-warn-bg);
   color: var(--warn);
 }
 
 .badge--ok {
-  background: #d4e8dc;
+  background: var(--badge-ok-bg);
   color: var(--ok);
 }
 
@@ -931,7 +989,7 @@ table.data tr:last-child td {
   gap: 0.35rem;
   margin-top: 1.25rem;
   padding: 0.25rem;
-  background: rgba(20, 33, 43, 0.04);
+  background: var(--tint-ink);
   border-radius: 8px;
   width: fit-content;
 }
@@ -1009,7 +1067,7 @@ table.data tr:last-child td {
 }
 
 .tree-row.is-selected {
-  background: rgba(26, 107, 92, 0.08);
+  background: var(--tint-accent);
 }
 
 .tree-row__main {
@@ -1050,7 +1108,7 @@ table.data tr:last-child td {
   width: 100%;
   max-height: 460px;
   background:
-    radial-gradient(ellipse at 50% 45%, rgba(26, 107, 92, 0.06), transparent 55%),
+    radial-gradient(ellipse at 50% 45%, var(--tint-accent-soft), transparent 55%),
     var(--paper-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1060,7 +1118,7 @@ table.data tr:last-child td {
   margin-top: 1rem;
   padding: 1rem 1.1rem;
   border-left: 3px solid var(--accent);
-  background: rgba(26, 107, 92, 0.05);
+  background: var(--tint-accent-soft);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
