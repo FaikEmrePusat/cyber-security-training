@@ -2007,10 +2007,19 @@
   font-size: 0.9rem;
   line-height: 1.35;
   color: var(--muted);
+  cursor: pointer;
 }
 
-.return-work__promote input {
+.return-work__promote input[type="checkbox"] {
   margin-top: 0.2rem;
+  width: auto;
+  min-width: 1.05rem;
+  min-height: 1.05rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .publish-panel {
@@ -2193,7 +2202,7 @@ button.day-log__chip.is-on {
 }
 
 .return-work__note,
-.return-work input {
+.return-work input:not([type="checkbox"]):not([type="radio"]) {
   width: 100%;
 }
 

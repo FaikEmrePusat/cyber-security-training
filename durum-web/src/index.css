@@ -682,7 +682,7 @@ table.data tr:last-child td {
   color: var(--ink-soft);
 }
 
-.field input,
+.field input:not([type="checkbox"]):not([type="radio"]),
 .field select,
 .field textarea {
   min-height: 44px;
@@ -690,6 +690,18 @@ table.data tr:last-child td {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--paper-raised);
+}
+
+.field input[type="checkbox"],
+.field input[type="radio"] {
+  width: auto;
+  min-width: 1.05rem;
+  min-height: 1.05rem;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  flex-shrink: 0;
 }
 
 .field textarea {
