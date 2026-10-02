@@ -55,9 +55,8 @@ GitHub Pages: repository secrets with those two names; `deploy.yml` passes them 
 
 ## 4. Use
 
-1. Open Ledger → **Data** → **Send login link** (same email as Usta).
-2. Open the link on that device’s browser.
-3. Status becomes **Synced**. Repeat sign-in once on the phone.
-4. After that, edits sync automatically (and on tab focus / **Sync now**).
+1. Open Ledger → **Data** → **Send 6-digit code** (same owner email as Usta), then **Sign in with code**.
+2. Status becomes **Synced**. Repeat sign-in once on the phone (same OTP flow — no deep-link required).
+3. After that, edits sync automatically (and on tab focus / **Sync now**).
 
 Publish to GitHub remains a separate, optional public snapshot for followers.

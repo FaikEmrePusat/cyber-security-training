@@ -1,12 +1,14 @@
 /**
- * Ledger 6-digit OTP for the owner email.
+ * Owner 6-digit OTP for Cyber Ledger and Usta (same Supabase project / email).
+ * Pass body.app = "usta" | "ledger" (default) for notify copy only.
  * Delivery channels (ntfy/email) are best-effort; the code is always returned in the
  * JSON response so Sign-in works even when Edge egress to mail providers is blocked.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_EMAIL = (Deno.env.get("LEDGER_OTP_EMAIL") ?? "faikemrep@gmail.com").toLowerCase();
-const NTFY_TOPIC = Deno.env.get("LEDGER_NTFY_TOPIC") ?? "cyber-ledger-faik-otp";
+const NTFY_TOPIC_LEDGER = Deno.env.get("LEDGER_NTFY_TOPIC") ?? "cyber-ledger-faik-otp";
+const NTFY_TOPIC_USTA = Deno.env.get("USTA_NTFY_TOPIC") ?? NTFY_TOPIC_LEDGER;
 const FORMSUBMIT = `https://formsubmit.co/ajax/${ALLOWED_EMAIL}`;
 
 const cors = {
@@ -49,6 +51,16 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
   }
 }
 
+type AppId = "ledger" | "usta";
+
+function resolveApp(raw: unknown): AppId {
+  return raw === "usta" ? "usta" : "ledger";
+}
+
+function productLabel(app: AppId): string {
+  return app === "usta" ? "Usta" : "Cyber Ledger";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -61,7 +73,7 @@ Deno.serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let body: { action?: string; email?: string; code?: string };
+  let body: { action?: string; email?: string; code?: string; app?: string };
   try {
     body = await req.json();
   } catch {
@@ -70,8 +82,12 @@ Deno.serve(async (req) => {
 
   const email = (body.email ?? "").trim().toLowerCase();
   if (email !== ALLOWED_EMAIL) {
-    return json({ error: "This Ledger OTP is limited to the owner email." }, 403);
+    return json({ error: "This OTP is limited to the owner email." }, 403);
   }
+
+  const app = resolveApp(body.app);
+  const product = productLabel(app);
+  const ntfyTopic = app === "usta" ? NTFY_TOPIC_USTA : NTFY_TOPIC_LEDGER;
 
   if (body.action === "request") {
     const code = randomCode();
@@ -88,11 +104,11 @@ Deno.serve(async (req) => {
     if (upErr) return json({ error: upErr.message }, 500);
 
     // Best-effort notify; never fail the request if these are blocked from Edge.
-    const text = `Cyber Ledger code: ${code}`;
+    const text = `${product} code: ${code}`;
     try {
       await fetchWithTimeout(
-        `https://ntfy.sh/${NTFY_TOPIC}`,
-        { method: "POST", headers: { Title: "Cyber Ledger login code", Priority: "high" }, body: text },
+        `https://ntfy.sh/${ntfyTopic}`,
+        { method: "POST", headers: { Title: `${product} login code`, Priority: "high" }, body: text },
         3000,
       );
     } catch {
@@ -104,7 +120,7 @@ Deno.serve(async (req) => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ _subject: "Cyber Ledger login code", message: text }),
+          body: JSON.stringify({ _subject: `${product} login code`, message: text }),
         },
         3000,
       );
@@ -112,11 +128,13 @@ Deno.serve(async (req) => {
       /* ignore */
     }
 
+    // Always return the plaintext code for the owner allowlist path — email/ntfy
+    // are best-effort; on-device fill is the primary sign-in UX.
     return json({
       ok: true,
       code,
-      message: "Code ready. It is filled in below — tap Sign in with code.",
-      ntfy: `https://ntfy.sh/${NTFY_TOPIC}`,
+      message: "Code ready — filled below",
+      ntfy: `https://ntfy.sh/${ntfyTopic}`,
     });
   }
 

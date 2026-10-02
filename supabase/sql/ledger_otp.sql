@@ -1,4 +1,5 @@
--- Cyber Ledger email OTP (6-digit), used by Edge Function ledger-otp.
+-- Owner email OTP (6-digit) for Cyber Ledger and Usta.
+-- Used by Edge Function ledger-otp (body.app = "ledger" | "usta").
 -- Run once in Supabase → SQL Editor.
 
 create table if not exists public.ledger_otp (

@@ -37,8 +37,8 @@ export function SyncPanel() {
       setMsg(result.message);
       return;
     }
-    if (result.code) setCode(result.code);
-    setMsg(result.message);
+    setCode(result.code);
+    setMsg(`${result.message}: ${result.code}`);
   };
 
   const verifyCode = async (e: FormEvent) => {
@@ -122,8 +122,22 @@ export function SyncPanel() {
               Send 6-digit code
             </button>
           </form>
+          {msg ? (
+            <p
+              className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("wrong") || msg.toLowerCase().includes("could not") || msg.toLowerCase().includes("did not return") ? "err" : "ok"}`}
+              role="status"
+              style={{ marginTop: "0.75rem" }}
+            >
+              {msg}
+            </p>
+          ) : null}
+          {code.trim().length >= 6 ? (
+            <p className="msg ok" role="status" style={{ marginTop: "0.5rem", fontFamily: "ui-monospace, monospace", letterSpacing: "0.12em", fontSize: "1.25rem" }}>
+              {code.trim()}
+            </p>
+          ) : null}
           <form onSubmit={(e) => void verifyCode(e)} className="field" style={{ marginTop: "0.75rem" }}>
-            <label htmlFor="ledger-sync-code">6-digit code from email</label>
+            <label htmlFor="ledger-sync-code">6-digit code (filled on this device)</label>
             <input
               id="ledger-sync-code"
               value={code}
@@ -143,7 +157,7 @@ export function SyncPanel() {
           </p>
         </>
       )}
-      {msg ? (
+      {syncEmail && msg ? (
         <p
           className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("wrong") || msg.toLowerCase().includes("could not") ? "err" : "ok"}`}
           role="status"
@@ -152,8 +166,8 @@ export function SyncPanel() {
         </p>
       ) : null}
       <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-        Send 6-digit code fills the box on this device — then tap Sign in with code. Same on phone when you sign in
-        there.
+        Send 6-digit code shows and fills the code on this device (email is optional backup) — then tap Sign in with
+        code. Same on phone when you sign in there.
       </p>
     </div>
   );
