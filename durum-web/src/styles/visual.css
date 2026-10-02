@@ -2295,6 +2295,10 @@ button.day-log__chip.is-on {
   margin-top: 0.75rem;
 }
 
+.record-work__selfcheck-lead {
+  margin: 0 0 0.65rem;
+}
+
 .record-work time {
   font-size: 0.75rem;
   color: var(--ink-mute);

@@ -604,7 +604,19 @@ export function DurumProvider({ children }: { children: ReactNode }) {
                 return line;
               }
             });
-            return { ...s, history, pending };
+            let next: AppState = { ...s, history, pending };
+            // Self-check / local refs (and optional public URLs) become kayit/public evidence.
+            next = applyEvidenceFromSession(
+              next,
+              {
+                id: `session-edit-${originalT}`,
+                kind: "konu",
+                baslik: form.aktiviteCustom?.trim() || patch.konu || "Session evidence",
+                alan: form.alan,
+              },
+              form,
+            );
+            return next;
           },
           { forceHistory: true },
         );

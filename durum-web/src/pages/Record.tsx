@@ -10,6 +10,7 @@ import { GatePipeline } from "../components/GatePipeline";
 import { PublishPanel } from "../components/PublishPanel";
 import { Section } from "../components/Section";
 import { SessionLogForm } from "../components/SessionLogForm";
+import { StudyPlanSelfCheck } from "../components/StudyPlanSelfCheck";
 import { kaynakLabel, logRecordToForm } from "../components/sessionLogFormUtils";
 import { formatTagLabels } from "../data/recordTags";
 import { artifactAlreadyHasUrl, isPublicHttpUrl, shortUrlLabel } from "../data/evidencePromote";
@@ -19,6 +20,14 @@ import {
   loadCurriculumMap,
   type PublicProgress,
 } from "../data/publicProgress";
+import { buildStudyGuide } from "../data/studyPlans";
+import { mergeEvidenceUrls } from "../data/sessionMultiFields";
+import {
+  formatSelfCheckSessionBlock,
+  loadSelfCheck,
+  selfCheckEvidenceRef,
+  selfCheckHasNotes,
+} from "../lib/selfCheckStore";
 import { resolveStatus } from "../useCurriculumStatuses";
 import { APP_NAME, APP_SUBTITLE, APP_TAGLINE, LEARNER_NAME, LEARNER_ROLE } from "../model/brand";
 import {
@@ -31,6 +40,9 @@ import {
   sfiaLabel,
   type AppState,
   type EvidenceTier,
+  type LogRecord,
+  type SessionFormData,
+  type Skill,
 } from "../model";
 import { useCurriculumStatuses } from "../useCurriculumStatuses";
 import { useDerived } from "../useDerived";
@@ -66,8 +78,86 @@ function curriculumCounts(map: Record<string, CurriculumStatus>, queueKeys: Set<
   return c;
 }
 
+/** Owner edit panel: session form + optional forgotten self-check for the topic. */
+function RecordSessionEditor({
+  record,
+  skills,
+  onCancel,
+  onSaved,
+}: {
+  record: LogRecord;
+  skills: Skill[];
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const { updateSessionFromForm, registerSelfCheckEvidence } = useDurum();
+  const topic = (record.konu ?? "").trim();
+  const guide = useMemo(
+    () => (topic ? buildStudyGuide({ kind: "konu", baslik: topic, alan: record.alan }) : null),
+    [topic, record.alan],
+  );
+  const topicKey = guide?.topic?.trim() || topic;
+  const showSelfCheck = Boolean(topicKey && guide && guide.outcomes.length > 0);
+
+  const handleSubmit = (form: SessionFormData) => {
+    let next: SessionFormData = { ...form };
+    const saveTopic = topicKey || (form.aktiviteCustom ?? "").trim();
+
+    if (saveTopic && guide) {
+      const doc = loadSelfCheck(saveTopic, guide.outcomes);
+      if (selfCheckHasNotes(doc)) {
+        const ref = selfCheckEvidenceRef(saveTopic);
+        const existing = mergeEvidenceUrls(next.kanit, next.evidenceUrls);
+        const hasRef = existing.some((u) => u.trim().toLowerCase() === ref.toLowerCase());
+        const merged = hasRef ? existing : [...existing, ref];
+        next = {
+          ...next,
+          kanit: merged[0],
+          evidenceUrls: merged,
+        };
+
+        const block = formatSelfCheckSessionBlock(doc);
+        const body = (next.not ?? "").trim();
+        if (block && !body.includes("Self-check notes")) {
+          next = {
+            ...next,
+            not: [body, block].filter(Boolean).join("\n\n"),
+          };
+        }
+
+        registerSelfCheckEvidence(saveTopic, next.alan || record.alan);
+      }
+    }
+
+    updateSessionFromForm(record.t, next);
+    onSaved();
+  };
+
+  return (
+    <div className="record-work__editor">
+      {showSelfCheck && guide ? (
+        <>
+          <p className="note record-work__selfcheck-lead">
+            Forgot self-check answers when you recorded? Add them here — written notes become record
+            (kayit) evidence for this topic.
+          </p>
+          <StudyPlanSelfCheck outcomes={guide.outcomes} topicKey={topicKey} alan={record.alan} />
+        </>
+      ) : null}
+      <SessionLogForm
+        key={record.t}
+        initial={logRecordToForm(record)}
+        skills={skills}
+        submitLabel="Save changes"
+        onCancel={onCancel}
+        onSubmit={handleSubmit}
+      />
+    </div>
+  );
+}
+
 export function RecordPage() {
-  const { state, promoteLogEvidence, updateSessionFromForm } = useDurum();
+  const { state, promoteLogEvidence } = useDurum();
   const d = useDerived();
   const queueKeys = new Set(state.retrieval.map((r) => r.topic.trim().toLowerCase()));
   const { getStatus, counts } = useCurriculumStatuses(queueKeys);
@@ -288,19 +378,12 @@ export function RecordPage() {
                     <p className="note">Local / non-http evidence is kept on the log only (not Gate C).</p>
                   )}
                   {isEditing && (
-                    <div className="record-work__editor">
-                      <SessionLogForm
-                        key={editingT}
-                        initial={logRecordToForm(r)}
-                        skills={skills}
-                        submitLabel="Save changes"
-                        onCancel={() => setEditingT(null)}
-                        onSubmit={(form) => {
-                          updateSessionFromForm(r.t, form);
-                          setEditingT(null);
-                        }}
-                      />
-                    </div>
+                    <RecordSessionEditor
+                      record={r}
+                      skills={skills}
+                      onCancel={() => setEditingT(null)}
+                      onSaved={() => setEditingT(null)}
+                    />
                   )}
                 </li>
               );
