@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { clearPublishToken } from "../data/publicProgress";
 import { requestLedgerOtp, verifyLedgerOtp } from "../lib/ledgerOtp";
-import { ledgerAuthRedirectTo, supabase, supabaseConfigured } from "../lib/supabase";
+import { supabase, supabaseConfigured } from "../lib/supabase";
 import { useDurum } from "../store";
 
 const DEFAULT_EMAIL = "faikemrep@gmail.com";
@@ -8,6 +9,7 @@ const DEFAULT_EMAIL = "faikemrep@gmail.com";
 export function SyncPanel() {
   const { syncStatus, syncEmail, refreshCloud } = useDurum();
   const [email, setEmail] = useState(DEFAULT_EMAIL);
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function SyncPanel() {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
-    const result = await requestLedgerOtp(email);
+    const result = await requestLedgerOtp(email, password);
     setBusy(false);
     if (!result.ok) {
       setMsg(result.message);
@@ -51,33 +53,19 @@ export function SyncPanel() {
       setMsg(`Sign-in failed: ${result.message}`);
       return;
     }
+    setPassword("");
     setMsg("Signed in. Syncing…");
     await refreshCloud();
     setMsg("Signed in and synced.");
   };
 
-  const sendMagicLinkFallback = async () => {
-    if (!supabase) return;
-    setBusy(true);
-    setMsg(null);
-    const redirectTo = ledgerAuthRedirectTo();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: redirectTo },
-    });
-    setBusy(false);
-    setMsg(
-      error
-        ? error.message
-        : `Magic link sent (fallback). It should open ${redirectTo}. Prefer the 6-digit code above.`,
-    );
-  };
-
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    clearPublishToken();
     setCode("");
-    setMsg("Signed out. Data on this browser stays until you clear site data.");
+    setPassword("");
+    setMsg("Signed out. Publish token cleared from this browser. Local data stays until you clear site data.");
   };
 
   const statusLabel =
@@ -90,6 +78,10 @@ export function SyncPanel() {
           : syncStatus === "error"
             ? "Error"
             : "Local only";
+
+  const msgIsErr =
+    !!msg &&
+    /fail|error|wrong|could not|did not return|required|locked|too many|not configured/i.test(msg);
 
   return (
     <div className="sync-panel">
@@ -113,26 +105,48 @@ export function SyncPanel() {
             <input
               id="ledger-sync-email"
               type="email"
-              autoComplete="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <button type="submit" className="cta" disabled={busy} style={{ marginTop: "0.5rem" }}>
+            <label htmlFor="ledger-sync-password" style={{ marginTop: "0.5rem" }}>
+              Site password
+            </label>
+            <input
+              id="ledger-sync-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Your owner password"
+            />
+            <button
+              type="submit"
+              className="cta"
+              disabled={busy || !password.trim()}
+              style={{ marginTop: "0.5rem" }}
+            >
               Send 6-digit code
             </button>
           </form>
           {msg ? (
-            <p
-              className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("wrong") || msg.toLowerCase().includes("could not") || msg.toLowerCase().includes("did not return") ? "err" : "ok"}`}
-              role="status"
-              style={{ marginTop: "0.75rem" }}
-            >
+            <p className={`msg ${msgIsErr ? "err" : "ok"}`} role="status" style={{ marginTop: "0.75rem" }}>
               {msg}
             </p>
           ) : null}
           {code.trim().length >= 6 ? (
-            <p className="msg ok" role="status" style={{ marginTop: "0.5rem", fontFamily: "ui-monospace, monospace", letterSpacing: "0.12em", fontSize: "1.25rem" }}>
+            <p
+              className="msg ok"
+              role="status"
+              style={{
+                marginTop: "0.5rem",
+                fontFamily: "ui-monospace, monospace",
+                letterSpacing: "0.12em",
+                fontSize: "1.25rem",
+              }}
+            >
               {code.trim()}
             </p>
           ) : null}
@@ -146,28 +160,25 @@ export function SyncPanel() {
               inputMode="numeric"
               autoComplete="one-time-code"
             />
-            <button type="submit" className="cta" disabled={busy || code.trim().length < 6} style={{ marginTop: "0.5rem" }}>
+            <button
+              type="submit"
+              className="cta"
+              disabled={busy || code.trim().length < 6}
+              style={{ marginTop: "0.5rem" }}
+            >
               Sign in with code
             </button>
           </form>
-          <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-            <button type="button" className="cta cta--ghost" disabled={busy} onClick={() => void sendMagicLinkFallback()}>
-              Send magic link instead
-            </button>
-          </p>
         </>
       )}
       {syncEmail && msg ? (
-        <p
-          className={`msg ${msg.toLowerCase().includes("fail") || msg.toLowerCase().includes("error") || msg.toLowerCase().includes("wrong") || msg.toLowerCase().includes("could not") ? "err" : "ok"}`}
-          role="status"
-        >
+        <p className={`msg ${msgIsErr ? "err" : "ok"}`} role="status">
           {msg}
         </p>
       ) : null}
       <p className="wk-meta" style={{ marginTop: "0.75rem" }}>
-        Send 6-digit code shows and fills the code on this device (email is optional backup) — then tap Sign in with
-        code. Same on phone when you sign in there.
+        Sign-in: owner email + site password → 6-digit code on this device → Sign in with code. Cloud sync and
+        Publish require this session. Magic-link login is disabled so the password cannot be bypassed.
       </p>
     </div>
   );

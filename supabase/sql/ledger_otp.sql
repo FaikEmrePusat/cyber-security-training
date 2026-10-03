@@ -1,6 +1,7 @@
 -- Owner email OTP (6-digit) for Cyber Ledger and Usta.
 -- Used by Edge Function ledger-otp (body.app = "ledger" | "usta").
 -- Run once in Supabase → SQL Editor.
+-- Also set Edge secret: LEDGER_OWNER_PASSWORD (site password before OTP is issued).
 
 create table if not exists public.ledger_otp (
   email text primary key,
@@ -16,3 +17,15 @@ alter table public.ledger_otp enable row level security;
 -- No direct client access; only service role / Edge Function.
 revoke all on public.ledger_otp from anon, authenticated;
 grant all on public.ledger_otp to service_role;
+
+-- Failed owner-password attempts (lockout after too many wrong passwords).
+create table if not exists public.ledger_auth_gate (
+  email text primary key,
+  fail_count int not null default 0,
+  locked_until timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.ledger_auth_gate enable row level security;
+revoke all on public.ledger_auth_gate from anon, authenticated;
+grant all on public.ledger_auth_gate to service_role;

@@ -55,7 +55,7 @@ export function DataPage() {
       <Section
         as="h1"
         title="Data"
-        lead="Sign in once to sync your private Ledger across devices. Publish is optional and only for public Record followers."
+        lead="Sign in with owner email + site password + 6-digit code to sync across devices. Publish stays locked until you are signed in."
       >
         <SyncPanel />
       </Section>

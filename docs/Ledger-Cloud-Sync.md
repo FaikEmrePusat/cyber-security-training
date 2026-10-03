@@ -53,10 +53,32 @@ Local: `durum-web/.env.local` with the same `VITE_SUPABASE_URL` and `VITE_SUPABA
 
 GitHub Pages: repository secrets with those two names; `deploy.yml` passes them into the Ledger build.
 
+### Owner site password (required for OTP)
+
+Edge Function `ledger-otp` will **not** issue a code until the owner password matches.
+
+```bash
+# Choose a strong password you will type on Ledger + Usta (not your Gmail password).
+npx supabase secrets set LEDGER_OWNER_PASSWORD="your-strong-site-password" --project-ref tjbebwdefmxqnbetmsve
+npx supabase functions deploy ledger-otp --project-ref tjbebwdefmxqnbetmsve
+```
+
+Optional: store only a SHA-256 hex hash instead of plaintext:
+
+```bash
+# PowerShell example: hash then set LEDGER_OWNER_PASSWORD_HASH (and unset plaintext).
+npx supabase secrets set LEDGER_OWNER_PASSWORD_HASH="<sha256-hex>" --project-ref tjbebwdefmxqnbetmsve
+```
+
+Also run the latest `supabase/sql/ledger_otp.sql` once (adds `ledger_auth_gate` for lockout).
+
 ## 4. Use
 
-1. Open Ledger → **Data** → **Send 6-digit code** (same owner email as Usta), then **Sign in with code**.
-2. Status becomes **Synced**. Repeat sign-in once on the phone (same OTP flow — no deep-link required).
+1. Open Ledger → **Data** → owner **email** + **site password** → **Send 6-digit code**, then **Sign in with code**.
+2. Status becomes **Synced**. Repeat sign-in once on the phone (same password + OTP — no deep-link).
 3. After that, edits sync automatically (and on tab focus / **Sync now**).
+4. **Publish** (GitHub progress snapshot) is unlocked only while signed in. Sign out clears the saved publish token from that browser.
 
-Publish to GitHub remains a separate, optional public snapshot for followers.
+Magic-link login is disabled in the UI so the site password cannot be bypassed.
+
+Wrong password is rate-limited (lockout after repeated failures).

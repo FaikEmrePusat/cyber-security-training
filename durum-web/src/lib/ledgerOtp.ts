@@ -32,12 +32,21 @@ function extractOtpCode(body: Record<string, unknown> | null): string | undefine
 
 export async function requestLedgerOtp(
   email: string,
+  password: string,
 ): Promise<{ ok: true; message: string; code: string; ntfy?: string | null } | { ok: false; message: string }> {
   if (!supabaseConfigured || !supabase) {
     return { ok: false, message: "Cloud is not configured on this build." };
   }
+  if (!password.trim()) {
+    return { ok: false, message: "Enter your site password." };
+  }
   const { data, error } = await supabase.functions.invoke(FN, {
-    body: { action: "request", email: email.trim().toLowerCase(), app: "ledger" },
+    body: {
+      action: "request",
+      email: email.trim().toLowerCase(),
+      password,
+      app: "ledger",
+    },
   });
   const body = parseInvokeBody(data);
   if (error) {

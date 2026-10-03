@@ -1,15 +1,20 @@
 /**
  * Owner 6-digit OTP for Cyber Ledger and Usta (same Supabase project / email).
+ * Requires owner site password (LEDGER_OWNER_PASSWORD) before a code is issued.
  * Pass body.app = "usta" | "ledger" (default) for notify copy only.
- * Delivery channels (ntfy/email) are best-effort; the code is always returned in the
- * JSON response so Sign-in works even when Edge egress to mail providers is blocked.
+ * Delivery channels (ntfy/email) are best-effort; after password check the code is
+ * returned in the JSON response for on-device fill.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const ALLOWED_EMAIL = (Deno.env.get("LEDGER_OTP_EMAIL") ?? "faikemrep@gmail.com").toLowerCase();
+const OWNER_PASSWORD = Deno.env.get("LEDGER_OWNER_PASSWORD") ?? "";
+const OWNER_PASSWORD_HASH = (Deno.env.get("LEDGER_OWNER_PASSWORD_HASH") ?? "").toLowerCase();
 const NTFY_TOPIC_LEDGER = Deno.env.get("LEDGER_NTFY_TOPIC") ?? "cyber-ledger-faik-otp";
 const NTFY_TOPIC_USTA = Deno.env.get("USTA_NTFY_TOPIC") ?? NTFY_TOPIC_LEDGER;
 const FORMSUBMIT = `https://formsubmit.co/ajax/${ALLOWED_EMAIL}`;
+const MAX_PASSWORD_FAILS = 8;
+const LOCK_MINUTES = 15;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +33,14 @@ function sha256Hex(text: string): Promise<string> {
   return crypto.subtle.digest("SHA-256", data).then((buf) =>
     [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join(""),
   );
+}
+
+/** Constant-time hex compare (same length only). */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 function randomCode(): string {
@@ -61,6 +74,31 @@ function productLabel(app: AppId): string {
   return app === "usta" ? "Usta" : "Cyber Ledger";
 }
 
+async function passwordConfiguredAndOk(candidate: string): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  if (!OWNER_PASSWORD && !OWNER_PASSWORD_HASH) {
+    return {
+      ok: false,
+      status: 503,
+      error: "Owner password is not configured on the server (set LEDGER_OWNER_PASSWORD).",
+    };
+  }
+  if (!candidate) {
+    return { ok: false, status: 401, error: "Email and password required." };
+  }
+  const candidateHash = await sha256Hex(candidate);
+  if (OWNER_PASSWORD_HASH) {
+    if (!timingSafeEqualHex(candidateHash, OWNER_PASSWORD_HASH)) {
+      return { ok: false, status: 401, error: "Wrong email or password." };
+    }
+    return { ok: true };
+  }
+  const expectedHash = await sha256Hex(OWNER_PASSWORD);
+  if (!timingSafeEqualHex(candidateHash, expectedHash)) {
+    return { ok: false, status: 401, error: "Wrong email or password." };
+  }
+  return { ok: true };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -73,7 +111,7 @@ Deno.serve(async (req) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let body: { action?: string; email?: string; code?: string; app?: string };
+  let body: { action?: string; email?: string; code?: string; password?: string; app?: string };
   try {
     body = await req.json();
   } catch {
@@ -82,7 +120,8 @@ Deno.serve(async (req) => {
 
   const email = (body.email ?? "").trim().toLowerCase();
   if (email !== ALLOWED_EMAIL) {
-    return json({ error: "This OTP is limited to the owner email." }, 403);
+    // Same message as wrong password — do not confirm which emails are allowed.
+    return json({ error: "Wrong email or password." }, 403);
   }
 
   const app = resolveApp(body.app);
@@ -90,6 +129,41 @@ Deno.serve(async (req) => {
   const ntfyTopic = app === "usta" ? NTFY_TOPIC_USTA : NTFY_TOPIC_LEDGER;
 
   if (body.action === "request") {
+    const { data: gate } = await admin
+      .from("ledger_auth_gate")
+      .select("fail_count, locked_until")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (gate?.locked_until && new Date(gate.locked_until).getTime() > Date.now()) {
+      return json({ error: "Too many failed attempts. Try again later." }, 429);
+    }
+
+    const pw = await passwordConfiguredAndOk(String(body.password ?? ""));
+    if (!pw.ok) {
+      const fails = (gate?.fail_count ?? 0) + 1;
+      const lockedUntil =
+        fails >= MAX_PASSWORD_FAILS
+          ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000).toISOString()
+          : null;
+      await admin.from("ledger_auth_gate").upsert({
+        email,
+        fail_count: fails,
+        locked_until: lockedUntil,
+        updated_at: new Date().toISOString(),
+      });
+      if (lockedUntil) return json({ error: "Too many failed attempts. Try again later." }, 429);
+      return json({ error: pw.error }, pw.status);
+    }
+
+    // Clear fail counter on success.
+    await admin.from("ledger_auth_gate").upsert({
+      email,
+      fail_count: 0,
+      locked_until: null,
+      updated_at: new Date().toISOString(),
+    });
+
     const code = randomCode();
     const codeHash = await sha256Hex(`${email}:${code}`);
 
@@ -103,7 +177,6 @@ Deno.serve(async (req) => {
     });
     if (upErr) return json({ error: upErr.message }, 500);
 
-    // Best-effort notify; never fail the request if these are blocked from Edge.
     const text = `${product} code: ${code}`;
     try {
       await fetchWithTimeout(
@@ -128,8 +201,6 @@ Deno.serve(async (req) => {
       /* ignore */
     }
 
-    // Always return the plaintext code for the owner allowlist path — email/ntfy
-    // are best-effort; on-device fill is the primary sign-in UX.
     return json({
       ok: true,
       code,

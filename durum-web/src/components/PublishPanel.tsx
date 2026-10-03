@@ -11,12 +11,23 @@ import {
 import { useDurum } from "../store";
 
 export function PublishPanel({ compact = false }: { compact?: boolean }) {
-  const { state } = useDurum();
+  const { state, syncEmail } = useDurum();
   const [token, setToken] = useState(() => getPublishToken() ?? "");
   const [saved, setSaved] = useState(() => Boolean(getPublishToken()));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  if (!syncEmail) {
+    return (
+      <section className={`publish-panel${compact ? " publish-panel--compact" : ""}`} aria-label="Publish progress">
+        <p className="publish-panel__lead">
+          Sign in under <strong>Data → Cloud sync</strong> (email + site password + code) before you can save a
+          GitHub token or publish. Visitors without your session cannot push progress.
+        </p>
+      </section>
+    );
+  }
 
   const saveToken = () => {
     if (!token.trim()) {
@@ -67,14 +78,15 @@ export function PublishPanel({ compact = false }: { compact?: boolean }) {
           <p className="publish-panel__lead">
             Push your local tracker snapshot to GitHub so anyone opening the site can follow your Record.
             Requires a fine-grained personal access token with <strong>Contents: Read and write</strong> on{" "}
-            <code>{PROGRESS_REPO}</code>. Token stays in this browser only — visitors without it cannot publish.
+            <code>{PROGRESS_REPO}</code>. Token stays in this browser only — only your signed-in session can use
+            this panel.
           </p>
         </>
       )}
       {compact && (
         <p className="publish-panel__lead">
-          Update what visitors see on Record. Writes <code>{PROGRESS_PATH}</code> — only works with your saved
-          token.
+          Signed in as {syncEmail}. Update what visitors see on Record. Writes <code>{PROGRESS_PATH}</code> —
+          only with your saved token.
         </p>
       )}
       <label className="publish-panel__label" htmlFor="publish-token">
@@ -99,7 +111,7 @@ export function PublishPanel({ compact = false }: { compact?: boolean }) {
             Remove token
           </button>
         )}
-        <button type="button" className="cta cta--sm" disabled={busy} onClick={publish}>
+        <button type="button" className="cta cta--sm" disabled={busy} onClick={() => void publish()}>
           {busy ? "Publishing…" : "Publish progress"}
         </button>
       </div>
